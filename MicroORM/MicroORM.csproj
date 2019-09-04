@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>2.1.8</Version>
+    <Authors>Vitalii Danilov</Authors>
+    <Company>Vitalii Danilov</Company>
+    <Product>DanilovSoft.MicroORM</Product>
+    <Description>Micro ORM for any DbProviderFactory.</Description>
+    <AssemblyName>DanilovSoft.MicroORM</AssemblyName>
+    <RootNamespace>DanilovSoft.MicroORM</RootNamespace>
+    <PackageId>DanilovSoft.MicroORM</PackageId>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <LangVersion>default</LangVersion>
+    <DocumentationFile>DanilovSoft.MicroORM.xml</DocumentationFile>
+    <NoWarn>1701;1702;1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <LangVersion>default</LangVersion>
+    <DocumentationFile>DanilovSoft.MicroORM.xml</DocumentationFile>
+    <NoWarn>1701;1702;1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+  </ItemGroup>
+
+</Project>

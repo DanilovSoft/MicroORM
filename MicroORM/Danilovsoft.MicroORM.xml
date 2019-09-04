@@ -1,0 +1,210 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>DanilovSoft.MicroORM</name>
+    </assembly>
+    <members>
+        <member name="T:DanilovSoft.MicroORM.CancelCommandRequest">
+            <summary>
+            If there is nothing to cancel, nothing happens. 
+            However, if there is a command in process, and the attempt to cancel fails, no exception is generated.
+            
+            Не спасает от не явного разъединения!
+            </summary>
+        </member>
+        <member name="T:DanilovSoft.MicroORM.CloseConnection">
+            <summary>
+            Аварийный контроль соединения.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.CloseConnection.Dispose">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ExtensionMethods.LoadAsync(System.Data.DataTable,System.Data.Common.DbDataReader,System.Threading.CancellationToken)">
+            <summary>
+            Загружает данные в DataTable.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ExtensionMethods.LoadData(System.Data.DataTable,System.Data.Common.DbDataReader)">
+            <summary>
+            Загружает данные в DataTable.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Execute(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Table(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Scalar(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.ScalarArray(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.ScalarList(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.ScalarArray``1(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.ScalarList``1(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Scalar``1(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.ScalarOrDefault``1(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Single``1(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Single``1(``0,System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Single``1(System.Action{``0,System.Data.Common.DbDataReader},System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Single``1(System.Func{System.Data.Common.DbDataReader,``0},System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.SingleOrDefault``1(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.SingleOrDefault``1(``0,System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.SingleOrDefault``1(System.Action{``0,System.Data.Common.DbDataReader},System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.SingleOrDefault``1(System.Func{System.Data.Common.DbDataReader,``0},System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.List``1(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.List``1(``0,System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.List``1(System.Func{System.Data.Common.DbDataReader,``0},System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.List``1(System.Action{``0,System.Data.Common.DbDataReader},System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Array``1(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Array``1(``0,System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Array``1(System.Func{System.Data.Common.DbDataReader,``0},System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Array``1(System.Action{``0,System.Data.Common.DbDataReader},System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Collection``2(System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Collection``2(System.Action{``0,System.Data.Common.DbDataReader},System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="T:DanilovSoft.MicroORM.MultiSqlReader">
+            <summary>
+            Не закрывает соединение.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ILGeneratorExtensions.PushInstance(System.Reflection.Emit.ILGenerator,System.Type)">
+            <summary>
+            Ldarg_0.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ILGeneratorExtensions.Emit_Ldarg(System.Reflection.Emit.ILGenerator,System.Int32)">
+            <summary>
+            Загружает аргумент с индексом <paramref name="argIndex"/> в стек вычислений.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ILGeneratorExtensions.Emit_Ldc_I4(System.Reflection.Emit.ILGenerator,System.Int32)">
+            <summary>
+            Помещает целочисленное значение <paramref name="n"/> в стек вычислений как <see langword="int32"/>.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.TypeContract.TryGetOrmProperty(System.String,DanilovSoft.MicroORM.ObjectMapping.OrmProperty@)">
+            <summary>
+            Этот метод должен быть потокобезопасен.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ReflectionUtils.IsIndexedProperty(System.Reflection.MemberInfo)">
+            <summary>
+            Determines whether the member is an indexed property.
+            </summary>
+            <param name="member">The member.</param>
+            <returns>
+            	<c>true</c> if the member is an indexed property; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ReflectionUtils.IsIndexedProperty(System.Reflection.PropertyInfo)">
+            <summary>
+            Determines whether the property is an indexed property.
+            </summary>
+            <param name="property">The property.</param>
+            <returns>
+            	<c>true</c> if the property is an indexed property; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="P:DanilovSoft.MicroORM.SqlORM.CloseConnectionPenaltySec">
+            <summary>
+            -1 means infinite.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTransaction.Commit">
+            <summary>
+            Commits the database transaction.
+            Try/Catch exception handling should always be used when committing or rolling back a SqlTransaction.
+            </summary>
+            <exception cref="T:System.Exception"/>
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTransaction.Rollback">
+            <summary>
+            Rolls back a transaction from a pending state.
+            Try/Catch exception handling should always be used when committing or rolling back a SqlTransaction.
+            </summary>
+            <exception cref="T:System.Exception"/>
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="T:System.Threading.DelayedAction">
+            <summary>
+            Планирует отложенный запуск задачи. Открытые члены класса являются потокобезопасными
+            </summary>
+        </member>
+        <member name="F:System.Threading.DelayedAction._state">
+            <summary>
+            Не запланирован: -1;
+            Запланирован: 0;
+            Сработал: 1;
+            Отменен: 2;
+            </summary>
+        </member>
+        <member name="M:System.Threading.DelayedAction.#ctor(System.Action{System.Object},System.Object)">
+            <exception cref="T:System.ArgumentNullException"/>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+        </member>
+        <member name="M:System.Threading.DelayedAction.Start(System.TimeSpan)">
+            <summary>
+            Возвращает True если действие было успешно запланировано. False если текущий экземпляр уже был отменен.
+            </summary>
+            <param name="dueTime"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Threading.DelayedAction.TryCancel(System.Boolean)">
+            <summary>
+            Пытается отменить запланированную задачу.
+            </summary>
+            <returns>True если удалось отменить запланированную задачу.</returns>
+            <param name="wait">True если нужно дожидаться завершения задачи. Одновременно поддерживается только один поток.</param>
+        </member>
+    </members>
+</doc>

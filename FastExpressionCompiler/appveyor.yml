@@ -1,0 +1,6 @@
+version: 1.4.0-preview.{build}
+test: off
+build_script:
+- cmd: build.bat
+artifacts:
+- path: ./src/FastExpressionCompiler/dist/*.nupkg
