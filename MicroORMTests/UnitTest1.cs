@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
@@ -18,8 +20,8 @@ namespace MicroORMTests
 
         static UnitTest1()
         {
-            _sql = new SqlORM("Server=10.0.0.101; Port=5432; Database=postgres; User Id=postgres; Password=pizdec; " +
-                "Pooling=true; MinPoolSize=1; MaxPoolSize=100; ConnectionIdleLifetime=0", Npgsql.NpgsqlFactory.Instance);
+            _sql = new SqlORM("Server=10.0.0.101; Port=5432; User Id=hh; Password=doDRC1vJRGybvCW6; Database=hh; " +
+                "Pooling=true; MinPoolSize=1; MaxPoolSize=100;", Npgsql.NpgsqlFactory.Instance);
         }
 
         private string GetSqlQuery()
@@ -190,9 +192,15 @@ namespace MicroORMTests
         public Point Location { get; private set; }
     }
 
-    class LocationConverter : ISqlConverter
+    class LocationConverter : TypeConverter
     {
-        public object Convert(object value, Type destinationType)
+        //public object Convert(object value, Type destinationType)
+        //{
+        //    var point = (NpgsqlTypes.NpgsqlPoint)value;
+        //    return new Point((int)point.X, (int)point.Y);
+        //}
+
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
         {
             var point = (NpgsqlTypes.NpgsqlPoint)value;
             return new Point((int)point.X, (int)point.Y);
@@ -229,9 +237,14 @@ namespace MicroORMTests
         }
     }
 
-    class IntConverter : ISqlConverter
+    class IntConverter : TypeConverter
     {
-        public object Convert(object value, Type destinationType)
+        //public object Convert(object value, Type destinationType)
+        //{
+        //    return value.ToString();
+        //}
+
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
         {
             return value.ToString();
         }

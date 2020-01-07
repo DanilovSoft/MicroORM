@@ -31,14 +31,14 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 for (int i = 0; i < reader.FieldCount; i++)
                 {
                     string columnName = reader.GetName(i);
-                    Type columnType = reader.GetFieldType(i);
+                    Type columnSourceType = reader.GetFieldType(i);
                     object value = reader[i];
                     if (value == DBNull.Value)
                         value = null;
 
                     if (_typeContract.TryGetOrmProperty(columnName, out OrmProperty ormProperty))
                     {
-                        ormProperty.SetValue(obj, value, columnType, columnName);
+                        ormProperty.SetValue(obj, value, columnSourceType, columnName);
                     }
                 }
             }

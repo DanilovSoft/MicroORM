@@ -116,6 +116,11 @@
             Не закрывает соединение.
             </summary>
         </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.DynamicReflectionDelegateFactory.CreateDefaultConstructor``1(System.Type)">
+            <summary>
+            Находит пустой конструктор.
+            </summary>
+        </member>
         <member name="M:DanilovSoft.MicroORM.ObjectMapping.ILGeneratorExtensions.PushInstance(System.Reflection.Emit.ILGenerator,System.Type)">
             <summary>
             Ldarg_0.

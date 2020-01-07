@@ -22,6 +22,9 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return dynamicMethod;
         }
 
+        /// <summary>
+        /// Находит пустой конструктор.
+        /// </summary>
         public Func<T> CreateDefaultConstructor<T>(Type type)
         {
             DynamicMethod dynamicMethod = CreateDynamicMethod("", 

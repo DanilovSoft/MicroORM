@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using System.Text;
 
@@ -8,16 +9,16 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 {
     internal sealed class OrmProperty
     {
-        private static readonly ConcurrentDictionary<Type, ISqlConverter> _converters = new ConcurrentDictionary<Type, ISqlConverter>();
-        private readonly MemberInfo _memberInfo;
+        private static readonly ConcurrentDictionary<Type, TypeConverter> _converters = new ConcurrentDictionary<Type, TypeConverter>();
+        //private readonly MemberInfo _memberInfo;
         public readonly SetMemberValueDelegate SetValueHandler;
-        public readonly ISqlConverter Converter;
+        public readonly TypeConverter Converter;
         public readonly Type MemberType;
 
         // ctor.
         public OrmProperty(MemberInfo memberInfo)
         {
-            _memberInfo = memberInfo;
+            //_memberInfo = memberInfo;
 
             if(memberInfo is PropertyInfo propertyInfo)
             {
@@ -37,27 +38,35 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             }
         }
 
-        private ISqlConverter ConverterValueFactory(Type converterType)
+        private TypeConverter ConverterValueFactory(Type converterType)
         {
-            var ctor = DynamicReflectionDelegateFactory.Instance.CreateDefaultConstructor<ISqlConverter>(converterType);
+            var ctor = DynamicReflectionDelegateFactory.Instance.CreateDefaultConstructor<TypeConverter>(converterType);
             return ctor.Invoke();
         }
 
-        private object Convert(object value, Type columnType, string columnName)
+        private object Convert(object value, Type columnSourceType, string columnName)
         {
             if (Converter != null)
             {
-                return Converter.Convert(value, MemberType);
+                if (Converter.CanConvertFrom(columnSourceType))
+                {
+                    return Converter.ConvertFrom(value);
+                }
+                else
+                // Безусловно вызываем конвертацию.
+                {
+                    return Converter.ConvertTo(value, MemberType);
+                }
             }
             else
             {
-                return SqlTypeConverter.ChangeType(value, MemberType, columnType, columnName);
+                return SqlTypeConverter.ChangeType(value, MemberType, columnSourceType, columnName);
             }
         }
 
-        public void SetValue(object obj, object value, Type columnType, string columnName)
+        public void SetValue(object obj, object value, Type columnSourceType, string columnName)
         {
-            object finalValue = Convert(value, columnType, columnName);
+            object finalValue = Convert(value, columnSourceType, columnName);
 
             SetValueHandler.Invoke(obj, finalValue);
         }

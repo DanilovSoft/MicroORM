@@ -55,4 +55,8 @@
     <None Remove="FastExpressionCompiler.*.ncrunchproject" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+  </ItemGroup>
+
 </Project>
