@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastExpressionCompiler", "FastExpressionCompiler\src\FastExpressionCompiler\FastExpressionCompiler.csproj", "{F9D82233-9627-4FD1-9B17-F1B0E90DCD0B}"
 EndProject
@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroORM", "MicroORM\MicroO
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{EB1DA831-5F31-437A-8BA3-76A501BF5896}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicroORMTests", "MicroORMTests\MicroORMTests.csproj", "{A0255AEB-F1E6-4516-B5DE-D28B99CCBC35}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "MicroORMTests\UnitTests.csproj", "{A0255AEB-F1E6-4516-B5DE-D28B99CCBC35}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

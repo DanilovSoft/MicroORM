@@ -6,6 +6,8 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
@@ -17,7 +19,7 @@ namespace Test
 
     class Program
     {
-        private SqlORM _sql = new SqlORM("Server=10.0.0.101; Port=5432; Database=MessengerServer; User Id=postgres; Password=pizdec; Pooling=true; MinPoolSize=1; MaxPoolSize=100; ConnectionIdleLifetime=0", Npgsql.NpgsqlFactory.Instance);
+        private SqlORM _sql = new SqlORM("Server=10.0.0.101; Port=5432; Database=hh; User Id=hh; Password=doDRC1vJRGybvCW6; Pooling=true; MinPoolSize=1; MaxPoolSize=100; ConnectionIdleLifetime=0", Npgsql.NpgsqlFactory.Instance);
 
         private CancellationTokenSource _cts = new CancellationTokenSource();
 
@@ -28,42 +30,7 @@ namespace Test
 
         private void Main()
         {
-            Guid id = Guid.NewGuid();
-            var created = DateTime.UtcNow;
-            string message = "test";
-            int groupId = 1;
-            int userId = 1;
-
-            using (var multi = _sql.Sql(
-@"
-SELECT ug.""UserId"" 
-FROM ""UserGroups"" ug 
-WHERE ug.""GroupId"" = @group_id;
-
-INSERT INTO ""Messages"" (""Id"", ""CreatedUtc"", ""Text"", ""GroupId"", ""UserId"", ""UpdatedUtc"")
-    SELECT @id, @created, @text, @group_id, @user_id, @updated_utc
-      WHERE
-        EXISTS(
-            SELECT * FROM ""Groups"" g
-            JOIN ""UserGroups"" ug ON ug.""GroupId"" = g.""Id""
-            WHERE g.""Id"" = @group_id AND ug.""UserId"" = @sender
-        );")
-
-                .Parameter("id", id)
-                .Parameter("created", created)
-                .Parameter("updated_utc", created)
-                .Parameter("text", message)
-                .Parameter("group_id", groupId)
-                .Parameter("user_id", userId)
-                .Parameter("sender", userId)
-                .MultiResult())
-            {
-                int[] users = multi.ScalarArray<int>();
-                var n = multi.Scalar();
-            }
-
-            TestAsync();
-            Thread.Sleep(-1);
+           
         }
 
         private async void TestAsync()

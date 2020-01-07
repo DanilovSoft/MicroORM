@@ -177,7 +177,7 @@
         </member>
         <member name="T:System.Threading.DelayedAction">
             <summary>
-            Планирует отложенный запуск задачи. Открытые члены класса являются потокобезопасными
+            Планирует отложенный запуск задачи. Открытые члены класса являются потокобезопасными.
             </summary>
         </member>
         <member name="F:System.Threading.DelayedAction._state">
