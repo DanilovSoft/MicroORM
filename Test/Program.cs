@@ -33,6 +33,7 @@ namespace Test
 
         private void Main()
         {
+            _sql.Transaction();
             var result = _sql.Sql("SELECT 'http://test.com' AS url, point(@0, @1) as location")
                 .Parameters(1, 2)
                 .Single<UserModel>();

@@ -37,11 +37,12 @@ namespace DanilovSoft.MicroORM
             _transaction = _connection.BeginTransaction();
         }
 
-        public async Task OpenTransactionAsync()
+        public Task OpenTransactionAsync()
         {
-            await OpenTransactionAsync(CancellationToken.None).ConfigureAwait(false);
+            return OpenTransactionAsync(CancellationToken.None);
         }
 
+        /// <exception cref="MicroORMException"/>
         public SqlQuery Sql(string query, params object[] parameters)
         {
             if (_transaction == null)
@@ -56,8 +57,6 @@ namespace DanilovSoft.MicroORM
         /// Commits the database transaction.
         /// Try/Catch exception handling should always be used when committing or rolling back a SqlTransaction.
         /// </summary>
-        /// <exception cref="Exception"/>
-        /// <exception cref="InvalidOperationException"/>
         public void Commit()
         {
             _transaction.Commit();
@@ -67,8 +66,6 @@ namespace DanilovSoft.MicroORM
         /// Rolls back a transaction from a pending state.
         /// Try/Catch exception handling should always be used when committing or rolling back a SqlTransaction.
         /// </summary>
-        /// <exception cref="Exception"/>
-        /// <exception cref="InvalidOperationException"/>
         public void Rollback()
         {
             _transaction.Rollback();

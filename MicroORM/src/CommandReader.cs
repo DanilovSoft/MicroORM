@@ -31,11 +31,16 @@ namespace DanilovSoft.MicroORM
             return _reader;
         }
 
-        public async Task<DbDataReader> GetReaderAsync(CancellationToken cancellationToken)
+        public Task<DbDataReader> GetReaderAsync(CancellationToken cancellationToken)
         {
             if (_reader != null)
-                return _reader;
+                return Task.FromResult(_reader);
 
+            return InnerGetReaderAsync(cancellationToken);
+        }
+
+        private async Task<DbDataReader> InnerGetReaderAsync(CancellationToken cancellationToken)
+        {
             _reader = await Command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
             return _reader;
         }

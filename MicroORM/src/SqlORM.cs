@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DanilovSoft.MicroORM
@@ -36,6 +37,39 @@ namespace DanilovSoft.MicroORM
             var sqlQuery = new SqlQuery(query, ConnectionString, _factory);
             sqlQuery.Parameters(parameters);
             return sqlQuery;
+        }
+
+        public SqlTransaction OpenTransaction()
+        {
+            var tsql = new SqlTransaction(ConnectionString, _factory);
+            try
+            {
+                tsql.OpenTransaction();
+                return GlobalVars.SetNull(ref tsql);
+            }
+            finally
+            {
+                tsql?.Dispose();
+            }
+        }
+
+        public Task<SqlTransaction> OpenTransactionAsync()
+        {
+            return OpenTransactionAsync(CancellationToken.None);
+        }
+
+        public async Task<SqlTransaction> OpenTransactionAsync(CancellationToken cancellationToken)
+        {
+            var tsql = new SqlTransaction(ConnectionString, _factory);
+            try
+            {
+                await tsql.OpenTransactionAsync(cancellationToken).ConfigureAwait(false);
+                return GlobalVars.SetNull(ref tsql);
+            }
+            finally
+            {
+                tsql?.Dispose();
+            }
         }
 
         public SqlTransaction Transaction()

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>2.2.1</Version>
+    <Version>2.2.2</Version>
     <Authors>Vitalii Danilov</Authors>
     <Company>Vitalii Danilov</Company>
     <Product>DanilovSoft.MicroORM</Product>
