@@ -67,7 +67,7 @@ namespace DanilovSoft.MicroORM
             }
             catch (Exception ex)
             {
-                throw new MicroORMException($"Error converting value {value} to type '{conversionType.FullName}'. Column name '{columnName}'.", ex);
+                throw new MicroORMException($"Error converting value '{value}' to type '{conversionType.FullName}'. Column name '{columnName}'.", ex);
             }
         }
     }

@@ -16,7 +16,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         private static readonly ConcurrentDictionary<TypeMember, OrmLazyProperty> _dict = new ConcurrentDictionary<TypeMember, OrmLazyProperty>();
         private readonly Type _type;
 
-        // Конструктор определенного type синхронизирован. (Потокобезопасно для каждого Type).
+        // Конструктор определенного Type синхронизирован. (Потокобезопасно для каждого Type).
         public TypeContract(Type type)
         {
             _type = type;

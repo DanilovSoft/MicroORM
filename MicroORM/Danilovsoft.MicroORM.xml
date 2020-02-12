@@ -4,32 +4,6 @@
         <name>DanilovSoft.MicroORM</name>
     </assembly>
     <members>
-        <member name="T:DanilovSoft.MicroORM.CancelCommandRequest">
-            <summary>
-            If there is nothing to cancel, nothing happens. 
-            However, if there is a command in process, and the attempt to cancel fails, no exception is generated.
-            
-            Не спасает от не явного разъединения!
-            </summary>
-        </member>
-        <member name="T:DanilovSoft.MicroORM.CloseConnection">
-            <summary>
-            Аварийный контроль соединения.
-            </summary>
-        </member>
-        <member name="M:DanilovSoft.MicroORM.CloseConnection.Dispose">
-            <exception cref="T:System.OperationCanceledException"/>
-        </member>
-        <member name="M:DanilovSoft.MicroORM.ExtensionMethods.LoadAsync(System.Data.DataTable,System.Data.Common.DbDataReader,System.Threading.CancellationToken)">
-            <summary>
-            Загружает данные в DataTable.
-            </summary>
-        </member>
-        <member name="M:DanilovSoft.MicroORM.ExtensionMethods.LoadData(System.Data.DataTable,System.Data.Common.DbDataReader)">
-            <summary>
-            Загружает данные в DataTable.
-            </summary>
-        </member>
         <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Execute(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
@@ -111,11 +85,6 @@
         <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Collection``2(System.Action{``0,System.Data.Common.DbDataReader},System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="T:DanilovSoft.MicroORM.MultiSqlReader">
-            <summary>
-            Не закрывает соединение.
-            </summary>
-        </member>
         <member name="M:DanilovSoft.MicroORM.ObjectMapping.DynamicReflectionDelegateFactory.CreateDefaultConstructor``1(System.Type)">
             <summary>
             Находит пустой конструктор.
@@ -141,6 +110,37 @@
             Этот метод должен быть потокобезопасен.
             </summary>
         </member>
+        <member name="T:DanilovSoft.MicroORM.CancelCommandRequest">
+            <summary>
+            If there is nothing to cancel, nothing happens. 
+            However, if there is a command in process, and the attempt to cancel fails, no exception is generated.
+            
+            Не спасает от не явного разъединения!
+            </summary>
+        </member>
+        <member name="T:DanilovSoft.MicroORM.CloseConnection">
+            <summary>
+            Аварийный контроль соединения.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.CloseConnection.Dispose">
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ExtensionMethods.LoadAsync(System.Data.DataTable,System.Data.Common.DbDataReader,System.Threading.CancellationToken)">
+            <summary>
+            Загружает данные в DataTable.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ExtensionMethods.LoadData(System.Data.DataTable,System.Data.Common.DbDataReader)">
+            <summary>
+            Загружает данные в DataTable.
+            </summary>
+        </member>
+        <member name="T:DanilovSoft.MicroORM.MultiSqlReader">
+            <summary>
+            Не закрывает соединение.
+            </summary>
+        </member>
         <member name="M:DanilovSoft.MicroORM.ReflectionUtils.IsIndexedProperty(System.Reflection.MemberInfo)">
             <summary>
             Determines whether the member is an indexed property.
@@ -164,21 +164,20 @@
             -1 means infinite.
             </summary>
         </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTransaction.Sql(System.String,System.Object[])">
+            <exception cref="T:DanilovSoft.MicroORM.MicroORMException"/>
+        </member>
         <member name="M:DanilovSoft.MicroORM.SqlTransaction.Commit">
             <summary>
             Commits the database transaction.
             Try/Catch exception handling should always be used when committing or rolling back a SqlTransaction.
             </summary>
-            <exception cref="T:System.Exception"/>
-            <exception cref="T:System.InvalidOperationException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.SqlTransaction.Rollback">
             <summary>
             Rolls back a transaction from a pending state.
             Try/Catch exception handling should always be used when committing or rolling back a SqlTransaction.
             </summary>
-            <exception cref="T:System.Exception"/>
-            <exception cref="T:System.InvalidOperationException"/>
         </member>
         <member name="T:System.Threading.DelayedAction">
             <summary>

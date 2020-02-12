@@ -1,4 +1,5 @@
 ﻿using DanilovSoft.MicroORM;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -33,10 +34,11 @@ namespace Test
 
         private void Main()
         {
-            _sql.Transaction();
+            var b = JsonConvert.DeserializeObject<TestStruct>("{\"Url\": \"http://test\"}");
+
             var result = _sql.Sql("SELECT 'http://test.com' AS url, point(@0, @1) as location")
                 .Parameters(1, 2)
-                .Single<UserModel>();
+                .Single<TestStruct>();
         }
 
         private async void TestAsync()
@@ -83,6 +85,13 @@ namespace Test
             //  SELECT * FROM (VALUES (1,2,3), (4,5,6), (7,8,9)) AS q (col1, col2, col3);
             return sb.ToString();
         }
+    }
+
+    internal readonly struct TestStruct
+    {
+        [SqlProperty("url")]
+        [SqlConverter(typeof(UriTypeConverter))]
+        public readonly Uri Url;
     }
 
     class UserModel
