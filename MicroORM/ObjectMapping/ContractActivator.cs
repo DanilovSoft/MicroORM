@@ -11,6 +11,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
     {
         private readonly Func<object> _activator;
         private readonly Func<object[], object> _anonimousActivator;
+        private readonly Func<object[], object> _readonlyStructActivator;
         public readonly OnDeserializingDelegate OnDeserializingHandle;
         public readonly OnDeserializedDelegate OnDeserializedHandle;
         public readonly Dictionary<string, AnonimousProperty> AnonimousProperties;
@@ -57,6 +58,11 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         }
 
         public object CreateAnonimousInstance(object[] args)
+        {
+            return _anonimousActivator.Invoke(args);
+        }
+
+        public object CreateReadonlyInstance(object[] args)
         {
             return _anonimousActivator.Invoke(args);
         }

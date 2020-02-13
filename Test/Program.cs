@@ -1,4 +1,5 @@
 ﻿using DanilovSoft.MicroORM;
+using DanilovSoft.MicroORM.ObjectMapping;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -34,11 +35,8 @@ namespace Test
 
         private void Main()
         {
-            var b = JsonConvert.DeserializeObject<TestStruct>("{\"Url\": \"http://test\"}");
-
-            var result = _sql.Sql("SELECT 'http://test.com' AS url, point(@0, @1) as location")
-                .Parameters(1, 2)
-                .Single<TestStruct>();
+            var activator = new ContractActivator(typeof(TestStruct), false);
+            activator.CreateReadonlyInstance();
         }
 
         private async void TestAsync()
