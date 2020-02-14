@@ -35,7 +35,13 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                     // internal (or Friend in Visual Basic), or protected. If the property does not have a set accessor, the method returns false.
                     if (!p.CanWrite)
                     {
-                        continue;
+                        if (!Attribute.IsDefined(p, typeof(SqlPropertyAttribute)) && !Attribute.IsDefined(p, typeof(DataMemberAttribute)))
+                        {
+                            //var backingField = type.GetField($"<{p.Name}>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance);
+                            //member = backingField;
+
+                            continue;
+                        }
                     }
                 }
 
@@ -98,7 +104,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         /// </summary>
         public bool TryGetOrmProperty(string memberName, out OrmProperty ormProperty)
         {
-            if(_dict.TryGetValue(new TypeMember(_type, memberName), out var lazyOrmProperty))
+            if(_dict.TryGetValue(new TypeMember(_type, memberName), out OrmLazyProperty lazyOrmProperty))
             {
                 ormProperty = lazyOrmProperty.Value;
                 return true;

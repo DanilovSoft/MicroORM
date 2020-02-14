@@ -28,9 +28,9 @@ namespace UnitTests
         [TestMethod]
         public void TestList()
         {
-            typeof(TestStruct).rea
-            var toObject = new ObjectMapper<TestStruct>();
-            return toObject.ReadObject();
+            
+            //var toObject = new ObjectMapper<TestStruct>();
+            //return toObject.ReadObject();
         }
     }
 }

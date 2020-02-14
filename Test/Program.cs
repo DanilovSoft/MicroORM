@@ -19,12 +19,11 @@ using System.Threading.Tasks;
 
 namespace Test
 {
-    
+
 
     class Program
     {
-        private readonly SqlORM _sql = new SqlORM("Server=10.0.0.101; Port=5432; User Id=hh; Password=doDRC1vJRGybvCW6; Database=hh; " +
-            "Pooling=true; MinPoolSize=1; MaxPoolSize=100", Npgsql.NpgsqlFactory.Instance);
+        private readonly SqlORM _sql = new SqlORM("Data Source = db.sqlite", System.Data.SQLite.SQLiteFactory.Instance);
 
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
@@ -35,8 +34,27 @@ namespace Test
 
         private void Main()
         {
-            var activator = new ContractActivator(typeof(TestStruct), false);
-            activator.CreateReadonlyInstance();
+            var f = typeof(TestStruct).GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+
+            //var mem = new MemoryStream();
+            //ProtoBuf.Serializer.Serialize(mem, TestStruct.Create("test", null));
+            //mem.Position = 0;
+            //var r = ProtoBuf.Serializer.Deserialize<TestStruct>(mem);
+
+
+            var row = _sql.Sql("SELECT 'http://test.ru' AS url, 'Grace' AS name")
+                .Single<TestStruct>();
+
+            if(row.Name == "")
+            {
+                //new PropertyDescriptor();
+            }
+        }
+
+        private static void Test<T>(T item)
+        {
+            var mapper = new AnonymousObjectMapper<T>();
+            mapper.ReadObject(null);
         }
 
         private async void TestAsync()
@@ -87,9 +105,18 @@ namespace Test
 
     internal readonly struct TestStruct
     {
+        [SqlProperty("name")]
+        public string Name { get; }
+
         [SqlProperty("url")]
         [SqlConverter(typeof(UriTypeConverter))]
-        public readonly Uri Url;
+        public Uri Url { get; }
+
+        public TestStruct(string name,  Uri url)
+        {
+            Name = name;
+            Url = url;
+        }
     }
 
     class UserModel

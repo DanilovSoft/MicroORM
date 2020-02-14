@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
@@ -44,6 +45,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         {
             // у анонимных типов всегда есть 1 конструктор, принимающий параметры.
             var ctors = type.GetConstructors();
+            Debug.Assert(ctors.Length == 1);
             var ctor = ctors[0];
 
             DynamicMethod dynamicMethod = CreateDynamicMethod("",
@@ -324,7 +326,8 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
         private static void GenerateCreateSetPropertyIL(PropertyInfo propertyInfo, ILGenerator generator)
         {
-            MethodInfo setMethod = propertyInfo.GetSetMethod(true);
+            MethodInfo setMethod = propertyInfo.GetSetMethod(nonPublic: true);
+            Debug.Assert(setMethod != null);
 
             if (!setMethod.IsStatic)
                 generator.PushInstance(propertyInfo.DeclaringType);

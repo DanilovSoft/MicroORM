@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace DanilovSoft.MicroORM.ObjectMapping
@@ -41,6 +42,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return new DynamicActivator(type, true);
         }
 
+        [DebuggerStepThrough]
         private ContractActivator LazyValueFactory()
         {
             return new ContractActivator(_type, _anonimousType);

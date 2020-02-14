@@ -11,7 +11,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
     {
         private readonly Func<object> _activator;
         private readonly Func<object[], object> _anonimousActivator;
-        private readonly Func<object[], object> _readonlyStructActivator;
+        //private readonly Func<object[], object> _readonlyStructActivator;
         public readonly OnDeserializingDelegate OnDeserializingHandle;
         public readonly OnDeserializedDelegate OnDeserializedHandle;
         public readonly Dictionary<string, AnonimousProperty> AnonimousProperties;
@@ -24,6 +24,12 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
             if(!anonimouseType)
             {
+                //// Тип может быть readonly структурой, определить можно только перебором всех свойст и полей — они должны быть IsInitOnly.
+                //if(type.IsValueType)
+                //{
+                //    //IsReadonly(type);
+                //}
+
                 _activator = DynamicReflectionDelegateFactory.Instance.CreateDefaultConstructor<object>(type);
                 OnDeserializingHandle = null;
 
@@ -56,6 +62,14 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                     .ToDictionary(x => x.PropertyInfo.Name, x => new AnonimousProperty(x.Index, x.PropertyInfo.PropertyType));
             }
         }
+
+        //private static void IsReadonly(Type type)
+        //{
+        //    var mem = type.GetMembers();
+        //    var p = (PropertyInfo)mem[0];
+        //    var f = (FieldInfo)mem[0];
+        //    //f.IsInitOnly
+        //}
 
         public object CreateAnonimousInstance(object[] args)
         {

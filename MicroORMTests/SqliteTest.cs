@@ -16,13 +16,7 @@ namespace MicroORMTests
     [TestClass]
     public class UnitTest1
     {
-        private static readonly SqlORM _sql;
-
-        static UnitTest1()
-        {
-            _sql = new SqlORM("Server=10.0.0.101; Port=5432; User Id=hh; Password=doDRC1vJRGybvCW6; Database=hh; " +
-                "Pooling=true; MinPoolSize=1; MaxPoolSize=100;", Npgsql.NpgsqlFactory.Instance);
-        }
+        private static readonly SqlORM _sql = new SqlORM("Data Source=db.sqlite", System.Data.SQLite.SQLiteFactory.Instance);
 
         private string GetSqlQuery()
         {
@@ -106,16 +100,7 @@ namespace MicroORMTests
             Assert.AreEqual(1, result.col1);
         }
 
-        [TestMethod]
-        public void ScalarArray()
-        {
-            var result = _sql.Sql("SELECT unnest(array['1', '2', '3'])")
-                .ScalarArray<decimal>(); // + конвертация
-
-            Assert.AreEqual(1, result[0]);
-            Assert.AreEqual(2, result[1]);
-            Assert.AreEqual(3, result[2]);
-        }
+        
 
         [TestMethod]
         public void TestParametersFromObject()
@@ -137,6 +122,17 @@ namespace MicroORMTests
 
             Assert.AreEqual("Alfred", result.name);
             Assert.AreEqual(30, result.age);
+        }
+
+        [TestMethod]
+        public void TestAnonimouseRows()
+        {
+            var result = _sql.Sql("SELECT @name AS qwer, @age AS a")
+                .Parameter("name", "Alfred")
+                .Parameter("age", 30)
+                .List(new { name = 0, age = "" });
+
+            Assert.AreEqual(1, result.Count);
         }
 
         [TestMethod]
