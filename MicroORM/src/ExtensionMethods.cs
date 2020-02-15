@@ -97,5 +97,10 @@ namespace DanilovSoft.MicroORM
                 collection.Add(items[i]);
             }
         }
+
+        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
+        {
+            return new HashSet<T>(source);
+        }
     }
 }

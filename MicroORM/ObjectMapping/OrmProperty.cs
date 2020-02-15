@@ -3,23 +3,23 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace DanilovSoft.MicroORM.ObjectMapping
 {
+    /// <summary>
+    /// Хранится в словаре поэтому извлекается быстрее как класс, а не как структура.
+    /// </summary>
     internal sealed class OrmProperty
     {
-        private static readonly ConcurrentDictionary<Type, TypeConverter> _converters = new ConcurrentDictionary<Type, TypeConverter>();
-        //private readonly MemberInfo _memberInfo;
-        public readonly SetMemberValueDelegate SetValueHandler;
+        public readonly SetValueDelegate SetValueHandler;
         public readonly TypeConverter Converter;
         public readonly Type MemberType;
 
         // ctor.
         public OrmProperty(MemberInfo memberInfo)
         {
-            //_memberInfo = memberInfo;
-
             if(memberInfo is PropertyInfo propertyInfo)
             {
                 MemberType = propertyInfo.PropertyType;
@@ -30,21 +30,34 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 MemberType = fieldInfo.FieldType;
             }
 
-            SetValueHandler = new SetMemberValueDelegate(DynamicReflectionDelegateFactory.Instance.CreateSet<object>(memberInfo));
             var attribute = memberInfo.GetCustomAttribute<SqlConverterAttribute>();
-            if (attribute != null)
+            if (attribute == null)
             {
-                Converter = _converters.GetOrAdd(attribute.ConverterType, ConverterValueFactory);
+                Converter = null;
+            }
+            else
+            {
+                Converter = StaticCache.TypeConverters.GetOrAdd(attribute.ConverterType, ConverterValueFactory);
+            }
+
+            Action<object, object> setAction = DynamicReflectionDelegateFactory.Instance.CreateSet<object>(memberInfo);
+            if (setAction != null)
+            {
+                SetValueHandler = new SetValueDelegate(setAction);
+            }
+            else
+            {
+                SetValueHandler = null;
             }
         }
 
-        private TypeConverter ConverterValueFactory(Type converterType)
+        private static TypeConverter ConverterValueFactory(Type converterType)
         {
             var ctor = DynamicReflectionDelegateFactory.Instance.CreateDefaultConstructor<TypeConverter>(converterType);
             return ctor.Invoke();
         }
 
-        private object Convert(object value, Type columnSourceType, string columnName)
+        public object Convert(object value, Type columnSourceType, string columnName)
         {
             if (Converter != null)
             {
@@ -64,7 +77,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             }
         }
 
-        public void SetValue(object obj, object value, Type columnSourceType, string columnName)
+        public void ConvertAndSetValue(object obj, object value, Type columnSourceType, string columnName)
         {
             object finalValue = Convert(value, columnSourceType, columnName);
 

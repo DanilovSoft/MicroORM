@@ -1,18 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace DanilovSoft.MicroORM.ObjectMapping
 {
-    internal sealed class AnonimousProperty
+    /// <summary>
+    /// Хранится в словаре поэтому извлекается быстрее как класс, а не структура.
+    /// </summary>
+    //[StructLayout(LayoutKind.Auto)]
+    [DebuggerDisplay(@"\{Index = {Index}, ParameterType = {ParameterType.FullName}\}")]
+    internal sealed class ConstructorArgument
     {
         public readonly int Index;
-        public readonly Type Type;
+        public readonly Type ParameterType;
 
-        public AnonimousProperty(int index, Type type)
+        public ConstructorArgument(int index, Type type)
         {
             Index = index;
-            Type = type;
+            ParameterType = type;
         }
     }
 }

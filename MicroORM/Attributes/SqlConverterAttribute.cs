@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace DanilovSoft.MicroORM
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-    public class SqlConverterAttribute : Attribute
+    public sealed class SqlConverterAttribute : Attribute
     {
         internal readonly Type ConverterType;
 

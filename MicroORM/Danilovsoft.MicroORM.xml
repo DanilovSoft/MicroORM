@@ -85,6 +85,16 @@
         <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Collection``2(System.Action{``0,System.Data.Common.DbDataReader},System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
+        <member name="T:DanilovSoft.MicroORM.ObjectMapping.ConstructorArgument">
+            <summary>
+            Хранится в словаре поэтому извлекается быстрее как класс, а не структура.
+            </summary>
+        </member>
+        <member name="T:DanilovSoft.MicroORM.ObjectMapping.ContractActivator">
+            <summary>
+            Создание данного экземпляра должно выполняться синхронизированно.
+            </summary>
+        </member>
         <member name="M:DanilovSoft.MicroORM.ObjectMapping.DynamicReflectionDelegateFactory.CreateDefaultConstructor``1(System.Type)">
             <summary>
             Находит пустой конструктор.
@@ -105,9 +115,36 @@
             Помещает целочисленное значение <paramref name="n"/> в стек вычислений как <see langword="int32"/>.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MicroORM.ObjectMapping.TypeContract.TryGetOrmProperty(System.String,DanilovSoft.MicroORM.ObjectMapping.OrmProperty@)">
+        <member name="T:DanilovSoft.MicroORM.ObjectMapping.OrmLazyProperty">
             <summary>
-            Этот метод должен быть потокобезопасен.
+            Хранит мета информацию о свойстве или поле.
+            Хранится в словаре поэтому извлекается быстрее как класс, а не как структура.
+            </summary>
+        </member>
+        <member name="T:DanilovSoft.MicroORM.ObjectMapping.OrmProperty">
+            <summary>
+            Хранится в словаре поэтому извлекается быстрее как класс, а не как структура.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MicroORM.ObjectMapping.StaticCache.TypesProperties">
+            <summary>
+            Хранит свойства и поля каждого типа.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.StaticCache.FromLazyActivator(System.Type)">
+            <summary>
+            Инициализирует контракт для типа <paramref name="type"/> из ленивой фабрики.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.StaticCache.FromLazyAnonimousActivator(System.Type)">
+            <summary>
+            Инициализирует контракт для типа <paramref name="type"/> из ленивой фабрики.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.TypeContract.TryGetOrmPropertyFromLazy(System.String,DanilovSoft.MicroORM.ObjectMapping.OrmProperty@)">
+            <summary>
+            Инициирует ленивое свойство при первом обращении.
+            Этот метод потокобезопасен.
             </summary>
         </member>
         <member name="T:DanilovSoft.MicroORM.CancelCommandRequest">

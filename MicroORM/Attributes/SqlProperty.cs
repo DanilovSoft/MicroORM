@@ -8,9 +8,9 @@ using System.Runtime.Serialization;
 namespace DanilovSoft.MicroORM
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
-    public class SqlPropertyAttribute : Attribute
+    public sealed class SqlPropertyAttribute : Attribute
     {
-        public readonly string Name;
+        internal readonly string Name;
 
         public SqlPropertyAttribute()
         {

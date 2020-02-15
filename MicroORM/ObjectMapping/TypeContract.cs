@@ -1,64 +1,50 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 
 namespace DanilovSoft.MicroORM.ObjectMapping
 {
-    internal sealed class TypeContract
+    [DebuggerDisplay(@"\{Контракт для типа {ContractType.Name}\}")]
+    [StructLayout(LayoutKind.Auto)]
+    internal readonly struct TypeContract
     {
-        private static readonly BindingFlags DefaultMembersSearchFlags = BindingFlags.Instance | BindingFlags.Public;
-        private static readonly ConcurrentDictionary<TypeMember, OrmLazyProperty> _dict = new ConcurrentDictionary<TypeMember, OrmLazyProperty>();
-        private readonly Type _type;
+        public readonly Type ContractType;
 
         // Конструктор определенного Type синхронизирован. (Потокобезопасно для каждого Type).
         public TypeContract(Type type)
         {
-            _type = type;
+            ContractType = type;
 
-            var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+            const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
-            var allMembers = ReflectionUtils.GetFieldsAndProperties(type, bindingFlags).Where(x => !ReflectionUtils.IsIndexedProperty(x));
-            var defaultMembers = ReflectionUtils.GetFieldsAndProperties(type, DefaultMembersSearchFlags).Where(x => !ReflectionUtils.IsIndexedProperty(x)).ToList();
+            IEnumerable<MemberInfo> allMembers = ReflectionUtils.GetFieldsAndProperties(type, bindingFlags).Where(x => !ReflectionUtils.IsIndexedProperty(x));
+            const BindingFlags DefaultMembersSearchFlags = BindingFlags.Instance | BindingFlags.Public;
+            var defaultMembers = ReflectionUtils.GetFieldsAndProperties(type, DefaultMembersSearchFlags).Where(x => !ReflectionUtils.IsIndexedProperty(x)).ToHashSet();
 
             foreach (MemberInfo member in allMembers)
             {
-                // пропустить свойства которые невозможно записать.
-                if (member is PropertyInfo p)
-                {
-                    // CanWrite returns true if the property has a set accessor, even if the accessor is private, 
-                    // internal (or Friend in Visual Basic), or protected. If the property does not have a set accessor, the method returns false.
-                    if (!p.CanWrite)
-                    {
-                        if (!Attribute.IsDefined(p, typeof(SqlPropertyAttribute)) && !Attribute.IsDefined(p, typeof(DataMemberAttribute)))
-                        {
-                            //var backingField = type.GetField($"<{p.Name}>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance);
-                            //member = backingField;
-
-                            continue;
-                        }
-                    }
-                }
-
-                if(member.IsDefined(typeof(CompilerGeneratedAttribute)) || member.IsDefined(typeof(SqlIgnoreAttribute)))
+                if (member.IsDefined(typeof(CompilerGeneratedAttribute)) || member.IsDefined(typeof(SqlIgnoreAttribute)))
                 {
                     continue;
                 }
 
-                // аттрибуты собственного типа сильнее DataMember атрибутов.
+                // Свои аттрибуты приоритетнее DataMember атрибутов.
 
                 bool canIgnoreMember = true;
                 string propName = member.Name;
 
                 var sqlPropAttr = member.GetCustomAttribute<SqlPropertyAttribute>();
                 if (sqlPropAttr != null)
+                // Есть атрибут SqlProperty — это свойство игнорировать нельзя.
                 {
-                    // если есть атрибут SqlProperty то это свойство игнорировать нельзя.
                     canIgnoreMember = false;
 
                     if (sqlPropAttr.Name != null)
@@ -66,19 +52,22 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 }
                 else
                 {
-                    if (member.IsDefined(typeof(IgnoreDataMemberAttribute)))
+                    // Проверять этот атрибут нужно после SqlPropertyAttribute.
+                    if (!member.IsDefined(typeof(IgnoreDataMemberAttribute)))
+                    {
+                        var dataMember = member.GetCustomAttribute<DataMemberAttribute>();
+                        if (dataMember != null)
+                        {
+                            // если есть атрибут DataMember то это свойство игнорировать нельзя.
+                            canIgnoreMember = false;
+
+                            if (dataMember.Name != null)
+                                propName = dataMember.Name;
+                        }
+                    }
+                    else
                     {
                         continue;
-                    }
-
-                    var dataMember = member.GetCustomAttribute<DataMemberAttribute>();
-                    if (dataMember != null)
-                    {
-                        // если есть атрибут DataMember то это свойство игнорировать нельзя.
-                        canIgnoreMember = false;
-
-                        if (dataMember.Name != null)
-                            propName = dataMember.Name;
                     }
                 }
 
@@ -91,7 +80,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                     }
                 }
 
-                if (!_dict.TryAdd(new TypeMember(type, propName), new OrmLazyProperty(member)))
+                if (!StaticCache.TypesProperties.TryAdd((type, propName), new OrmLazyProperty(member)))
                 {
                     // если не удалось добавить, причина может быть только одна — в словаре уже есть такой ключ.
                     throw new MicroOrmSerializationException($"A member with the name '{propName}' already exists on '{type}'. Use the {nameof(SqlPropertyAttribute)} to specify another name.");
@@ -100,18 +89,19 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         }
 
         /// <summary>
-        /// Этот метод должен быть потокобезопасен.
+        /// Инициирует ленивое свойство при первом обращении.
+        /// Этот метод потокобезопасен.
         /// </summary>
-        public bool TryGetOrmProperty(string memberName, out OrmProperty ormProperty)
+        public bool TryGetOrmPropertyFromLazy(string memberName, out OrmProperty ormProperty)
         {
-            if(_dict.TryGetValue(new TypeMember(_type, memberName), out OrmLazyProperty lazyOrmProperty))
+            if(StaticCache.TypesProperties.TryGetValue((ContractType, memberName), out OrmLazyProperty lazyOrmProperty))
             {
                 ormProperty = lazyOrmProperty.Value;
                 return true;
             }
             else
             {
-                ormProperty = null;
+                ormProperty = default;
                 return false;
             }
         }

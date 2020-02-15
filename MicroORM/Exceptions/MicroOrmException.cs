@@ -9,7 +9,7 @@ namespace DanilovSoft.MicroORM
     {
         public MicroOrmException()
         {
-
+            
         }
 
         public MicroOrmException(string message) : base(message)

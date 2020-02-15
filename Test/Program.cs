@@ -2,6 +2,7 @@
 using DanilovSoft.MicroORM.ObjectMapping;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Common;
@@ -12,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
@@ -19,8 +21,6 @@ using System.Threading.Tasks;
 
 namespace Test
 {
-
-
     class Program
     {
         private readonly SqlORM _sql = new SqlORM("Data Source = db.sqlite", System.Data.SQLite.SQLiteFactory.Instance);
@@ -32,59 +32,25 @@ namespace Test
             new Program().Main();
         }
 
+        [StructLayout(LayoutKind.Auto)]
+        internal readonly struct TestStruct
+        {
+            public string N1 { get; }
+            public string N2 { get; }
+            //public string N3 { get; }
+
+            public TestStruct(string n1, string n2, string n3)
+            {
+                N1 = n1;
+                N2 = n2;
+                //N3 = n3;
+            }
+        }
+
         private void Main()
         {
-            var f = typeof(TestStruct).GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-
-            //var mem = new MemoryStream();
-            //ProtoBuf.Serializer.Serialize(mem, TestStruct.Create("test", null));
-            //mem.Position = 0;
-            //var r = ProtoBuf.Serializer.Deserialize<TestStruct>(mem);
-
-
             var row = _sql.Sql("SELECT 'http://test.ru' AS url, 'Grace' AS name")
-                .Single<TestStruct>();
-
-            if(row.Name == "")
-            {
-                //new PropertyDescriptor();
-            }
-        }
-
-        private static void Test<T>(T item)
-        {
-            var mapper = new AnonymousObjectMapper<T>();
-            mapper.ReadObject(null);
-        }
-
-        private async void TestAsync()
-        {
-            SqlORM.CloseConnectionPenaltySec = 5;
-
-            try
-            {
-                try
-                {
-                    string[] para = new[] { "1", "2" };
-
-                    _sql.Sql("SELECT @, @")
-                        .Parameters(para)
-                        .Execute();
-
-                    Console.WriteLine("GO");
-                    //await task;
-
-                }
-                catch (SqlQueryTimeoutException ex)
-                {
-                    
-                }
-                DebugOnly.Break();
-            }
-            catch (Exception ex)
-            {
-                DebugOnly.Break();
-            }
+                .Single(new { url = "" });
         }
 
         public static string GetSqlQuery()
@@ -103,19 +69,32 @@ namespace Test
         }
     }
 
+    [StructLayout(LayoutKind.Auto)]
     internal readonly struct TestStruct
     {
-        [SqlProperty("name")]
-        public string Name { get; }
-
         [SqlProperty("url")]
         [SqlConverter(typeof(UriTypeConverter))]
         public Uri Url { get; }
 
+        [SqlProperty("name")]
+        private readonly string _name;
+
+        public static int Test { get; set; }
+
+        public object this[int index]
+        {
+            get => Test;
+        }
+
         public TestStruct(string name,  Uri url)
         {
-            Name = name;
+            _name = name;
             Url = url;
+        }
+
+        public static TestStruct Create(string name, Uri url)
+        {
+            return new TestStruct(name, url);
         }
     }
 

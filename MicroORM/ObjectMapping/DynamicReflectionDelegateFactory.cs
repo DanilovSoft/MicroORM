@@ -46,8 +46,13 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             // у анонимных типов всегда есть 1 конструктор, принимающий параметры.
             var ctors = type.GetConstructors();
             Debug.Assert(ctors.Length == 1);
-            var ctor = ctors[0];
+            ConstructorInfo ctor = ctors[0];
 
+            return CreateConstructor(type, ctor);
+        }
+
+        public Func<object[], object> CreateConstructor(Type type, ConstructorInfo ctor)
+        {
             DynamicMethod dynamicMethod = CreateDynamicMethod("",
                 returnType: typeof(object),
                 parameterTypes: _objectArrayTypes,
@@ -291,27 +296,38 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
         public Action<T, object> CreateSet<T>(MemberInfo memberInfo)
         {
-            if (memberInfo is PropertyInfo propertyInfo)
+            switch (memberInfo)
             {
-                return CreateSet<T>(propertyInfo);
+                case PropertyInfo p:
+                    {
+                        return CreateSet<T>(p);
+                    }
+                case FieldInfo f:
+                    {
+                        return CreateSet<T>(f);
+                    }
+                default:
+                    throw new InvalidOperationException($"Could not create setter for {memberInfo}.");
             }
-
-            if (memberInfo is FieldInfo fieldInfo)
-            {
-                return CreateSet<T>(fieldInfo);
-            }
-
-            throw new InvalidOperationException($"Could not create setter for {memberInfo}.");
         }
 
         public Action<T, object> CreateSet<T>(PropertyInfo propertyInfo)
         {
-            DynamicMethod dynamicMethod = CreateDynamicMethod("Set" + propertyInfo.Name, null, new[] { typeof(T), typeof(object) }, propertyInfo.DeclaringType);
-            ILGenerator generator = dynamicMethod.GetILGenerator();
+            MethodInfo setMethod = propertyInfo.GetSetMethod(nonPublic: true);
+            if (setMethod != null)
+            {
+                DynamicMethod dynamicMethod = CreateDynamicMethod("Set" + propertyInfo.Name, null, new[] { typeof(T), typeof(object) }, propertyInfo.DeclaringType);
+                ILGenerator generator = dynamicMethod.GetILGenerator();
 
-            GenerateCreateSetPropertyIL(propertyInfo, generator);
+                GenerateCreateSetPropertyIL(setMethod, propertyInfo, generator);
 
-            return (Action<T, object>)dynamicMethod.CreateDelegate(typeof(Action<T, object>));
+                return (Action<T, object>)dynamicMethod.CreateDelegate(typeof(Action<T, object>));
+            }
+            else
+            // Свойство является readonly.
+            {
+                return null;
+            }
         }
 
         public Action<T, object> CreateSet<T>(FieldInfo fieldInfo)
@@ -324,9 +340,8 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return (Action<T, object>)dynamicMethod.CreateDelegate(typeof(Action<T, object>));
         }
 
-        private static void GenerateCreateSetPropertyIL(PropertyInfo propertyInfo, ILGenerator generator)
+        private static void GenerateCreateSetPropertyIL(MethodInfo setMethod, PropertyInfo propertyInfo, ILGenerator generator)
         {
-            MethodInfo setMethod = propertyInfo.GetSetMethod(nonPublic: true);
             Debug.Assert(setMethod != null);
 
             if (!setMethod.IsStatic)

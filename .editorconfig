@@ -1,0 +1,7 @@
+﻿[*.cs]
+
+# CA1720: Идентификатор содержит имя типа
+dotnet_diagnostic.CA1720.severity = none
+
+# CA1716: Идентификаторы не должны совпадать с ключевыми словами
+dotnet_diagnostic.CA1716.severity = none
