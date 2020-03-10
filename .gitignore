@@ -260,3 +260,4 @@ paket-files/
 __pycache__/
 *.pyc
 /MicroORM/NuGetKey.local.txt
+/MicroORM/NuGet.local.txt
