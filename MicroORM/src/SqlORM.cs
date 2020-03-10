@@ -25,8 +25,13 @@ namespace DanilovSoft.MicroORM
         {
             if (!string.IsNullOrEmpty(connectionString))
             {
-                _factory = factory;
-                ConnectionString = connectionString;
+                if (factory != null)
+                {
+                    _factory = factory;
+                    ConnectionString = connectionString;
+                }
+                else
+                    throw new ArgumentNullException(nameof(factory));
             }
             else
                 throw new ArgumentOutOfRangeException(nameof(connectionString));
