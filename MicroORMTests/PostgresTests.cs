@@ -14,7 +14,7 @@ namespace UnitTests
     public class PostgresTests
     {
         private static readonly SqlORM _sql = new SqlORM("Server=10.0.0.101; Port=5432; User Id=test; Password=test; Database=hh; " +
-            "Pooling=true; MinPoolSize=1; MaxPoolSize=100", System.Data.SQLite.SQLiteFactory.Instance);
+            "Pooling=true; MinPoolSize=1; MaxPoolSize=100", Npgsql.NpgsqlFactory.Instance);
 
         [TestMethod]
         public void ScalarArray()
@@ -115,22 +115,6 @@ namespace UnitTests
             string query = GetSqlQuery();
             List<RowModel> list = _sql.Sql(query)
                 .List<RowModel>();
-        }
-
-        [TestMethod]
-        public async Task TestTimeout()
-        {
-            try
-            {
-                await _sql.Sql("SELECT pg_sleep(10)")
-                    .Timeout(5) // таймаут запроса
-                    .ToAsync()
-                    .Execute();
-            }
-            catch (SqlQueryTimeoutException ex)
-            {
-
-            }
         }
     }
 }

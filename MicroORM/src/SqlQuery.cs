@@ -14,14 +14,14 @@ namespace DanilovSoft.MicroORM
         private readonly Dictionary<string, object> _parameters;
         private readonly DbProviderFactory _factory;
         private readonly string _connectionString;
-        internal string CommandText { get; }
+        private readonly string _commandText;
         private int _anonimParamCount = 0;
 
         internal SqlQuery(string commandText, string connectionString, DbProviderFactory factory)
         {
             _factory = factory;
             _connectionString = connectionString;
-            CommandText = commandText;
+            _commandText = commandText;
             _parameters = new Dictionary<string, object>();
         }
 
@@ -46,7 +46,7 @@ namespace DanilovSoft.MicroORM
             DbConnection connection = GetConnection();
             DbCommand command = connection.CreateCommand();
             AddParameters(command);
-            command.CommandText = CommandText;
+            command.CommandText = _commandText;
             command.CommandTimeout = base.QueryTimeoutSec;
             return command;
         }
@@ -56,7 +56,7 @@ namespace DanilovSoft.MicroORM
             DbConnection connection = await GetConnectionAsync(cancellationToken).ConfigureAwait(false);
             DbCommand command = connection.CreateCommand();
             AddParameters(command);
-            command.CommandText = CommandText;
+            command.CommandText = _commandText;
 
             // The CommandTimeout property will be ignored during asynchronous method calls such as BeginExecuteReader.
             //command.CommandTimeout = base.QueryTimeoutSec;
