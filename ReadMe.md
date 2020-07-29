@@ -49,6 +49,11 @@ decimal[] result = _orm.Sql("SELECT unnest(array['1', '2', '3'])")
     .ScalarArray<decimal>();
 
 
+List<(string name, int age)> rows = _pgsql.Sql("SELECT * FROM table1")
+    .AsAnonymous(new { name = default(string), age = default(int) })
+    .List(x => (x.name, x.age));
+                
+
 await _orm.Sql("SELECT pg_sleep(10)")
     .Timeout(timeoutSec: 5)
     .ToAsync()

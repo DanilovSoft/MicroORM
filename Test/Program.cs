@@ -52,10 +52,9 @@ namespace Test
 
         private void Main()
         {
-            var rows = _pgsql.Sql("SELECT unnest(array[1,2,3])")
-                //.ToAsync()
-                .AsAnonymous(new { unnest = 0 })
-                .List(x => (x.unnest, 0));
+            List<(string name, int age)> rows = _pgsql.Sql("SELECT * FROM table1")
+                .AsAnonymous(new { name = default(string), age = default(int) })
+                .List(x => (x.name, x.age));
         }
 
         public static string GetSqlQuery()
