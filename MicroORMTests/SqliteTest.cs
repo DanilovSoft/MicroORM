@@ -16,12 +16,12 @@ namespace MicroORMTests
     [TestClass]
     public class SqliteTest
     {
-        private static readonly SqlORM _sql = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
+        private static readonly SqlORM _orm = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
 
         [TestMethod]
         public void TestScalar()
         {
-            string result = _sql.Sql("SELECT @0")
+            string result = _orm.Sql("SELECT @0")
                 .Parameter("OK")
                 .Scalar<string>();
 
@@ -31,17 +31,21 @@ namespace MicroORMTests
         [TestMethod]
         public void TestNamedParameterAndScalar()
         {
-            byte result = _sql.Sql("SELECT @count")
-                .Parameter("count", 128)
-                .Scalar<byte>(); // автоматическая конвертация
+            using (var t = _orm.OpenTransaction())
+            {
+                byte result = t.Sql("SELECT @count")
+                    .Parameter("count", 128)
+                    .Scalar<byte>(); // автоматическая конвертация.
 
-            Assert.AreEqual(128, result);
+                t.Commit();
+                Assert.AreEqual(128, result);
+            }
         }
 
         [TestMethod]
         public void TestSelector()
         {
-            var result = _sql.Sql("SELECT 1 AS col1")
+            var result = _orm.Sql("SELECT 1 AS col1")
                 .Single(x => new
                 {
                     col1 = Convert.ChangeType(x["col1"], typeof(int))
@@ -53,7 +57,7 @@ namespace MicroORMTests
         [TestMethod]
         public void TestParametersFromObject()
         {
-            var result = _sql.Sql("SELECT @name AS name, @count AS count")
+            var result = _orm.Sql("SELECT @name AS name, @count AS count")
                 .ParametersFromObject(new { count = 128, name = "Alfred" })
                 .SingleOrDefault<UserModel>();
 
@@ -63,7 +67,7 @@ namespace MicroORMTests
         [TestMethod]
         public void TestAnonimouseType()
         {
-            var result = _sql.Sql("SELECT @name AS name, @age AS age")
+            var result = _orm.Sql("SELECT @name AS name, @age AS age")
                 .Parameter("name", "Alfred")
                 .Parameter("age", 30)
                 .Single(new { name = "", age = 0 });
@@ -75,7 +79,7 @@ namespace MicroORMTests
         [TestMethod]
         public void TestAnonimouseRows()
         {
-            var result = _sql.Sql("SELECT @name AS qwer, @age AS a")
+            var result = _orm.Sql("SELECT @name AS qwer, @age AS a")
                 .Parameter("name", "Alfred")
                 .Parameter("age", 30)
                 .List(new { name = 0, age = "" });

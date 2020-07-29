@@ -19,7 +19,7 @@ namespace UnitTests
         [TestMethod]
         public void ScalarArray()
         {
-            var result = _sql.Sql("SELECT unnest(array['1', '2', '3'])")
+            decimal[] result = _sql.Sql("SELECT unnest(array['1', '2', '3'])")
                 .ScalarArray<decimal>(); // + конвертация
 
             Assert.AreEqual(1, result[0]);
@@ -30,7 +30,7 @@ namespace UnitTests
         [TestMethod]
         public void TestConverter()
         {
-            var result = _sql.Sql("SELECT point(@0, @1) AS location")
+            UserModel result = _sql.Sql("SELECT point(@0, @1) AS location")
                 .Parameters(1, 2)
                 .Single<UserModel>();
 
@@ -44,7 +44,7 @@ namespace UnitTests
             try
             {
                 await _sql.Sql("SELECT pg_sleep(10)")
-                    .Timeout(5) // таймаут запроса
+                    .Timeout(timeoutSec: 5) // таймаут запроса
                     .ToAsync()
                     .Execute();
             }

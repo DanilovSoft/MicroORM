@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Common;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -49,8 +50,15 @@ namespace Test
 
         private void Main()
         {
-            var row = _sql.Sql("SELECT 'http://test.ru' AS url, 'Grace' AS name")
+            var row = _sql.Sql("SELECT * FROM table1 LIMIT 1")
                 .Single(new { url = "" });
+
+            var row2 = _sql.Sql("SELECT * FROM table1 LIMIT 2")
+                .Array(new { url = "" }).Single();
+
+
+            _sql.Sql("SELECT * FROM table1 LIMIT 2")
+                .Array(new { url = "" }).First();
         }
 
         public static string GetSqlQuery()
