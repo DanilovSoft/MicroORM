@@ -103,11 +103,10 @@ namespace MicroORMTests
 
     class LocationConverter : TypeConverter
     {
-        //public object Convert(object value, Type destinationType)
-        //{
-        //    var point = (NpgsqlTypes.NpgsqlPoint)value;
-        //    return new Point((int)point.X, (int)point.Y);
-        //}
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+        {
+            return true;
+        }
 
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
         {

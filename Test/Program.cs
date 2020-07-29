@@ -24,7 +24,9 @@ namespace Test
 {
     class Program
     {
-        private readonly SqlORM _sql = new SqlORM("Data Source = db.sqlite", System.Data.SQLite.SQLiteFactory.Instance);
+        private readonly SqlORM _sqlite = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
+        private static readonly SqlORM _pgsql = new SqlORM("Server=10.0.0.101; Port=5432; User Id=test; Password=test; Database=hh; " +
+            "Pooling=true; MinPoolSize=1; MaxPoolSize=100", Npgsql.NpgsqlFactory.Instance);
 
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
@@ -50,15 +52,10 @@ namespace Test
 
         private void Main()
         {
-            var row = _sql.Sql("SELECT * FROM table1 LIMIT 1")
-                .Single(new { url = "" });
-
-            var row2 = _sql.Sql("SELECT * FROM table1 LIMIT 2")
-                .Array(new { url = "" }).Single();
-
-
-            _sql.Sql("SELECT * FROM table1 LIMIT 2")
-                .Array(new { url = "" }).First();
+            var rows = _pgsql.Sql("SELECT unnest(array[1,2,3])")
+                //.ToAsync()
+                .AsAnonymous(new { unnest = 0 })
+                .List(x => (x.unnest, 0));
         }
 
         public static string GetSqlQuery()

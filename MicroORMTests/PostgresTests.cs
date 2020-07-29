@@ -116,21 +116,5 @@ namespace UnitTests
             List<RowModel> list = _sql.Sql(query)
                 .List<RowModel>();
         }
-
-        [TestMethod]
-        public async Task TestTimeout()
-        {
-            try
-            {
-                await _sql.Sql("SELECT pg_sleep(10)")
-                    .Timeout(5) // таймаут запроса
-                    .ToAsync()
-                    .Execute();
-            }
-            catch (SqlQueryTimeoutException ex)
-            {
-
-            }
-        }
     }
 }

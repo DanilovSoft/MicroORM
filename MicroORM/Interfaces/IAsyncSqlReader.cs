@@ -92,5 +92,7 @@ namespace DanilovSoft.MicroORM
         Task<TCollection> Collection<TItem, TCollection>(Action<TItem, DbDataReader> selector) where TCollection : ICollection<TItem>, new() where TItem : class;
         /// <exception cref="OperationCanceledException"/>
         Task<TCollection> Collection<TItem, TCollection>(Action<TItem, DbDataReader> selector, CancellationToken cancellationToken) where TCollection : ICollection<TItem>, new() where TItem : class;
+
+        IAsyncAnonymousReader<T> AsAnonymous<T>(T anonymousType) where T : class;
     }
 }
