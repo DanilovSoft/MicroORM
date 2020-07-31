@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -101,6 +103,23 @@ namespace DanilovSoft.MicroORM
         public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
         {
             return new HashSet<T>(source);
+        }
+    }
+}
+
+namespace System.Threading.Tasks
+{
+    internal static class ExtensionMethods
+    {
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static bool IsCompletedSuccessfully(this Task task)
+        {
+#if !NETSTANDARD2_0
+            return task.IsCompletedSuccessfully;
+#else
+            return task.Status == TaskStatus.RanToCompletion;
+#endif
         }
     }
 }

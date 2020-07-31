@@ -23,10 +23,10 @@ namespace DanilovSoft.MicroORM
             return connection;
         }
 
-        internal override Task<DbConnection> GetConnectionAsync(CancellationToken cancellationToken)
+        internal override ValueTask<DbConnection> GetOpenConnectionAsync(CancellationToken cancellationToken)
         {
             DbConnection connection = _transaction.Connection;
-            return Task.FromResult(connection);
+            return new ValueTask<DbConnection>(result: connection);
         }
 
         internal override ICommandReader GetCommandReader()
@@ -36,7 +36,7 @@ namespace DanilovSoft.MicroORM
             return commandReader;
         }
 
-        internal async override Task<ICommandReader> GetCommandReaderAsync(CancellationToken cancellationToken)
+        internal async override ValueTask<ICommandReader> GetCommandReaderAsync(CancellationToken cancellationToken)
         {
             DbCommand command = await GetCommandAsync(cancellationToken).ConfigureAwait(false);
             var commandReader = new CommandReader(command);
@@ -66,11 +66,25 @@ namespace DanilovSoft.MicroORM
             return command;
         }
 
-        protected override async Task<DbCommand> GetCommandAsync(CancellationToken cancellationToken)
+        protected override ValueTask<DbCommand> GetCommandAsync(CancellationToken cancellationToken)
         {
-            DbCommand command = await base.GetCommandAsync(cancellationToken).ConfigureAwait(false);
-            command.Transaction = _transaction;
-            return command;
+            ValueTask<DbCommand> task = base.GetCommandAsync(cancellationToken);
+            if (task.IsCompletedSuccessfully)
+            {
+                DbCommand command = task.Result;
+                command.Transaction = _transaction;
+                return new ValueTask<DbCommand>(result: command);
+            }
+            else
+            {
+                return WaitAsync(task, _transaction);
+                static async ValueTask<DbCommand> WaitAsync(ValueTask<DbCommand> task, DbTransaction transaction)
+                {
+                    DbCommand command = await task.ConfigureAwait(false);
+                    command.Transaction = transaction;
+                    return command;
+                }
+            }
         }
     }
 }

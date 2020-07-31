@@ -22,7 +22,7 @@ namespace DanilovSoft.MicroORM
     public abstract class SqlReader : ISqlReader, IAsyncSqlReader
     {
         internal abstract ICommandReader GetCommandReader();
-        internal abstract Task<ICommandReader> GetCommandReaderAsync(CancellationToken cancellationToken);
+        internal abstract ValueTask<ICommandReader> GetCommandReaderAsync(CancellationToken cancellationToken);
         protected int QueryTimeoutSec { get; set; } = SqlORM.DefaultQueryTimeoutSec;
         private readonly int _closeConnectionPenaltySec = SqlORM.CloseConnectionPenaltySec;
         private IAsyncSqlReader AsAsync => this;
@@ -34,10 +34,12 @@ namespace DanilovSoft.MicroORM
 
         public IAsyncSqlReader ToAsync() => this;
 
-        private void NullIfDBNull(ref object value)
+        private static void NullIfDBNull(ref object? value)
         {
             if (value == DBNull.Value)
+            {
                 value = null;
+            }
         }
 
         public int Execute()
@@ -53,17 +55,17 @@ namespace DanilovSoft.MicroORM
         private DataTable Table(DbDataReader reader)
         {
             var table = new DataTable("Table1");
+            DataTable? toDispose = table;
             try
             {
                 table.LoadData(reader);
+                toDispose = null;
+                return table;
             }
-            catch
+            finally
             {
-                table.Dispose();
-                throw;
+                toDispose?.Dispose();
             }
-            
-            return table;
         }
 
 
@@ -241,7 +243,7 @@ namespace DanilovSoft.MicroORM
                 return SingleOrDefault(reader, sel);
             }
         }
-        private object SingleOrDefault<T>(DbDataReader reader)
+        private object? SingleOrDefault<T>(DbDataReader reader)
         {
             if (reader.Read())
             {
@@ -566,18 +568,41 @@ namespace DanilovSoft.MicroORM
         {
             return WrapperAsync(TableAsync, cancellationToken);
         }
-        private async Task<DataTable> TableAsync(DbDataReader reader, CancellationToken cancellationToken)
+        private Task<DataTable> TableAsync(DbDataReader reader, CancellationToken cancellationToken)
         {
             var table = new DataTable("Table1");
+            DataTable? toDispose = table;
             try
             {
-                await table.LoadAsync(reader, cancellationToken).ConfigureAwait(false);
-                return table;
+                Task task = table.LoadAsync(reader, cancellationToken);
+                toDispose = null;
+                if (task.IsCompletedSuccessfully())
+                {
+                    return Task.FromResult(table);
+                }
+                else
+                {
+                    return WaitAsync(task, table);
+
+                    static async Task<DataTable> WaitAsync(Task task, DataTable table)
+                    {
+                        DataTable? toDispose = table;
+                        try
+                        {
+                            await task.ConfigureAwait(false);
+                            toDispose = null;
+                            return table;
+                        }
+                        finally
+                        {
+                            toDispose?.Dispose();
+                        }
+                    }
+                }
             }
-            catch
+            finally
             {
-                table.Dispose();
-                throw;
+                toDispose?.Dispose();
             }
         } 
 
@@ -866,19 +891,35 @@ namespace DanilovSoft.MicroORM
         {
             List<T> list = await AsAsync.List<T>(cancellationToken).ConfigureAwait(false);
 
-            if (list.Count > 0)
-                return list.ToArray();
-
-            return SystemArray.Empty<T>();
+            return list.Count > 0 
+                ? list.ToArray() 
+                : SystemArray.Empty<T>();
         }
-        async Task<T[]> IAsyncSqlReader.Array<T>(T anonymousType, CancellationToken cancellationToken)
+        Task<T[]> IAsyncSqlReader.Array<T>(T anonymousType, CancellationToken cancellationToken)
         {
-            List<T> list = await AsAsync.List(anonymousType, cancellationToken).ConfigureAwait(false);
+            Task<List<T>> task = AsAsync.List(anonymousType, cancellationToken);
+            if (task.IsCompletedSuccessfully())
+            {
+                List<T> list = task.Result;
+                var array = ToArray(list);
+                return Task.FromResult(array);
+            }
+            else
+            {
+                return WaitAsync(task);
+                static async Task<T[]> WaitAsync(Task<List<T>> task)
+                {
+                    List<T> list = await task.ConfigureAwait(false);
+                    return ToArray(list);
+                }
+            }
 
-            if (list.Count > 0)
-                return list.ToArray();
-
-            return SystemArray.Empty<T>();
+            static T[] ToArray(List<T> list)
+            {
+                return list.Count > 0
+                    ? list.ToArray()
+                    : SystemArray.Empty<T>();
+            }
         }
         async Task<T[]> IAsyncSqlReader.Array<T>(Func<DbDataReader, T> selector)
         {
@@ -942,17 +983,56 @@ namespace DanilovSoft.MicroORM
                 return SingleAsync(reader, sel, token);
             }
         }
-        private async Task<T> SingleAsync<T>(DbDataReader reader, CancellationToken cancellationToken)
+        private Task<T> SingleAsync<T>(DbDataReader reader, CancellationToken cancellationToken)
         {
-            await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-            var objectMapper = new ObjectMapper<T>(reader);
-            return (T)objectMapper.ReadObject();
+            Task<bool> task = reader.ReadAsync(cancellationToken);
+            if (task.IsCompletedSuccessfully())
+            {
+                var objectMapper = new ObjectMapper<T>(reader);
+                T value = Map(reader);
+                return Task.FromResult(value);
+            }
+            else
+            {
+                return WaitAsync(task, reader);
+
+                static async Task<T> WaitAsync(Task<bool> task, DbDataReader reader)
+                {
+                    await task.ConfigureAwait(false);
+                    return Map(reader);
+                }
+            }
+
+            static T Map(DbDataReader reader)
+            {
+                var objectMapper = new ObjectMapper<T>(reader);
+                return (T)objectMapper.ReadObject();
+            }
         }
-        private async Task<T> AnonymousSingleAsync<T>(DbDataReader reader, CancellationToken cancellationToken) where T : class
+        private Task<T> AnonymousSingleAsync<T>(DbDataReader reader, CancellationToken cancellationToken) where T : class
         {
-            await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-            var toObject = new AnonymousObjectMapper<T>(reader);
-            return toObject.ReadObject();
+            Task<bool> task = reader.ReadAsync(cancellationToken);
+
+            if (task.IsCompletedSuccessfully())
+            {
+                return Task.FromResult(Map(reader));
+            }
+            else
+            {
+                return WaitAsync(task, reader);
+
+                static async Task<T> WaitAsync(Task<bool> task, DbDataReader reader)
+                {
+                    await task.ConfigureAwait(false);
+                    return Map(reader);
+                }
+            }
+
+            static T Map(DbDataReader reader)
+            {
+                var toObject = new AnonymousObjectMapper<T>(reader);
+                return toObject.ReadObject();
+            }
         }
         private async Task<T> SingleAsync<T>(DbDataReader reader, Action<T, DbDataReader> selector, CancellationToken cancellationToken) where T : class
         {
@@ -1036,17 +1116,37 @@ namespace DanilovSoft.MicroORM
                 return default;
             }
         }
-        private async Task<T> AnonymousSingleOrDefaultAsync<T>(DbDataReader reader, CancellationToken cancellationToken) where T : class
+        private Task<T> AnonymousSingleOrDefaultAsync<T>(DbDataReader reader, CancellationToken cancellationToken) where T : class
         {
-            if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            Task<bool> task = reader.ReadAsync(cancellationToken);
+            if (task.IsCompletedSuccessfully())
             {
-                var toObject = new AnonymousObjectMapper<T>(reader);
-                T obj = toObject.ReadObject();
-                return obj;
+                bool hasRows = task.Result;
+                var value = Map(hasRows, reader);
+                return Task.FromResult(value);
             }
             else
             {
-                return default;
+                return WaitAsync(task, reader);
+
+                static async Task<T> WaitAsync(Task<bool> task, DbDataReader reader)
+                {
+                    bool hasRows = await task.ConfigureAwait(false);
+                    return Map(hasRows, reader);
+                }
+            }
+
+            static T Map(bool hasRows, DbDataReader reader)
+            {
+                if (hasRows)
+                {
+                    var toObject = new AnonymousObjectMapper<T>(reader);
+                    return toObject.ReadObject();
+                }
+                else
+                {
+                    return default;
+                }
             }
         }
         private async Task<T> SingleOrDefaultAsync<T>(DbDataReader reader, Action<T, DbDataReader> selector, CancellationToken cancellationToken)
@@ -1073,11 +1173,12 @@ namespace DanilovSoft.MicroORM
         private Task<T> WrapperAsync<T>(Func<DbDataReader, CancellationToken, Task<T>> selector, CancellationToken cancellationToken)
         {
             return WrapperAsync(Wrap, selector, cancellationToken);
+        }
 
-            static Task<T> Wrap(DbDataReader reader, Func<DbDataReader, CancellationToken, Task<T>> sel, CancellationToken cancellationToken)
-            {
-                return sel(reader, cancellationToken);
-            }
+        [DebuggerStepThrough]
+        private static Task<T> Wrap<T>(DbDataReader reader, Func<DbDataReader, CancellationToken, Task<T>> sel, CancellationToken cancellationToken)
+        {
+            return sel(reader, cancellationToken);
         }
 
         private async Task<T> WrapperAsync<T, TArg>(Func<DbDataReader, TArg, CancellationToken, Task<T>> selector, TArg state, CancellationToken cancellationToken)
@@ -1103,8 +1204,10 @@ namespace DanilovSoft.MicroORM
                                 // Инициализация запроса и ожидание готовности данных.
                                 DbDataReader reader = await comReader.GetReaderAsync(linked.Token).ConfigureAwait(false);
 
+                                Task<T> selectorTask = selector(reader, state, linked.Token);
+
                                 // Получение данных сервера.
-                                return await selector(reader, state, linked.Token).ConfigureAwait(false);
+                                return await selectorTask.ConfigureAwait(false);
                             }
                         }
                     }

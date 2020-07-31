@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -13,36 +14,58 @@ namespace DanilovSoft.MicroORM
     /// </summary>
     public class MultiSqlReader : SqlReader, IDisposable
     {
-        private readonly DbCommand _command;
-        private DbDataReader _reader;
-        private MultiResultCommandReader _commandReader;
+        private readonly DbCommand _dbCommand;
+        private DbDataReader? _reader;
+        private MultiResultCommandReader? _commandReader;
 
         // ctor.
         internal MultiSqlReader(DbCommand command)
         {
-            _command = command;
+            _dbCommand = command;
         }
 
         internal void ExecuteReader()
         {
-            _reader = _command.ExecuteReader();
-            _commandReader = new MultiResultCommandReader(_reader, _command);
+            _reader = _dbCommand.ExecuteReader();
+            _commandReader = new MultiResultCommandReader(_reader, _dbCommand);
         }
 
-        internal async Task ExecuteReaderAsync(CancellationToken cancellationToken)
+        internal ValueTask ExecuteReaderAsync(CancellationToken cancellationToken)
         {
-            _reader = await _command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-            _commandReader = new MultiResultCommandReader(_reader, _command);
+            Task<DbDataReader> task = _dbCommand.ExecuteReaderAsync(cancellationToken);
+            if (task.IsCompletedSuccessfully())
+            {
+                var reader = task.Result;
+                SetReader(reader);
+                return default;
+            }
+            else
+            {
+                return WaitAsync(task);
+                async ValueTask WaitAsync(Task<DbDataReader> task)
+                {
+                    var reader = await task.ConfigureAwait(false);
+                    SetReader(reader);
+                }
+            }
+
+            void SetReader(DbDataReader reader)
+            {
+                _reader = reader;
+                _commandReader = new MultiResultCommandReader(reader, _dbCommand);
+            }
         }
 
         internal override ICommandReader GetCommandReader()
         {
+            Debug.Assert(_commandReader != null);
             return _commandReader;
         }
 
-        internal override Task<ICommandReader> GetCommandReaderAsync(CancellationToken cancellationToken)
+        internal override ValueTask<ICommandReader> GetCommandReaderAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult<ICommandReader>(_commandReader);
+            Debug.Assert(_commandReader != null);
+            return new ValueTask<ICommandReader>(result: _commandReader);
         }
 
         public void Dispose()
@@ -56,7 +79,7 @@ namespace DanilovSoft.MicroORM
             if (disposing)
             {
                 _reader?.Dispose();
-                _command.Dispose();
+                _dbCommand.Dispose();
             }
         }
     }

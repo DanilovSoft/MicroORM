@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -12,14 +13,14 @@ namespace DanilovSoft.MicroORM
     public class SqlQuery : SqlReader
     {
         private readonly Dictionary<string, object> _parameters;
-        private readonly DbProviderFactory _factory;
+        private readonly DbProviderFactory _dbProvider;
         private readonly string _connectionString;
         private readonly string _commandText;
         private int _anonimParamCount = 0;
 
         internal SqlQuery(string commandText, string connectionString, DbProviderFactory factory)
         {
-            _factory = factory;
+            _dbProvider = factory;
             _connectionString = connectionString;
             _commandText = commandText;
             _parameters = new Dictionary<string, object>();
@@ -27,18 +28,57 @@ namespace DanilovSoft.MicroORM
 
         internal virtual DbConnection GetConnection()
         {
-            DbConnection connection = _factory.CreateConnection();
+            DbConnection connection = _dbProvider.CreateConnection();
+            DbConnection? toDispose = connection;
             connection.ConnectionString = _connectionString;
-            connection.Open();
-            return connection;
+            try
+            {
+                connection.Open();
+                toDispose = null;
+                return connection;
+            }
+            finally
+            {
+                toDispose?.Dispose();
+            }
         }
 
-        internal virtual async Task<DbConnection> GetConnectionAsync(CancellationToken cancellationToken)
+        internal virtual ValueTask<DbConnection> GetOpenConnectionAsync(CancellationToken cancellationToken)
         {
-            DbConnection connection = _factory.CreateConnection();
+            DbConnection connection = _dbProvider.CreateConnection();
+            DbConnection? toDispose = connection;
             connection.ConnectionString = _connectionString;
-            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-            return connection;
+            try
+            {
+                Task task = connection.OpenAsync(cancellationToken);
+                toDispose = null;
+                if (task.IsCompletedSuccessfully())
+                {
+                    return new ValueTask<DbConnection>(result: connection);
+                }
+                else
+                {
+                    return WaitAsync(task, connection);
+                    static async ValueTask<DbConnection> WaitAsync(Task task, DbConnection connection)
+                    {
+                        DbConnection? toDispose = connection;
+                        try
+                        {
+                            await task.ConfigureAwait(false);
+                            toDispose = null;
+                            return connection;
+                        }
+                        finally
+                        {
+                            toDispose?.Dispose();
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                toDispose?.Dispose();
+            }
         }
 
         protected virtual DbCommand GetCommand()
@@ -51,17 +91,36 @@ namespace DanilovSoft.MicroORM
             return command;
         }
 
-        protected virtual async Task<DbCommand> GetCommandAsync(CancellationToken cancellationToken)
+        protected virtual ValueTask<DbCommand> GetCommandAsync(CancellationToken cancellationToken)
         {
-            DbConnection connection = await GetConnectionAsync(cancellationToken).ConfigureAwait(false);
-            DbCommand command = connection.CreateCommand();
-            AddParameters(command);
-            command.CommandText = _commandText;
+            ValueTask<DbConnection> task = GetOpenConnectionAsync(cancellationToken);
+            if (task.IsCompletedSuccessfully)
+            {
+                DbConnection connection = task.Result;
+                DbCommand command = CreateCommand(connection);
+                return new ValueTask<DbCommand>(result: command);
+            }
+            else
+            {
+                return WaitAsync(task);
+                async ValueTask<DbCommand> WaitAsync(ValueTask<DbConnection> task)
+                {
+                    DbConnection connection = await task.ConfigureAwait(false);
+                    return CreateCommand(connection);
+                }
+            }
 
-            // The CommandTimeout property will be ignored during asynchronous method calls such as BeginExecuteReader.
-            //command.CommandTimeout = base.QueryTimeoutSec;
+            DbCommand CreateCommand(DbConnection connection)
+            {
+                DbCommand command = connection.CreateCommand();
+                AddParameters(command);
+                command.CommandText = _commandText;
 
-            return command;
+                // The CommandTimeout property will be ignored during asynchronous method calls such as BeginExecuteReader.
+                //command.CommandTimeout = base.QueryTimeoutSec;
+
+                return command;
+            }
         }
 
         public SqlQuery Timeout(int timeoutSec)
@@ -98,18 +157,32 @@ namespace DanilovSoft.MicroORM
             return comReader;
         }
 
-        internal override async Task<ICommandReader> GetCommandReaderAsync(CancellationToken cancellationToken)
+        internal override ValueTask<ICommandReader> GetCommandReaderAsync(CancellationToken cancellationToken)
         {
-            DbCommand command = await GetCommandAsync(cancellationToken).ConfigureAwait(false);
-            var comReader = new CommandReaderCloseConnection(command);
-            return comReader;
+            ValueTask<DbCommand> task = GetCommandAsync(cancellationToken);
+            if (task.IsCompletedSuccessfully)
+            {
+                var command = task.Result;
+                var comReader = new CommandReaderCloseConnection(command);
+                return new ValueTask<ICommandReader>(result: comReader);
+            }
+            else
+            {
+                return WaitAsync(task);
+                static async ValueTask<ICommandReader> WaitAsync(ValueTask<DbCommand> task)
+                {
+                    DbCommand command = await task.ConfigureAwait(false);
+                    var comReader = new CommandReaderCloseConnection(command);
+                    return comReader;
+                }
+            }
         }
 
         #region Параметры
 
         private void AddParameters(DbCommand command)
         {
-            foreach (var keyValue in _parameters)
+            foreach (KeyValuePair<string, object> keyValue in _parameters)
             {
                 DbParameter p = command.CreateParameter();
                 p.ParameterName = keyValue.Key;
@@ -122,7 +195,7 @@ namespace DanilovSoft.MicroORM
         {
             for (int i = 0; i < parameters.Length; i++)
             {
-                Parameter(_anonimParamCount.ToString(), parameters[i]);
+                Parameter(_anonimParamCount.ToString(CultureInfo.InvariantCulture), parameters[i]);
                 _anonimParamCount++;
             }
 
@@ -131,7 +204,7 @@ namespace DanilovSoft.MicroORM
 
         public SqlQuery Parameter(object value)
         {
-            Parameter(_anonimParamCount.ToString(), value);
+            Parameter(_anonimParamCount.ToString(CultureInfo.InvariantCulture), value);
             _anonimParamCount++;
             return this;
         }
@@ -144,23 +217,31 @@ namespace DanilovSoft.MicroORM
 
         public SqlQuery Parameters(IEnumerable<KeyValuePair<string, object>> parameters)
         {
-            foreach (var p in parameters)
+            if (parameters != null)
             {
-                _parameters.Add(p.Key, p.Value);
+                foreach (var p in parameters)
+                {
+                    _parameters.Add(p.Key, p.Value);
+                }
+                return this;
             }
-
-            return this;
+            else
+                throw new ArgumentNullException(nameof(parameters));
         }
 
         public SqlQuery ParametersFromObject(object values)
         {
-            RouteValueDictionary dict = new RouteValueDictionary(values);
-            foreach (var keyValue in dict)
+            if (values != null)
             {
-                Parameter(keyValue.Key, keyValue.Value);
+                var dict = new RouteValueDictionary(values);
+                foreach (var keyValue in dict)
+                {
+                    Parameter(keyValue.Key, keyValue.Value);
+                }
+                return this;
             }
-
-            return this;
+            else
+                throw new ArgumentNullException(nameof(values));
         }
         #endregion
     }

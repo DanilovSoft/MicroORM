@@ -252,11 +252,11 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             else
             {
                 ConstructorInfo constructorInfo =
-                    type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null,Type.EmptyTypes, null);
+                    type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
 
                 if (constructorInfo == null)
                 {
-                    throw new ArgumentException($"Could not get constructor for {type}.");
+                    throw new MicroOrmException($"Could not find constructor for type {type}.");
                 }
 
                 generator.Emit(OpCodes.Newobj, constructorInfo);

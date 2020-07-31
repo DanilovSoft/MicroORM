@@ -11,7 +11,7 @@ namespace DanilovSoft.MicroORM
 {
     internal class CommandReader : ICommandReader
     {
-        private DbDataReader _reader;
+        private DbDataReader? _reader;
         public bool SkipNextResult { get; set; }
         public DbConnection Connection { get; private set; }
         public DbCommand Command { get; private set; }
@@ -31,18 +31,32 @@ namespace DanilovSoft.MicroORM
             return _reader;
         }
 
-        public Task<DbDataReader> GetReaderAsync(CancellationToken cancellationToken)
+        public ValueTask<DbDataReader> GetReaderAsync(CancellationToken cancellationToken)
         {
             if (_reader != null)
-                return Task.FromResult(_reader);
-
-            return InnerGetReaderAsync(cancellationToken);
+                return new ValueTask<DbDataReader>(result: _reader);
+            else
+                return InnerGetReaderAsync(cancellationToken);
         }
 
-        private async Task<DbDataReader> InnerGetReaderAsync(CancellationToken cancellationToken)
+        private ValueTask<DbDataReader> InnerGetReaderAsync(CancellationToken cancellationToken)
         {
-            _reader = await Command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-            return _reader;
+            Task<DbDataReader> task = Command.ExecuteReaderAsync(cancellationToken);
+            if (task.IsCompletedSuccessfully())
+            {
+                _reader = task.Result;
+                return new ValueTask<DbDataReader>(result: _reader);
+            }
+            else
+            {
+                return WaitAsync(task);
+                async ValueTask<DbDataReader> WaitAsync(Task<DbDataReader> task)
+                {
+                    DbDataReader reader = await task.ConfigureAwait(false);
+                    _reader = reader;
+                    return reader;
+                }
+            }
         }
 
         public virtual void Dispose()

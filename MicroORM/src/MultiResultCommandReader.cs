@@ -42,23 +42,41 @@ namespace DanilovSoft.MicroORM
             return _reader;
         }
 
-        public async Task<DbDataReader> GetReaderAsync(CancellationToken cancellationToken)
+        public ValueTask<DbDataReader> GetReaderAsync(CancellationToken cancellationToken)
         {
             if (!_firstTime)
             {
-                bool hasNextResult = await _reader.NextResultAsync(cancellationToken).ConfigureAwait(false);
-                if (hasNextResult)
+                Task<bool> task = _reader.NextResultAsync(cancellationToken);
+                if (task.IsCompletedSuccessfully())
                 {
-                    return _reader;
+                    bool hasNextResult = task.Result;
+                    if (hasNextResult)
+                    {
+                        return new ValueTask<DbDataReader>(result: _reader);
+                    }
+                    else
+                        return new ValueTask<DbDataReader>(Task.FromException<DbDataReader>(new MicroORMException(NoNextResultError)));
                 }
                 else
-                    throw new MicroORMException(NoNextResultError);
+                {
+                    return WaitAsync(task, _reader);
+                    static async ValueTask<DbDataReader> WaitAsync(Task<bool> task, DbDataReader reader)
+                    {
+                        bool hasNextResult = await task.ConfigureAwait(false);
+                        if (hasNextResult)
+                        {
+                            return reader;
+                        }
+                        else
+                            throw new MicroORMException(NoNextResultError);
+                    }
+                }
             }
             else
             {
                 _firstTime = false;
+                return new ValueTask<DbDataReader>(result: _reader);
             }
-            return _reader;
         }
 
         public void Dispose()

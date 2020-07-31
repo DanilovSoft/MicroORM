@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -51,7 +52,7 @@ namespace DanilovSoft.MicroORM
             {
                 if (!conversionType.IsEnum)
                 {
-                    return Convert.ChangeType(value, conversionType);
+                    return Convert.ChangeType(value, conversionType, CultureInfo.InvariantCulture);
                 }
                 else
                 {
