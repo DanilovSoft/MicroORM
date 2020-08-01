@@ -51,12 +51,61 @@ namespace DanilovSoft.MicroORM
             return sqlReader;
         }
 
-        public override async Task<MultiSqlReader> MultiResultAsync(CancellationToken cancellationToken)
+        public override ValueTask<MultiSqlReader> MultiResultAsync(CancellationToken cancellationToken)
         {
-            DbCommand command = await GetCommandAsync(cancellationToken).ConfigureAwait(false);
-            MultiSqlReader sqlReader = new MultiSqlReader(command);
-            await sqlReader.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-            return sqlReader;
+            ValueTask<DbCommand> task = GetCommandAsync(cancellationToken);
+            if (task.IsCompletedSuccessfully)
+            {
+                DbCommand command = task.Result;
+                return CreateReaderAsync(command, cancellationToken);
+            }
+            else
+            {
+                return WaitAsync(task, cancellationToken);
+                static async ValueTask<MultiSqlReader> WaitAsync(ValueTask<DbCommand> task, CancellationToken cancellationToken)
+                {
+                    DbCommand command = await task.ConfigureAwait(false);
+                    return await CreateReaderAsync(command, cancellationToken).ConfigureAwait(false);
+                }
+            }
+        }
+
+        private static ValueTask<MultiSqlReader> CreateReaderAsync(DbCommand command, CancellationToken cancellationToken)
+        {
+            var sqlReader = new MultiSqlReader(command);
+            MultiSqlReader? toDispose = sqlReader;
+            ValueTask task;
+            try
+            {
+                task = sqlReader.ExecuteReaderAsync(cancellationToken);
+                toDispose = null;
+            }
+            finally
+            {
+                toDispose?.Dispose();
+            }
+            if (task.IsCompletedSuccessfully)
+            {
+                return new ValueTask<MultiSqlReader>(result: sqlReader);
+            }
+            else
+            {
+                return WaitAsync(task, sqlReader);
+                static async ValueTask<MultiSqlReader> WaitAsync(ValueTask task, MultiSqlReader sqlReader)
+                {
+                    MultiSqlReader? toDispose = sqlReader;
+                    try
+                    {
+                        await task.ConfigureAwait(false);
+                        toDispose = null;
+                        return sqlReader;
+                    }
+                    finally
+                    {
+                        toDispose?.Dispose();
+                    }
+                }
+            }
         }
 
         protected override DbCommand GetCommand()

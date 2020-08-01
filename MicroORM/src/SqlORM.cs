@@ -47,33 +47,61 @@ namespace DanilovSoft.MicroORM
         public SqlTransaction OpenTransaction()
         {
             var tsql = new SqlTransaction(ConnectionString, _factory);
+            SqlTransaction? toDispose = tsql;
             try
             {
                 tsql.OpenTransaction();
-                return GlobalVars.SetNull(ref tsql);
+                toDispose = null;
+                return tsql;
             }
             finally
             {
-                tsql?.Dispose();
+                toDispose?.Dispose();
             }
         }
 
-        public Task<SqlTransaction> OpenTransactionAsync()
+        public ValueTask<SqlTransaction> OpenTransactionAsync()
         {
             return OpenTransactionAsync(CancellationToken.None);
         }
 
-        public async Task<SqlTransaction> OpenTransactionAsync(CancellationToken cancellationToken)
+        public ValueTask<SqlTransaction> OpenTransactionAsync(CancellationToken cancellationToken)
         {
             var tsql = new SqlTransaction(ConnectionString, _factory);
+            SqlTransaction? toDispose = tsql;
+
+            ValueTask task;
             try
             {
-                await tsql.OpenTransactionAsync(cancellationToken).ConfigureAwait(false);
-                return GlobalVars.SetNull(ref tsql);
+                task = tsql.OpenTransactionAsync(cancellationToken);
+                toDispose = null;
             }
             finally
             {
-                tsql?.Dispose();
+                toDispose?.Dispose();
+            }
+
+            if (task.IsCompletedSuccessfully)
+            {
+                return new ValueTask<SqlTransaction>(result: tsql);
+            }
+            else
+            {
+                return WaitAsync(task, tsql);
+                static async ValueTask<SqlTransaction> WaitAsync(ValueTask task, SqlTransaction tsql)
+                {
+                    SqlTransaction? toDispose = tsql;
+                    try
+                    {
+                        await task.ConfigureAwait(false);
+                        toDispose = null;
+                        return tsql;
+                    }
+                    finally
+                    {
+                        toDispose?.Dispose();
+                    }
+                }
             }
         }
 

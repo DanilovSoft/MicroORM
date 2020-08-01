@@ -13,13 +13,13 @@ namespace UnitTests
     [TestClass]
     public class PostgresTests
     {
-        private static readonly SqlORM _sql = new SqlORM("Server=10.0.0.101; Port=5432; User Id=test; Password=test; Database=hh; " +
+        private static readonly SqlORM _orm = new SqlORM("Server=10.0.0.99; Port=5432; User Id=test; Password=test; Database=hh; " +
             "Pooling=true; MinPoolSize=1; MaxPoolSize=100", Npgsql.NpgsqlFactory.Instance);
 
         [TestMethod]
         public void ScalarArray()
         {
-            decimal[] result = _sql.Sql("SELECT unnest(array['1', '2', '3'])")
+            decimal[] result = _orm.Sql("SELECT unnest(array['1', '2', '3'])")
                 .ScalarArray<decimal>(); // + конвертация
 
             Assert.AreEqual(1, result[0]);
@@ -30,7 +30,7 @@ namespace UnitTests
         [TestMethod]
         public void TestConverter()
         {
-            UserModel result = _sql.Sql("SELECT point(@0, @1) AS location")
+            UserModel result = _orm.Sql("SELECT point(@0, @1) AS location")
                 .Parameters(1, 2)
                 .Single<UserModel>();
 
@@ -39,11 +39,11 @@ namespace UnitTests
         }
 
         [TestMethod]
-        public async Task TestTimeout()
+        public async Task TestTimeout5Sec()
         {
             try
             {
-                await _sql.Sql("SELECT pg_sleep(10)")
+                await _orm.Sql("SELECT pg_sleep(10)")
                     .Timeout(timeoutSec: 5) // таймаут запроса
                     .ToAsync()
                     .Execute();
@@ -57,7 +57,7 @@ namespace UnitTests
         [TestMethod]
         public void TestTransactionWithMultiResult()
         {
-            using (var multiResult = _sql.Sql("SELECT @0 AS row1; SELECT unnest(array['1', '2'])")
+            using (var multiResult = _orm.Sql("SELECT @0 AS row1; SELECT unnest(array['1', '2'])")
                 .Parameters(1)
                 .MultiResult())
             {
@@ -72,13 +72,13 @@ namespace UnitTests
         }
 
         [TestMethod]
-        public async Task TestUserCancelled()
+        public async Task TestUserCancelled1Sec()
         {
             var cts = new CancellationTokenSource();
 
             try
             {
-                var task = _sql.Sql("SELECT pg_sleep(10)")
+                var task = _orm.Sql("SELECT pg_sleep(10)")
                     .Timeout(5) // таймаут запроса
                     .ToAsync()
                     .Execute(cts.Token);
@@ -113,7 +113,7 @@ namespace UnitTests
         public void TestList()
         {
             string query = GetSqlQuery();
-            List<RowModel> list = _sql.Sql(query)
+            List<RowModel> list = _orm.Sql(query)
                 .List<RowModel>();
         }
     }

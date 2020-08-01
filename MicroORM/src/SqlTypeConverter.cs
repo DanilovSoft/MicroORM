@@ -9,18 +9,18 @@ namespace DanilovSoft.MicroORM
 {
     internal static class SqlTypeConverter
     {
-        public static T ChangeType<T>(object value, Type columnType, string columnName)
+        public static T ChangeType<T>(object? value, Type columnType, string columnName)
         {
-            object convertedValue = ChangeType(value, typeof(T), columnType, columnName);
-            return (T)convertedValue;
+            object? convertedValue = ChangeType(value, typeof(T), columnType, columnName);
+            return (T)convertedValue!;
         }
 
-        public static object ChangeType(object value, Type propertyType, Type columnType, string columnName)
+        public static object? ChangeType(object? value, Type propertyType, Type columnType, string columnName)
         {
             bool isAssignable = propertyType.IsAssignableFrom(columnType);
             if (!isAssignable || value == null)
             {
-                Type nullableType = Nullable.GetUnderlyingType(propertyType);
+                Type? nullableType = Nullable.GetUnderlyingType(propertyType);
                 if (nullableType == null)
                 {
                     if (!propertyType.IsValueType || value != null)
@@ -32,7 +32,7 @@ namespace DanilovSoft.MicroORM
                     }
                     else
                     {
-                        throw new MicroORMException($"Error converting value {{null}} to type '{propertyType.FullName}'. Column name '{columnName}'.");
+                        throw new MicroOrmException($"Error converting value {{null}} to type '{propertyType.FullName}'. Column name '{columnName}'.");
                     }
                 }
                 else
@@ -46,7 +46,7 @@ namespace DanilovSoft.MicroORM
             return value;
         }
 
-        private static object ChangeType(object value, Type conversionType, string columnName)
+        private static object? ChangeType(object? value, Type conversionType, string columnName)
         {
             try
             {
@@ -68,7 +68,7 @@ namespace DanilovSoft.MicroORM
             }
             catch (Exception ex)
             {
-                throw new MicroORMException($"Error converting value '{value}' to type '{conversionType.FullName}'. Column name '{columnName}'.", ex);
+                throw new MicroOrmException($"Error converting value '{value}' to type '{conversionType.FullName}'. Column name '{columnName}'.", ex);
             }
         }
     }

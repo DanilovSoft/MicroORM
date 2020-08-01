@@ -137,12 +137,12 @@ namespace DanilovSoft.MicroORM
             return sqlReader;
         }
 
-        public Task<MultiSqlReader> MultiResultAsync()
+        public ValueTask<MultiSqlReader> MultiResultAsync()
         {
             return MultiResultAsync(CancellationToken.None);
         }
 
-        public virtual async Task<MultiSqlReader> MultiResultAsync(CancellationToken cancellationToken)
+        public virtual async ValueTask<MultiSqlReader> MultiResultAsync(CancellationToken cancellationToken)
         {
             DbCommand command = await GetCommandAsync(cancellationToken).ConfigureAwait(false);
             var sqlReader = new AutoCloseMultiSqlReader(command);

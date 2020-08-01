@@ -15,11 +15,11 @@ namespace DanilovSoft.MicroORM.ObjectMapping
     [DebuggerDisplay(@"\{Контракт типа {Contract.ContractType.Name}\}")]
     internal sealed class ContractActivator
     {
-        private readonly Func<object> _activator;
-        private readonly Func<object[], object> _anonimousActivator;
-        public readonly OnDeserializingDelegate OnDeserializingHandle;
-        public readonly OnDeserializedDelegate OnDeserializedHandle;
-        public readonly Dictionary<string, ConstructorArgument> ConstructorArguments;
+        private readonly Func<object>? _activator;
+        private readonly Func<object[], object>? _anonimousActivator;
+        public readonly OnDeserializingDelegate? OnDeserializingHandle;
+        public readonly OnDeserializedDelegate? OnDeserializedHandle;
+        public readonly Dictionary<string, ConstructorArgument>? ConstructorArguments;
         public readonly bool IsReadonlyStruct;
         public TypeContract Contract { get; }
 
@@ -58,7 +58,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                     ConstructorInfo[] ctors = type.GetConstructors();
                     Debug.Assert(ctors.Length > 0, "Не найден открытый конструктор");
                     if (ctors.Length == 0)
-                        throw new MicroORMException("Не найден открытый конструктор");
+                        throw new MicroOrmException("Не найден открытый конструктор");
 
                     ConstructorInfo ctor = ctors[0];
                     _anonimousActivator = DynamicReflectionDelegateFactory.Instance.CreateConstructor(type, ctor);

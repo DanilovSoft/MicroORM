@@ -17,15 +17,15 @@ namespace DanilovSoft.MicroORM
         Task<DataTable> Table();
         /// <exception cref="OperationCanceledException"/>
         Task<DataTable> Table(CancellationToken cancellationToken);
-        Task<object> Scalar();
+        Task<object?> Scalar();
         /// <exception cref="OperationCanceledException"/>
-        Task<object> Scalar(CancellationToken cancellationToken);
-        Task<object[]> ScalarArray();
+        Task<object?> Scalar(CancellationToken cancellationToken);
+        Task<object?[]> ScalarArray();
         /// <exception cref="OperationCanceledException"/>
-        Task<object[]> ScalarArray(CancellationToken cancellationToken);
-        Task<List<object>> ScalarList();
+        Task<object?[]> ScalarArray(CancellationToken cancellationToken);
+        Task<List<object?>> ScalarList();
         /// <exception cref="OperationCanceledException"/>
-        Task<List<object>> ScalarList(CancellationToken cancellationToken);
+        Task<List<object?>> ScalarList(CancellationToken cancellationToken);
         Task<T[]> ScalarArray<T>();
         /// <exception cref="OperationCanceledException"/>
         Task<T[]> ScalarArray<T>(CancellationToken cancellationToken);

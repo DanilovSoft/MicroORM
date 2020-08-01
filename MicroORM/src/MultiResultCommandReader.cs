@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -18,7 +19,7 @@ namespace DanilovSoft.MicroORM
 
         internal MultiResultCommandReader(DbDataReader reader, DbCommand command)
         {
-            this._reader = reader;
+            _reader = reader;
             Command = command;
             Connection = command.Connection;
         }
@@ -33,13 +34,28 @@ namespace DanilovSoft.MicroORM
                     return _reader;
                 }
                 else
-                    throw new MicroORMException(NoNextResultError);
+                    throw new MicroOrmException(NoNextResultError);
             }
             else
             {
                 _firstTime = false;
             }
             return _reader;
+        }
+
+        public bool TryGetReader(out DbDataReader? reader)
+        {
+            if (!_firstTime)
+            {
+                reader = default;
+                return false;
+            }
+            else
+            {
+                _firstTime = false;
+                reader = _reader;
+                return true;
+            }
         }
 
         public ValueTask<DbDataReader> GetReaderAsync(CancellationToken cancellationToken)
@@ -55,7 +71,7 @@ namespace DanilovSoft.MicroORM
                         return new ValueTask<DbDataReader>(result: _reader);
                     }
                     else
-                        return new ValueTask<DbDataReader>(Task.FromException<DbDataReader>(new MicroORMException(NoNextResultError)));
+                        return new ValueTask<DbDataReader>(Task.FromException<DbDataReader>(new MicroOrmException(NoNextResultError)));
                 }
                 else
                 {
@@ -68,7 +84,7 @@ namespace DanilovSoft.MicroORM
                             return reader;
                         }
                         else
-                            throw new MicroORMException(NoNextResultError);
+                            throw new MicroOrmException(NoNextResultError);
                     }
                 }
             }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 internal static class GlobalVars
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T SetNull<T>(ref T value) where T : class
+    public static T? SetNull<T>(ref T? value) where T : class
     {
         var refCopy = value;
         value = null;

@@ -14,7 +14,7 @@ namespace DanilovSoft.MicroORM
         private readonly string _connectionString;
         private readonly DbConnection _connection;
         private readonly DbProviderFactory _factory;
-        private DbTransaction _transaction;
+        private DbTransaction? _transaction;
         private bool _disposed;
 
         internal SqlTransaction(string connectionString, DbProviderFactory factory)
@@ -31,26 +31,41 @@ namespace DanilovSoft.MicroORM
             _transaction = _connection.BeginTransaction();
         }
 
-        public async Task OpenTransactionAsync(CancellationToken cancellationToken)
+        public ValueTask OpenTransactionAsync(CancellationToken cancellationToken)
         {
-            await _connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-            _transaction = _connection.BeginTransaction();
+            Task task = _connection.OpenAsync(cancellationToken);
+            if (task.IsCompletedSuccessfully())
+            {
+                _transaction = _connection.BeginTransaction();
+                return default;
+            }
+            else
+            {
+                return WaitAsync(task);
+                async ValueTask WaitAsync(Task task)
+                {
+                    await task.ConfigureAwait(false);
+                    _transaction = _connection.BeginTransaction();
+                }
+            }
         }
 
-        public Task OpenTransactionAsync()
+        public ValueTask OpenTransactionAsync()
         {
             return OpenTransactionAsync(CancellationToken.None);
         }
 
-        /// <exception cref="MicroORMException"/>
+        /// <exception cref="MicroOrmException"/>
         public SqlQuery Sql(string query, params object[] parameters)
         {
-            if (_transaction == null)
-                throw new MicroORMException("Transaction is not open.");
-
-            SqlQuery sql = new SqlQueryTransaction(_transaction, query, _connectionString, _factory);
-            sql.Parameters(parameters);
-            return sql;
+            if (_transaction != null)
+            {
+                SqlQuery sql = new SqlQueryTransaction(_transaction, query, _connectionString, _factory);
+                sql.Parameters(parameters);
+                return sql;
+            }
+            else
+                throw new MicroOrmException("Transaction is not open.");
         }
 
         /// <summary>
@@ -59,7 +74,12 @@ namespace DanilovSoft.MicroORM
         /// </summary>
         public void Commit()
         {
-            _transaction.Commit();
+            if (_transaction != null)
+            {
+                _transaction.Commit();
+            }
+            else
+                throw new MicroOrmException("Transaction is not open");
         }
 
         /// <summary>
@@ -68,7 +88,12 @@ namespace DanilovSoft.MicroORM
         /// </summary>
         public void Rollback()
         {
-            _transaction.Rollback();
+            if (_transaction != null)
+            {
+                _transaction.Rollback();
+            }
+            else
+                throw new MicroOrmException("Transaction is not open");
         }
 
         public void Dispose()

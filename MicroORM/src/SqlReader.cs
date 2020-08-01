@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -32,8 +33,10 @@ namespace DanilovSoft.MicroORM
 
         }
 
+        [DebuggerStepThrough]
         public IAsyncSqlReader ToAsync() => this;
 
+        [DebuggerStepThrough]
         private static void NullIfDBNull(ref object? value)
         {
             if (value == DBNull.Value)
@@ -69,21 +72,21 @@ namespace DanilovSoft.MicroORM
         }
 
 
-        public object Scalar()
+        public object? Scalar()
         {
             return Wrapper(Scalar);
         }
-        private object Scalar(DbDataReader reader)
+        private object? Scalar(DbDataReader reader)
         {
-            bool read = reader.Read();
-            object value = reader.GetValue(0);
+            reader.Read();
+            object? value = reader.GetValue(0);
             NullIfDBNull(ref value);
             return value;
         }
-        private object Scalar<T>(DbDataReader reader)
+        private object? Scalar<T>(DbDataReader reader)
         {
             reader.Read();
-            object value = reader.GetValue(0);
+            object? value = reader.GetValue(0);
             NullIfDBNull(ref value);
             return SqlTypeConverter.ChangeType(value, typeof(T), reader.GetFieldType(0), reader.GetName(0));
         }
@@ -93,15 +96,15 @@ namespace DanilovSoft.MicroORM
         }
 
 
-        public object[] ScalarArray()
+        public object?[] ScalarArray()
         {
-            List<object> list = ScalarList();
-            if (list.Count > 0)
-                return list.ToArray();
-            
-            return SystemArray.Empty<object>();
+            List<object?> list = ScalarList();
+
+            return list.Count > 0 
+                ? list.ToArray() 
+                : SystemArray.Empty<object>();
         }
-        public List<object> ScalarList()
+        public List<object?> ScalarList()
         {
             return Wrapper(ScalarList);
         }
@@ -255,7 +258,7 @@ namespace DanilovSoft.MicroORM
                 return default(T);
             }
         }
-        private T AnonymousSingleOrDefault<T>(DbDataReader reader) where T : class
+        private T? AnonymousSingleOrDefault<T>(DbDataReader reader) where T : class
         {
             if (reader.Read())
             {
@@ -607,20 +610,38 @@ namespace DanilovSoft.MicroORM
         } 
 
 
-        Task<object> IAsyncSqlReader.Scalar()
+        Task<object?> IAsyncSqlReader.Scalar()
         {
             return WrapperAsync(ScalarAsync, CancellationToken.None);
         }
-        Task<object> IAsyncSqlReader.Scalar(CancellationToken cancellationToken)
+        Task<object?> IAsyncSqlReader.Scalar(CancellationToken cancellationToken)
         {
             return WrapperAsync(ScalarAsync, cancellationToken);
         }
-        private async Task<object> ScalarAsync(DbDataReader reader, CancellationToken cancellationToken)
+        private Task<object?> ScalarAsync(DbDataReader reader, CancellationToken cancellationToken)
         {
-            await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-            object value = reader.GetValue(0);
-            NullIfDBNull(ref value);
-            return value;
+            Task<bool> task = reader.ReadAsync(cancellationToken);
+            if (task.IsCompletedSuccessfully())
+            {
+                object? value = Read(reader);
+                return Task.FromResult(value);
+            }
+            else
+            {
+                return WaitAsync(task, reader);
+                static async Task<object?> WaitAsync(Task<bool> task, DbDataReader reader)
+                {
+                    await task.ConfigureAwait(false);
+                    return Read(reader);
+                }
+            }
+
+            static object? Read(DbDataReader reader)
+            {
+                object? value = reader.GetValue(0);
+                NullIfDBNull(ref value);
+                return value;
+            }
         }
         private async Task<T> ScalarAsync<T>(DbDataReader reader, CancellationToken cancellationToken)
         {
@@ -641,15 +662,15 @@ namespace DanilovSoft.MicroORM
             return WrapperAsync(ScalarAsync<T>, cancellationToken);
         }
 
-        async Task<object[]> IAsyncSqlReader.ScalarArray()
+        async Task<object?[]> IAsyncSqlReader.ScalarArray()
         {
-            List<object> list = await AsAsync.ScalarList().ConfigureAwait(false);
-            if (list.Count > 0)
-                return list.ToArray();
-            
-            return SystemArray.Empty<object>();
+            List<object?> list = await AsAsync.ScalarList().ConfigureAwait(false);
+
+            return list.Count > 0 
+                ? list.ToArray() 
+                : SystemArray.Empty<object>();
         }
-        Task<List<object>> IAsyncSqlReader.ScalarList()
+        Task<List<object?>> IAsyncSqlReader.ScalarList()
         {
             return AsAsync.ScalarList(CancellationToken.None);
         }
@@ -666,7 +687,7 @@ namespace DanilovSoft.MicroORM
         {
             return AsAsync.ScalarList<T>(CancellationToken.None);
         }
-        async Task<object[]> IAsyncSqlReader.ScalarArray(CancellationToken cancellationToken)
+        async Task<object?[]> IAsyncSqlReader.ScalarArray(CancellationToken cancellationToken)
         {
             var list = await AsAsync.ScalarList(cancellationToken).ConfigureAwait(false);
 
@@ -680,12 +701,11 @@ namespace DanilovSoft.MicroORM
         {
             var list = await AsAsync.ScalarList<T>(cancellationToken).ConfigureAwait(false);
 
-            if (list.Count > 0)
-                return list.ToArray();
-
-            return SystemArray.Empty<T>();
+            return list.Count > 0 
+                ? list.ToArray() 
+                : SystemArray.Empty<T>();
         }
-        Task<List<object>> IAsyncSqlReader.ScalarList(CancellationToken cancellationToken)
+        Task<List<object?>> IAsyncSqlReader.ScalarList(CancellationToken cancellationToken)
         {
             return WrapperAsync(ScalarListAsync, cancellationToken);
         }
@@ -705,12 +725,12 @@ namespace DanilovSoft.MicroORM
             }
             return list;
         }
-        private async Task<List<object>> ScalarListAsync(DbDataReader reader, CancellationToken cancellationToken)
+        private async Task<List<object?>> ScalarListAsync(DbDataReader reader, CancellationToken cancellationToken)
         {
-            var list = new List<object>();
+            var list = new List<object?>();
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
-                object value = reader.GetValue(0);
+                object? value = reader.GetValue(0);
                 NullIfDBNull(ref value);
                 list.Add(value);
             }
@@ -726,11 +746,12 @@ namespace DanilovSoft.MicroORM
         {
             return WrapperAsync(ScalarOrDefaultAsyncInternal<T>, cancellationToken);
         }
+
         private async Task<T> ScalarOrDefaultAsyncInternal<T>(DbDataReader reader, CancellationToken cancellationToken)
         {
             if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
-                object value = reader.GetValue(0);
+                object? value = reader.GetValue(0);
                 Type columnType = reader.GetFieldType(0);
                 string columnName = reader.GetName(0);
                 NullIfDBNull(ref value);
@@ -1064,7 +1085,7 @@ namespace DanilovSoft.MicroORM
         }
         Task<T> IAsyncSqlReader.SingleOrDefault<T>(T anonymousType, CancellationToken cancellationToken)
         {
-            return WrapperAsync(AnonymousSingleOrDefaultAsync<T>, cancellationToken);
+            return WrapperAsync(AnonymousSingleOrDefaultAsync<T>, cancellationToken)!;
         }
         Task<T> IAsyncSqlReader.SingleOrDefault<T>(Action<T, DbDataReader> selector)
         {
@@ -1116,27 +1137,27 @@ namespace DanilovSoft.MicroORM
                 return default;
             }
         }
-        private Task<T> AnonymousSingleOrDefaultAsync<T>(DbDataReader reader, CancellationToken cancellationToken) where T : class
+        private Task<T?> AnonymousSingleOrDefaultAsync<T>(DbDataReader reader, CancellationToken cancellationToken) where T : class
         {
             Task<bool> task = reader.ReadAsync(cancellationToken);
             if (task.IsCompletedSuccessfully())
             {
                 bool hasRows = task.Result;
-                var value = Map(hasRows, reader);
+                var value = MapAnonymousObject(hasRows, reader);
                 return Task.FromResult(value);
             }
             else
             {
                 return WaitAsync(task, reader);
 
-                static async Task<T> WaitAsync(Task<bool> task, DbDataReader reader)
+                static async Task<T?> WaitAsync(Task<bool> task, DbDataReader reader)
                 {
                     bool hasRows = await task.ConfigureAwait(false);
-                    return Map(hasRows, reader);
+                    return MapAnonymousObject(hasRows, reader);
                 }
             }
 
-            static T Map(bool hasRows, DbDataReader reader)
+            static T? MapAnonymousObject(bool hasRows, DbDataReader reader)
             {
                 if (hasRows)
                 {
@@ -1183,57 +1204,63 @@ namespace DanilovSoft.MicroORM
 
         private async Task<T> WrapperAsync<T, TArg>(Func<DbDataReader, TArg, CancellationToken, Task<T>> selector, TArg state, CancellationToken cancellationToken)
         {
+            // Смешиваем пользовательский токен и аварийный таймаут.
             using (var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
             {
                 // Установить таймаут.
                 linked.CancelAfter(millisecondsDelay: QueryTimeoutSec * 1000);
 
                 // The CommandTimeout property will be ignored during asynchronous method calls such as BeginExecuteReader.
-                using (ICommandReader comReader = await GetCommandReaderAsync(linked.Token).ConfigureAwait(false))
+                ICommandReader comReader = await GetCommandReaderAsync(linked.Token).ConfigureAwait(false);
+                
+                // Аварийный контроль соединения. При не явном дисконнекте выполняет закрытие с дополнительной форой после QueryTimeoutSec.
+                var closeConnection = new CloseConnection(_closeConnectionPenaltySec, comReader.Connection, linked.Token);
+                try
                 {
-                    bool abnormallyClosed = false;
-
+                    // Отправляет серверу запрос на отмену выполняющегося запроса по таймауту или по запросу пользователя.
+                    var cancelCommandRequest = new CancelCommandRequest(comReader.Command, linked.Token);
                     try
                     {
-                        // Аварийный контроль соединения. При не явном дисконнекте выполняет закрытие с дополнительной форой после QueryTimeoutSec.
-                        using (new CloseConnection(_closeConnectionPenaltySec, comReader, linked.Token, delegate { abnormallyClosed = true; }))
-                        {
-                            // Отправляет серверу запрос на отмену выполняющегося запроса по таймауту или по запросу пользователя.
-                            using (new CancelCommandRequest(comReader.Command, linked.Token))
-                            {
-                                // Инициализация запроса и ожидание готовности данных.
-                                DbDataReader reader = await comReader.GetReaderAsync(linked.Token).ConfigureAwait(false);
+                        // Инициализация запроса и ожидание готовности данных.
+                        DbDataReader reader = await comReader.GetReaderAsync(linked.Token).ConfigureAwait(false);
+                        
+                        Task<T> selectorTask = selector(reader, state, linked.Token);
 
-                                Task<T> selectorTask = selector(reader, state, linked.Token);
-
-                                // Получение данных сервера.
-                                return await selectorTask.ConfigureAwait(false);
-                            }
-                        }
+                        // Получение данных сервера.
+                        return await selectorTask.ConfigureAwait(false);
                     }
-                    catch (Exception ex) when (abnormallyClosed)
-                    // Этот случай приоритетнее токенов отмены — проверяется в первую очередь.
+                    finally
                     {
-                        // Бросить вверх — соединение закрыто аварийно из-за превышенного времени на выполнение запроса + фора на грациозную отмену запроса.
-                        throw new ConnectionClosedAbnormallyException(ex, QueryTimeoutSec, _closeConnectionPenaltySec);
+                        cancelCommandRequest.Dispose();
+                        closeConnection.Dispose();
                     }
-                    catch (Exception ex) when (!cancellationToken.IsCancellationRequested && linked.IsCancellationRequested)
-                    // Ошибка может быть любого типа из-за токена таймаута. Токен таймаута приоритетнее пользовательского токена.
-                    {
-                        // Бросить вверх таймаут исключение и вложить порожденное исключение даже если это просто OperationCanceledException токена 'linked'.
-                        throw new SqlQueryTimeoutException(ex, QueryTimeoutSec);
-                    }
-                    catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
-                    // Сработал пользовательский токен отмены и нет поражденного исключения.
-                    {
-                        // Бросить вверх без вложенного исключения — в нём ничего нет.
-                        throw new OperationCanceledException(UserCancelMessage, cancellationToken);
-                    }
-                    catch (Exception ex) when (cancellationToken.IsCancellationRequested)
-                    {
-                        // Бросить вверх и вложить исключение с подробностями.
-                        throw new OperationCanceledException(UserCancelMessage, ex, cancellationToken);
-                    }
+                }
+                catch (Exception ex) when (closeConnection.AbnormallyClosed)
+                // Этот случай приоритетнее токенов отмены — проверяется в первую очередь.
+                {
+                    // Бросить вверх — соединение закрыто аварийно из-за превышенного времени на выполнение запроса + фора на грациозную отмену запроса.
+                    throw new ConnectionClosedAbnormallyException(ex, QueryTimeoutSec, _closeConnectionPenaltySec);
+                }
+                catch (Exception ex) when (!cancellationToken.IsCancellationRequested && linked.IsCancellationRequested)
+                // Ошибка может быть любого типа из-за токена таймаута. Токен таймаута приоритетнее пользовательского токена.
+                {
+                    // Бросить вверх таймаут исключение и вложить порожденное исключение даже если это просто OperationCanceledException токена 'linked'.
+                    throw new SqlQueryTimeoutException(ex, QueryTimeoutSec);
+                }
+                catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
+                // Сработал пользовательский токен отмены и нет поражденного исключения.
+                {
+                    // Бросить вверх без вложенного исключения — в нём ничего нет.
+                    throw new OperationCanceledException(UserCancelMessage, cancellationToken);
+                }
+                catch (Exception ex) when (cancellationToken.IsCancellationRequested)
+                {
+                    // Бросить вверх и вложить исключение с подробностями.
+                    throw new OperationCanceledException(UserCancelMessage, ex, cancellationToken);
+                }
+                finally
+                {
+                    comReader.Dispose();
                 }
             }
         }

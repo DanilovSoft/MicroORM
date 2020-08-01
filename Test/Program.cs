@@ -26,13 +26,13 @@ namespace Test
     {
         private readonly SqlORM _sqlite = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
         private static readonly SqlORM _pgsql = new SqlORM("Server=10.0.0.99; Port=5432; User Id=test; Password=test; Database=hh; " +
-            "Pooling=true; MinPoolSize=1; MaxPoolSize=100", Npgsql.NpgsqlFactory.Instance);
+            "Pooling=true; MinPoolSize=1; MaxPoolSize=2", Npgsql.NpgsqlFactory.Instance);
 
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            new Program().Main();
+            await new Program().Main();
         }
 
         [StructLayout(LayoutKind.Auto)]
@@ -50,13 +50,21 @@ namespace Test
             }
         }
 
-        private void Main()
+        private async Task Main()
         {
+            try
+            {
+                await _pgsql.Sql("SELECT 1").ToAsync().Scalar();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+            
+
             while (true)
             {
-                _pgsql.Sql("SELECT 1 AS id")
-                    .ToAsync()
-                    .Array(new { id = 0 }).GetAwaiter().GetResult();
+                await _pgsql.Sql("SELECT 1").ToAsync().Scalar();
             }
         }
 

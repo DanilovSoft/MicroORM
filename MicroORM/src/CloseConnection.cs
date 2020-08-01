@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
@@ -10,35 +11,37 @@ namespace DanilovSoft.MicroORM
     /// <summary>
     /// Аварийный контроль соединения.
     /// </summary>
-    internal sealed class CloseConnection : IDisposable
+    [StructLayout(LayoutKind.Auto)]
+    internal struct CloseConnection : IDisposable
     {
         private readonly CancellationTokenRegistration _tokenRegistration;
-        private readonly int _closeConnectionPenaltySec;
-        private readonly Action _socketClosedCallback;
-        private readonly DelayedAction _delayedAction;
+        private readonly DelayedAction<DbConnection> _delayedAction;
+        internal bool AbnormallyClosed;
 
-        public CloseConnection(int closeConnectionPenaltySec, ICommandReader commandReader, CancellationToken cancellationToken, Action socketClosedCallback)
+        public CloseConnection(int closeConnectionPenaltySec, DbConnection connection, CancellationToken cancellationToken)
         {
-            _closeConnectionPenaltySec = closeConnectionPenaltySec;
-            _socketClosedCallback = socketClosedCallback;
+            AbnormallyClosed = false;
 
-            _delayedAction = new DelayedAction(OnDelayedAction, commandReader.Connection);
+            // Подготовим таймер но не запускаем.
+            _delayedAction = new DelayedAction<DbConnection>(OnDelayedAction, connection, dueTimeSec: closeConnectionPenaltySec);
 
-            // Подписываемся на отмену.
-            _tokenRegistration = cancellationToken.Register(OnCancellationToken, useSynchronizationContext: false);
+            // Подписываемся на отмену. (может сработать сразу поэтому эта операция должна быть в конце).
+            _tokenRegistration = cancellationToken.Register(OnCancellationToken, state: _delayedAction, useSynchronizationContext: false);
         }
 
-        private void OnCancellationToken()
+        private static void OnCancellationToken(object? state)
         {
-            Debug.WriteLine($"Закрытие сокета через {_closeConnectionPenaltySec} секунд");
+            var delayedAction = state as DelayedAction<DbConnection>;
+            Debug.Assert(delayedAction != null);
+
+            Debug.WriteLine($"Закрытие сокета через {delayedAction.DueTimeSec} секунд");
 
             // Выждать фору.
-            _delayedAction.Start(TimeSpan.FromMilliseconds(_closeConnectionPenaltySec * 1000));
+            delayedAction.TryStart();
         }
 
-        private static void OnDelayedAction(object state)
+        private static void OnDelayedAction(DbConnection dbСon)
         {
-            var dbСon = (DbConnection)state;
             Debug.WriteLine("DbConnection.Close()");
 
             try
@@ -59,17 +62,17 @@ namespace DanilovSoft.MicroORM
         /// <exception cref="OperationCanceledException"/>
         public void Dispose()
         {
-            // Отменить таймер.
-            bool canceled = _delayedAction.TryCancel(wait: true);
+            // Отменить запланированное закрытие соединения.
+            bool canceled = _delayedAction.TryCancel();
 
             // Отписаться от токена отмены.
             _tokenRegistration.Dispose();
 
-            if(!canceled)
-            // Соединение закрыто таймером.
+            if (!canceled)
+            // Соединение закрыто таймером или в процессе закрытия.
             {
                 // Оповещаем подписчика что сокет был аварийно закрыт.
-                _socketClosedCallback();
+                AbnormallyClosed = true;
             }
         }
     }

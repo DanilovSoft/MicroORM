@@ -31,26 +31,41 @@ namespace DanilovSoft.MicroORM
             return _reader;
         }
 
-        public ValueTask<DbDataReader> GetReaderAsync(CancellationToken cancellationToken)
+        public bool TryGetReader(out DbDataReader? reader)
         {
-            if (_reader != null)
-                return new ValueTask<DbDataReader>(result: _reader);
+            if (_reader == null)
+            {
+                reader = default;
+                return false;
+            }
             else
-                return InnerGetReaderAsync(cancellationToken);
+            {
+                reader = _reader;
+                return true;
+            }
         }
 
-        private ValueTask<DbDataReader> InnerGetReaderAsync(CancellationToken cancellationToken)
+        public ValueTask<DbDataReader> GetReaderAsync(CancellationToken cancellationToken)
         {
+            if (_reader == null)
+                return new ValueTask<DbDataReader>(task: InnerGetReaderAsync(cancellationToken));
+            else
+                return new ValueTask<DbDataReader>(result: _reader);
+        }
+
+        private Task<DbDataReader> InnerGetReaderAsync(CancellationToken cancellationToken)
+        {
+            // Только Sqlite может завершиться синхронно.
             Task<DbDataReader> task = Command.ExecuteReaderAsync(cancellationToken);
             if (task.IsCompletedSuccessfully())
             {
                 _reader = task.Result;
-                return new ValueTask<DbDataReader>(result: _reader);
+                return Task.FromResult(_reader);
             }
             else
             {
                 return WaitAsync(task);
-                async ValueTask<DbDataReader> WaitAsync(Task<DbDataReader> task)
+                async Task<DbDataReader> WaitAsync(Task<DbDataReader> task)
                 {
                     DbDataReader reader = await task.ConfigureAwait(false);
                     _reader = reader;

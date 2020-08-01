@@ -13,10 +13,10 @@ namespace DanilovSoft.MicroORM
         IAsyncSqlReader ToAsync();
         int Execute();
         DataTable Table();
-        object Scalar();
+        object? Scalar();
         T Scalar<T>();
-        object[] ScalarArray();
-        List<object> ScalarList();
+        object?[] ScalarArray();
+        List<object?> ScalarList();
         T[] ScalarArray<T>();
         List<T> ScalarList<T>();
         T ScalarOrDefault<T>();
@@ -25,8 +25,8 @@ namespace DanilovSoft.MicroORM
         T Single<T>(Action<T, DbDataReader> selector) where T : class;
         T Single<T>(Func<DbDataReader, T> selector);
         T SingleOrDefault<T>();
-        T SingleOrDefault<T>(T anonymousType) where T : class;
-        T SingleOrDefault<T>(Action<T, DbDataReader> selector) where T : class;
+        T? SingleOrDefault<T>(T anonymousType) where T : class;
+        T? SingleOrDefault<T>(Action<T, DbDataReader> selector) where T : class;
         T SingleOrDefault<T>(Func<DbDataReader, T> selector);
         List<T> List<T>();
         List<T> List<T>(T anonymousType) where T : class;
