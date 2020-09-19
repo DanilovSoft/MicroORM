@@ -1,4 +1,5 @@
-﻿using DanilovSoft.MicroORM;
+﻿using ConsoleTest;
+using DanilovSoft.MicroORM;
 using DanilovSoft.MicroORM.ObjectMapping;
 using Newtonsoft.Json;
 using System;
@@ -24,15 +25,44 @@ namespace Test
 {
     class Program
     {
+        public const string PgConnectionString = "Server=10.0.0.99; Port=5432; User Id=test; Password=test; Database=test; " +
+            "Pooling=true; MinPoolSize=1; MaxPoolSize=10";
+
         private readonly SqlORM _sqlite = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
-        private static readonly SqlORM _pgsql = new SqlORM("Server=10.0.0.99; Port=5432; User Id=test; Password=test; Database=hh; " +
-            "Pooling=true; MinPoolSize=1; MaxPoolSize=2", Npgsql.NpgsqlFactory.Instance);
+        private static readonly SqlORM _pgsql = new SqlORM(PgConnectionString, Npgsql.NpgsqlFactory.Instance);
 
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
-        static async Task Main(string[] args)
+        static void Main()
         {
-            await new Program().Main();
+            Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
+
+            var list = _pgsql.Sql("SELECT * FROM b.\"Blog\" LIMIT 25").List<Blog>();
+
+            var context = new EfDbContext();
+            context.Set<Blog>().ToList();
+
+            //Npgsql.NpgsqlDataReader reader;
+            //reader.GetInt32(0);
+
+            for (int i = 0; i < 10; i++)
+            {
+                var sw = Stopwatch.StartNew();
+                context.Set<Blog>().Take(25).ToList();
+                sw.Stop();
+                Console.WriteLine($"EF: {sw.ElapsedMilliseconds:0}");
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                var sw = Stopwatch.StartNew();
+                list = _pgsql.Sql("SELECT * FROM b.\"Blog\" LIMIT 25").List<Blog>();
+                sw.Stop();
+
+                Console.WriteLine($"MicroORM: {sw.ElapsedMilliseconds:0}");
+            }
+
+            Console.ReadKey();
         }
 
         [StructLayout(LayoutKind.Auto)]
@@ -50,7 +80,7 @@ namespace Test
             }
         }
 
-        private async Task Main()
+        private async Task MainAsync()
         {
             try
             {

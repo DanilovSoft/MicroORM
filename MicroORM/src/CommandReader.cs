@@ -24,11 +24,13 @@ namespace DanilovSoft.MicroORM
 
         public DbDataReader GetReader()
         {
-            if (_reader != null)
+            if (_reader == null)
+            {
+                _reader = Command.ExecuteReader(CommandBehavior.SequentialAccess);
                 return _reader;
-
-            _reader = Command.ExecuteReader();
-            return _reader;
+            }
+            else
+                return _reader;
         }
 
         public bool TryGetReader(out DbDataReader? reader)
