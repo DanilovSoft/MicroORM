@@ -37,7 +37,7 @@ namespace DanilovSoft.MicroORM
                 throw new ArgumentOutOfRangeException(nameof(connectionString));
         }
 
-        public SqlQuery Sql(string query, params object[] parameters)
+        public SqlQuery Sql(string query, params object?[] parameters)
         {
             var sqlQuery = new SqlQuery(query, ConnectionString, _factory);
             sqlQuery.Parameters(parameters);

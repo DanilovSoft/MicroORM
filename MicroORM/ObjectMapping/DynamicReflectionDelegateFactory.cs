@@ -8,13 +8,13 @@ using System.Text;
 
 namespace DanilovSoft.MicroORM.ObjectMapping
 {
-    internal sealed class DynamicReflectionDelegateFactory
+    internal static class DynamicReflectionDelegateFactory
     {
         private static readonly Type[] _objectArrayTypes = new[] { typeof(object[]) };
 
-        internal static DynamicReflectionDelegateFactory Instance { get; } = new DynamicReflectionDelegateFactory();
+        //internal static DynamicReflectionDelegateFactory Instance { get; } = new DynamicReflectionDelegateFactory();
 
-        private static DynamicMethod CreateDynamicMethod(string name, Type returnType, Type[] parameterTypes, Type owner)
+        private static DynamicMethod CreateDynamicMethod(string name, Type? returnType, Type[] parameterTypes, Type owner)
         {
             DynamicMethod dynamicMethod = !owner.IsInterface
                 ? new DynamicMethod(name, returnType, parameterTypes, owner, true)
@@ -26,7 +26,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         /// <summary>
         /// Находит пустой конструктор.
         /// </summary>
-        public Func<T> CreateDefaultConstructor<T>(Type type)
+        public static Func<T> CreateDefaultConstructor<T>(Type type)
         {
             DynamicMethod dynamicMethod = CreateDynamicMethod("", 
                 returnType: typeof(T), 
@@ -41,7 +41,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return (Func<T>)dynamicMethod.CreateDelegate(typeof(Func<T>));
         }
 
-        public Func<object[], object> CreateAnonimousConstructor(Type type)
+        public static Func<object?[], object> CreateAnonimousConstructor(Type type)
         {
             // у анонимных типов всегда есть 1 конструктор, принимающий параметры.
             var ctors = type.GetConstructors();
@@ -51,7 +51,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return CreateConstructor(type, ctor);
         }
 
-        public Func<object[], object> CreateConstructor(Type type, ConstructorInfo ctor)
+        public static Func<object?[], object> CreateConstructor(Type type, ConstructorInfo ctor)
         {
             DynamicMethod dynamicMethod = CreateDynamicMethod("",
                 returnType: typeof(object),
@@ -63,27 +63,32 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
             GenerateCreateMethodCallIL(ctor, generator, 0);
 
-            return (Func<object[], object>)dynamicMethod.CreateDelegate(typeof(Func<object[], object>));
+            return (Func<object?[], object>)dynamicMethod.CreateDelegate(typeof(Func<object[], object>));
         }
 
-        private void GenerateCreateMethodCallIL(MethodBase method, ILGenerator generator, int argsIndex)
+        private static void GenerateCreateMethodCallIL(MethodBase method, ILGenerator generator, int argsIndex)
         {
             ParameterInfo[] args = method.GetParameters();
 
             Label argsOk = generator.DefineLabel();
+
+            var exceptionCtor = typeof(TargetParameterCountException).GetConstructor(Type.EmptyTypes);
+            Debug.Assert(exceptionCtor != null);
 
             // throw an error if the number of argument values doesn't match method parameters
             generator.Emit(OpCodes.Ldarg, argsIndex);
             generator.Emit(OpCodes.Ldlen);
             generator.Emit(OpCodes.Ldc_I4, args.Length);
             generator.Emit(OpCodes.Beq, argsOk);
-            generator.Emit(OpCodes.Newobj, typeof(TargetParameterCountException).GetConstructor(Type.EmptyTypes));
+            generator.Emit(OpCodes.Newobj, exceptionCtor);
             generator.Emit(OpCodes.Throw);
 
             generator.MarkLabel(argsOk);
 
             if (!method.IsConstructor && !method.IsStatic)
             {
+                Debug.Assert(method.DeclaringType != null);
+
                 generator.PushInstance(method.DeclaringType);
             }
 
@@ -220,6 +225,8 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 generator.CallMethod((MethodInfo)method);
             }
 
+            Debug.Assert(method.DeclaringType != null);
+
             Type returnType = method.IsConstructor
                 ? method.DeclaringType
                 : ((MethodInfo)method).ReturnType;
@@ -236,7 +243,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             generator.Return();
         }
 
-        private void GenerateCreateDefaultConstructorIL(Type type, ILGenerator generator, Type delegateType)
+        private static void GenerateCreateDefaultConstructorIL(Type type, ILGenerator generator, Type delegateType)
         {
             if (type.IsValueType)
             {
@@ -251,7 +258,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             }
             else
             {
-                ConstructorInfo constructorInfo =
+                ConstructorInfo? constructorInfo =
                     type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
 
                 if (constructorInfo == null)
@@ -265,8 +272,10 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             generator.Return();
         }
 
-        public OnDeserializingDelegate CreateOnDeserializingMethodCall(MethodInfo method, Type type)
+        public static OnDeserializingDelegate CreateOnDeserializingMethodCall(MethodInfo method, Type type)
         {
+            Debug.Assert(method.DeclaringType != null);
+
             DynamicMethod dynamicMethod = CreateDynamicMethod("", returnType: typeof(void), parameterTypes: new[] { typeof(object), typeof(object) }, owner: method.DeclaringType);
             ILGenerator generator = dynamicMethod.GetILGenerator();
 
@@ -275,7 +284,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return (OnDeserializingDelegate)dynamicMethod.CreateDelegate(typeof(OnDeserializingDelegate));
         }
 
-        public OnDeserializedDelegate CreateOnDeserializedMethodCall(MethodInfo method, Type type)
+        public static OnDeserializedDelegate CreateOnDeserializedMethodCall(MethodInfo method, Type type)
         {
             DynamicMethod dynamicMethod = CreateDynamicMethod("", returnType: typeof(void), parameterTypes: new[] { typeof(object), typeof(object) }, owner: type);
             ILGenerator generator = dynamicMethod.GetILGenerator();
@@ -285,7 +294,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return (OnDeserializedDelegate)dynamicMethod.CreateDelegate(typeof(OnDeserializedDelegate));
         }
 
-        private void GenerateCreateMethodCallIL(MethodInfo method, ILGenerator generator, Type type)
+        private static void GenerateCreateMethodCallIL(MethodInfo method, ILGenerator generator, Type type)
         {
             generator.PushInstance(type);
             generator.Emit(OpCodes.Ldarg_1);
@@ -294,7 +303,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             generator.Return();
         }
 
-        public Action<T, object> CreateSet<T>(MemberInfo memberInfo)
+        public static Action<T, object?>? CreateSet<T>(MemberInfo memberInfo)
         {
             switch (memberInfo)
             {
@@ -311,17 +320,19 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             }
         }
 
-        public Action<T, object> CreateSet<T>(PropertyInfo propertyInfo)
+        public static Action<T, object?>? CreateSet<T>(PropertyInfo propertyInfo)
         {
-            MethodInfo setMethod = propertyInfo.GetSetMethod(nonPublic: true);
+            MethodInfo? setMethod = propertyInfo.GetSetMethod(nonPublic: true);
             if (setMethod != null)
             {
+                Debug.Assert(propertyInfo.DeclaringType != null);
+
                 DynamicMethod dynamicMethod = CreateDynamicMethod("Set" + propertyInfo.Name, null, new[] { typeof(T), typeof(object) }, propertyInfo.DeclaringType);
                 ILGenerator generator = dynamicMethod.GetILGenerator();
 
                 GenerateCreateSetPropertyIL(setMethod, propertyInfo, generator);
 
-                return (Action<T, object>)dynamicMethod.CreateDelegate(typeof(Action<T, object>));
+                return (Action<T, object?>)dynamicMethod.CreateDelegate(typeof(Action<T, object>));
             }
             else
             // Свойство является readonly.
@@ -330,14 +341,16 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             }
         }
 
-        public Action<T, object> CreateSet<T>(FieldInfo fieldInfo)
+        public static Action<T, object?> CreateSet<T>(FieldInfo fieldInfo)
         {
+            Debug.Assert(fieldInfo.DeclaringType != null);
+
             DynamicMethod dynamicMethod = CreateDynamicMethod("Set" + fieldInfo.Name, null, new[] { typeof(T), typeof(object) }, fieldInfo.DeclaringType);
             ILGenerator generator = dynamicMethod.GetILGenerator();
 
             GenerateCreateSetFieldIL(fieldInfo, generator);
 
-            return (Action<T, object>)dynamicMethod.CreateDelegate(typeof(Action<T, object>));
+            return (Action<T, object?>)dynamicMethod.CreateDelegate(typeof(Action<T, object>));
         }
 
         private static void GenerateCreateSetPropertyIL(MethodInfo setMethod, PropertyInfo propertyInfo, ILGenerator generator)
@@ -345,7 +358,10 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             Debug.Assert(setMethod != null);
 
             if (!setMethod.IsStatic)
+            {
+                Debug.Assert(propertyInfo.DeclaringType != null);
                 generator.PushInstance(propertyInfo.DeclaringType);
+            }
 
             generator.Emit(OpCodes.Ldarg_1);
             generator.UnboxIfNeeded(propertyInfo.PropertyType);
@@ -356,7 +372,10 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         private static void GenerateCreateSetFieldIL(FieldInfo fieldInfo, ILGenerator generator)
         {
             if (!fieldInfo.IsStatic)
+            {
+                Debug.Assert(fieldInfo.DeclaringType != null);
                 generator.PushInstance(fieldInfo.DeclaringType);
+            }
 
             generator.Emit(OpCodes.Ldarg_1);
             generator.UnboxIfNeeded(fieldInfo.FieldType);

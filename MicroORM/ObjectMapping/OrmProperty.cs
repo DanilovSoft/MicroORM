@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -13,8 +14,8 @@ namespace DanilovSoft.MicroORM.ObjectMapping
     /// </summary>
     internal sealed class OrmProperty
     {
-        public readonly SetValueDelegate SetValueHandler;
-        public readonly TypeConverter Converter;
+        public readonly SetValueDelegate? SetValueHandler;
+        public readonly TypeConverter? Converter;
         public readonly Type MemberType;
 
         // ctor.
@@ -40,7 +41,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 Converter = StaticCache.TypeConverters.GetOrAdd(attribute.ConverterType, ConverterValueFactory);
             }
 
-            Action<object, object> setAction = DynamicReflectionDelegateFactory.Instance.CreateSet<object>(memberInfo);
+            Action<object, object?>? setAction = DynamicReflectionDelegateFactory.CreateSet<object>(memberInfo);
             if (setAction != null)
             {
                 SetValueHandler = new SetValueDelegate(setAction);
@@ -53,11 +54,11 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
         private static TypeConverter ConverterValueFactory(Type converterType)
         {
-            var ctor = DynamicReflectionDelegateFactory.Instance.CreateDefaultConstructor<TypeConverter>(converterType);
+            var ctor = DynamicReflectionDelegateFactory.CreateDefaultConstructor<TypeConverter>(converterType);
             return ctor.Invoke();
         }
 
-        public object Convert(object value, Type columnSourceType, string columnName)
+        public object? Convert(object? value, Type columnSourceType, string columnName)
         {
             if (Converter != null)
             {
@@ -77,9 +78,11 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             }
         }
 
-        public void ConvertAndSetValue(object obj, object value, Type columnSourceType, string columnName)
+        public void ConvertAndSetValue(object obj, object? value, Type columnSourceType, string columnName)
         {
-            object finalValue = Convert(value, columnSourceType, columnName);
+            Debug.Assert(SetValueHandler != null);
+
+            object? finalValue = Convert(value, columnSourceType, columnName);
 
             SetValueHandler.Invoke(obj, finalValue);
         }

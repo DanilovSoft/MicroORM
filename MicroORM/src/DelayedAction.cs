@@ -22,8 +22,6 @@ namespace System.Threading
         /// </summary>
         private int _state = -1;
 
-        /// <exception cref="ArgumentNullException"/>
-        /// <exception cref="ArgumentOutOfRangeException"/>
         public DelayedAction(Action<TState> callback, TState token, int dueTimeSec)
         {
             Debug.Assert(callback != null);

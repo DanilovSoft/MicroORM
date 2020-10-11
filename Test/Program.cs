@@ -1,6 +1,7 @@
 ﻿using ConsoleTest;
 using DanilovSoft.MicroORM;
 using DanilovSoft.MicroORM.ObjectMapping;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -28,8 +29,11 @@ namespace Test
         public const string PgConnectionString = "Server=10.0.0.99; Port=5432; User Id=test; Password=test; Database=test; " +
             "Pooling=true; MinPoolSize=1; MaxPoolSize=10";
 
+        //public const string PgConnectionString = "Server=10.0.0.99;Port=5432;User Id = test; Password=test;Database=test;Pooling=true;" +
+        //    "MinPoolSize=10;MaxPoolSize=16;CommandTimeout=30;Timeout=30";
+
         private readonly SqlORM _sqlite = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
-        private static readonly SqlORM _pgsql = new SqlORM(PgConnectionString, Npgsql.NpgsqlFactory.Instance);
+        private static readonly SqlORM _pgOrm = new SqlORM(PgConnectionString, Npgsql.NpgsqlFactory.Instance);
 
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
@@ -37,10 +41,20 @@ namespace Test
         {
             Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
 
-            var list = _pgsql.Sql("SELECT * FROM b.\"Blog\" LIMIT 25").List<Blog>();
+            const string Query = @"SELECT g.gid, g.posted_date, gi.title, gi.token, g.pages, g.rating,
+g.category, f.file_name, gt.file_extension, gt.width, gt.height
+FROM gallery g
+JOIN gallery_info gi ON g.gid = gi.gid
+JOIN gallery_thumb gt ON g.gid = gt.gid
+JOIN page_file f ON gt.fid = f.fid
+ORDER BY g.posted_date DESC
+LIMIT 25";
 
-            var context = new EfDbContext();
-            context.Set<Blog>().ToList();
+            var list = _pgOrm.Sql(Query).List<GalleryDb>();
+
+            var ef = new EfDbContext();
+            //ef.Set<GalleryDb>().Take(1).ToList();
+            ef.Set<GalleryDb>().FromSqlRaw(Query).ToList();
 
             //Npgsql.NpgsqlDataReader reader;
             //reader.GetInt32(0);
@@ -48,7 +62,7 @@ namespace Test
             for (int i = 0; i < 10; i++)
             {
                 var sw = Stopwatch.StartNew();
-                context.Set<Blog>().Take(25).ToList();
+                var list2 = ef.Set<GalleryDb>().FromSqlRaw(Query).ToList();
                 sw.Stop();
                 Console.WriteLine($"EF: {sw.ElapsedMilliseconds:0}");
             }
@@ -56,7 +70,7 @@ namespace Test
             for (int i = 0; i < 10; i++)
             {
                 var sw = Stopwatch.StartNew();
-                list = _pgsql.Sql("SELECT * FROM b.\"Blog\" LIMIT 25").List<Blog>();
+                list = _pgOrm.Sql("SELECT * FROM b.\"Blog\" LIMIT 25").List<GalleryDb>();
                 sw.Stop();
 
                 Console.WriteLine($"MicroORM: {sw.ElapsedMilliseconds:0}");
@@ -84,7 +98,7 @@ namespace Test
         {
             try
             {
-                await _pgsql.Sql("SELECT 1").ToAsync().Scalar();
+                await _pgOrm.Sql("SELECT 1").ToAsync().Scalar();
             }
             catch (Exception ex)
             {
@@ -94,7 +108,7 @@ namespace Test
 
             while (true)
             {
-                await _pgsql.Sql("SELECT 1").ToAsync().Scalar();
+                await _pgOrm.Sql("SELECT 1").ToAsync().Scalar();
             }
         }
 

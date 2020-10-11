@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
@@ -11,7 +12,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
     internal readonly struct ObjectMapper<T>
     {
         private static readonly Type ThisType = typeof(T);
-        private static readonly StreamingContext DefaultStreamingContext = new StreamingContext();
+        private static readonly StreamingContext DefaultStreamingContext;
         private readonly ContractActivator _activator;
         private readonly DbDataReader _reader;
 
@@ -19,7 +20,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         public ObjectMapper(DbDataReader reader)
         {
             _reader = reader;
-
+            
             // Инициализирует из ленивого хранилища.
             _activator = StaticCache.FromLazyActivator(ThisType);
         }
@@ -48,7 +49,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 {
                     string columnName = reader.GetName(i);
                     Type columnSourceType = reader.GetFieldType(i);
-                    object value = reader[i];
+                    object? value = reader[i];
                     if (value == DBNull.Value)
                         value = null;
 
@@ -66,23 +67,26 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
         private object InnerReadReadonlyObject(DbDataReader reader)
         {
+            Debug.Assert(_activator != null);
+            Debug.Assert(_activator.ConstructorArguments != null);
+
             // Что-бы сконструировать структуру, сначала нужно подготовить параметры его конструктора.
-            object[] propValues = new object[_activator.ConstructorArguments.Count];
+            object?[] propValues = new object[_activator.ConstructorArguments.Count];
 
             for (int i = 0; i < reader.FieldCount; i++)
             {
                 // Имя колонки в БД.
                 string columnName = reader.GetName(i);
 
-                if (_activator.ConstructorArguments.TryGetValue(columnName, out ConstructorArgument anonProp))
+                if (_activator.ConstructorArguments.TryGetValue(columnName, out ConstructorArgument? anonProp))
                 {
-                    object value = reader[i];
+                    object? value = reader[i];
                     Type columnSourceType = reader.GetFieldType(i);
 
                     if (value == DBNull.Value)
                         value = null;
 
-                    object finalValue;
+                    object? finalValue;
                     if (_activator.Contract.TryGetOrmPropertyFromLazy(columnName, out OrmProperty ormProperty))
                     {
                         finalValue = ormProperty.Convert(value, columnSourceType, columnName);

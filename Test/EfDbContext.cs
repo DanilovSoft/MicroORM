@@ -13,6 +13,8 @@ namespace ConsoleTest
             Blog.OnModelCreating(builder);
             BlogCategory.OnModelCreating(builder);
             Category.OnModelCreating(builder);
+
+            builder.Entity<GalleryDb>().HasNoKey();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder builder)

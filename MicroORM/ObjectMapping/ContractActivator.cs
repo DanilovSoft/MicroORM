@@ -16,7 +16,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
     internal sealed class ContractActivator
     {
         private readonly Func<object>? _activator;
-        private readonly Func<object[], object>? _anonimousActivator;
+        private readonly Func<object?[], object>? _anonimousActivator;
         public readonly OnDeserializingDelegate? OnDeserializingHandle;
         public readonly OnDeserializedDelegate? OnDeserializedHandle;
         public readonly Dictionary<string, ConstructorArgument>? ConstructorArguments;
@@ -27,14 +27,14 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         // Мы защищены от одновременного создания с помощью Lazy.ExecutionAndPublication.
         public ContractActivator(Type type, bool anonimousType)
         {
-            if(!anonimousType)
+            if (!anonimousType)
             {
                 // Тип может быть readonly структурой, определить можно только перебором всех свойст и полей.
                 IsReadonlyStruct = GetIsReadonlyStruct(type);
 
                 if (!IsReadonlyStruct)
                 {
-                    _activator = DynamicReflectionDelegateFactory.Instance.CreateDefaultConstructor<object>(type);
+                    _activator = DynamicReflectionDelegateFactory.CreateDefaultConstructor<object>(type);
                     OnDeserializingHandle = null;
 
                     MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
@@ -43,12 +43,12 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                         MethodInfo method = methods[i];
                         if (method.IsDefined(typeof(OnDeserializingAttribute), false))
                         {
-                            OnDeserializingHandle = DynamicReflectionDelegateFactory.Instance.CreateOnDeserializingMethodCall(method, type);
+                            OnDeserializingHandle = DynamicReflectionDelegateFactory.CreateOnDeserializingMethodCall(method, type);
                         }
 
                         if (method.IsDefined(typeof(OnDeserializedAttribute), false))
                         {
-                            OnDeserializedHandle = DynamicReflectionDelegateFactory.Instance.CreateOnDeserializedMethodCall(method, type);
+                            OnDeserializedHandle = DynamicReflectionDelegateFactory.CreateOnDeserializedMethodCall(method, type);
                         }
                     }
                 }
@@ -61,7 +61,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                         throw new MicroOrmException("Не найден открытый конструктор");
 
                     ConstructorInfo ctor = ctors[0];
-                    _anonimousActivator = DynamicReflectionDelegateFactory.Instance.CreateConstructor(type, ctor);
+                    _anonimousActivator = DynamicReflectionDelegateFactory.CreateConstructor(type, ctor);
 
                     ConstructorArguments = ctor.GetParameters()
                         .Select((x, Index) => new { ParameterInfo = x, Index })
@@ -70,7 +70,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             }
             else
             {
-                _anonimousActivator = DynamicReflectionDelegateFactory.Instance.CreateAnonimousConstructor(type);
+                _anonimousActivator = DynamicReflectionDelegateFactory.CreateAnonimousConstructor(type);
 
                 // поля у анонимных типов не рассматриваются.
                 // берем только свойства по умолчанию.
@@ -131,18 +131,24 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return true;
         }
 
-        public object CreateInstance(object[] args)
+        public object CreateInstance(object?[] args)
         {
+            Debug.Assert(_anonimousActivator != null);
+
             return _anonimousActivator.Invoke(args);
         }
 
         public object CreateReadonlyInstance(object[] args)
         {
+            Debug.Assert(_anonimousActivator != null);
+
             return _anonimousActivator.Invoke(args);
         }
 
         public object CreateInstance()
         {
+            Debug.Assert(_activator != null);
+
             return _activator.Invoke();
         }
 
