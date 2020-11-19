@@ -26,7 +26,7 @@ namespace Test
 {
     class Program
     {
-        public const string PgConnectionString = "Server=10.0.0.99; Port=5432; User Id=hh; Password=doDRC1vJRGybvCW6; Database=hh; " +
+        public const string PgConnectionString = "Server=10.0.0.99; Port=5432; User Id=test; Password=test; Database=test; " +
             "Pooling=true; MinPoolSize=1; MaxPoolSize=10";
 
         //public const string PgConnectionString = "Server=10.0.0.99;Port=5432;User Id = test; Password=test;Database=test;Pooling=true;" +
