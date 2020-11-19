@@ -1181,6 +1181,7 @@ namespace DanilovSoft.MicroORM
                 }
             }
         }
+
         private static async Task<T> SingleOrDefaultAsync<T>(DbDataReader reader, Action<T, DbDataReader> selector, CancellationToken cancellationToken)
         {
             T item = await SingleOrDefaultAsync<T>(reader, cancellationToken).ConfigureAwait(false);

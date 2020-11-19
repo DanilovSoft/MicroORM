@@ -10,9 +10,11 @@ namespace ConsoleTest
     // Таблица gallery.
     public sealed class GalleryDb
     {
+        [Column("gid")]
         [SqlProperty("gid")]
         public int GalleryId { get; set; }
 
+        [Column("token")]
         [SqlProperty("token")]
         public string GalleryToken { get; set; }
 
@@ -25,6 +27,7 @@ namespace ConsoleTest
         [SqlProperty("title")]
         public string Title { get; set; }
 
+        [Column("orig_title")]
         [SqlProperty("orig_title")]
         public string OriginalTitle { get; set; }
 
@@ -41,9 +44,9 @@ namespace ConsoleTest
         public int? Category { get; set; }
 
         //[SqlIgnore]
-        [SqlProperty("favorited")]
-        [Column("favorited")]
-        public int? Favorited { get; set; }
+        //[SqlProperty("favorited")]
+        //[Column("favorited")]
+        //public int? Favorited { get; set; }
 
         [SqlIgnore]
         [NotMapped]

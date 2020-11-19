@@ -48,7 +48,7 @@ namespace UnitTests
                     .ToAsync()
                     .Execute();
             }
-            catch (SqlQueryTimeoutException ex)
+            catch (SqlQueryTimeoutException)
             {
 
             }
