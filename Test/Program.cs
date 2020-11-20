@@ -24,16 +24,18 @@ using System.Threading.Tasks;
 
 namespace Test
 {
+    public sealed record GalleryRec(int gid, DateTime posted_date, string title, string token, short pages);
+
     class Program
     {
-        public const string PgConnectionString = "Server=10.0.0.99; Port=5432; User Id=hh; Password=doDRC1vJRGybvCW6; Database=hh; " +
+        public const string PgConnectionString = "Server=10.0.0.99; Port=5432; User Id=test; Password=test; Database=hh; " +
             "Pooling=true; MinPoolSize=1; MaxPoolSize=10";
 
         //public const string PgConnectionString = "Server=10.0.0.99;Port=5432;User Id = test; Password=test;Database=test;Pooling=true;" +
         //    "MinPoolSize=10;MaxPoolSize=16;CommandTimeout=30;Timeout=30";
 
         private readonly SqlORM _sqlite = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
-        private static readonly SqlORM _pgOrm = new SqlORM(PgConnectionString, Npgsql.NpgsqlFactory.Instance);
+        private static readonly SqlORM _pgOrm = new SqlORM(PgConnectionString, Npgsql.NpgsqlFactory.Instance, usePascalCaseNamingConvention: false);
 
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
@@ -47,14 +49,16 @@ FROM gallery g
 JOIN gallery_info gi ON g.gid = gi.gid
 JOIN gallery_thumb gt ON g.gid = gt.gid
 JOIN page_file f ON gt.fid = f.fid
+WHERE g.visible = 'yes'
 ORDER BY g.posted_date DESC
 LIMIT 25";
 
-            var list = _pgOrm.Sql(Query).List<GalleryDb>();
-
+            var list = _pgOrm.Sql(Query).List<GalleryRec>();
             var ef = new EfDbContext();
-            //ef.Set<GalleryDb>().Take(1).ToList();
-            ef.Set<GalleryDb>().FromSqlRaw(Query).ToList();
+            ef.Set<GalleryRec>().FromSqlRaw(Query).ToList();
+           
+            //_pgOrm.Sql(Query).List<TestStruct>();
+
 
             //Npgsql.NpgsqlDataReader reader;
             //reader.GetInt32(0);
@@ -62,18 +66,18 @@ LIMIT 25";
             for (int i = 0; i < 10; i++)
             {
                 var sw = Stopwatch.StartNew();
-                var list2 = ef.Set<GalleryDb>().FromSqlRaw(Query).ToList();
+                var list2 = ef.Set<GalleryRec>().FromSqlRaw(Query).ToList();
                 sw.Stop();
-                Console.WriteLine($"EF: {sw.ElapsedMilliseconds:0}");
+                Console.WriteLine($"EF: {sw.ElapsedMilliseconds:0} msec");
             }
 
             for (int i = 0; i < 10; i++)
             {
                 var sw = Stopwatch.StartNew();
-                list = _pgOrm.Sql("SELECT * FROM b.\"Blog\" LIMIT 25").List<GalleryDb>();
+                list = _pgOrm.Sql(Query).List<GalleryRec>();
                 sw.Stop();
 
-                Console.WriteLine($"MicroORM: {sw.ElapsedMilliseconds:0}");
+                Console.WriteLine($"MicroORM: {sw.ElapsedMilliseconds:0} msec");
             }
 
             Console.ReadKey();

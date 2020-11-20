@@ -104,6 +104,40 @@ namespace DanilovSoft.MicroORM
         {
             return new HashSet<T>(source);
         }
+
+        public static string SnakeToPascalCase(this string str)
+        {
+            int newLength = str.Length;
+
+            for (int i = 0; i < str.Length; i++)
+            {
+                char ch = str[i];
+                if (ch == '_' || ch == ' ')
+                {
+                    --newLength;
+                }
+            }
+
+
+            return string.Create(newLength, str, (span, s) =>
+            {
+                bool wordStart = true;
+                int spanIndex = 0;
+                for (int i = 0; i < s.Length; i++)
+                {
+                    char ch = s[i];
+                    if (ch == '_' || ch == ' ')
+                    {
+                        wordStart = true;
+                    }
+                    else
+                    {
+                        span[spanIndex++] = wordStart ? char.ToUpperInvariant(ch) : ch;
+                        wordStart = false;
+                    }
+                }
+            });
+        }
     }
 }
 

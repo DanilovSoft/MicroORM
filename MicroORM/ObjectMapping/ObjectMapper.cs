@@ -15,25 +15,27 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         private static readonly StreamingContext DefaultStreamingContext;
         private readonly ContractActivator _activator;
         private readonly DbDataReader _reader;
+        private readonly SqlORM _sqlOrm;
 
         // ctor.
-        public ObjectMapper(DbDataReader reader)
+        public ObjectMapper(DbDataReader reader, SqlORM sqlOrm)
         {
             _reader = reader;
-            
+            _sqlOrm = sqlOrm;
+
             // Инициализирует из ленивого хранилища.
             _activator = StaticCache.FromLazyActivator(ThisType);
         }
 
         public object ReadObject()
         {
-            if (!_activator.IsReadonlyStruct)
+            if (_activator.IsEmptyCtor)
             {
                 return InnerReadObject(_reader);
             }
             else
             {
-                return InnerReadReadonlyObject(_reader);
+                return ReadToNonEmptyCtor(_reader);
             }
         }
 
@@ -65,7 +67,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return obj;
         }
 
-        private object InnerReadReadonlyObject(DbDataReader reader)
+        private object ReadToNonEmptyCtor(DbDataReader reader)
         {
             Debug.Assert(_activator != null);
             Debug.Assert(_activator.ConstructorArguments != null);
@@ -73,13 +75,25 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             // Что-бы сконструировать структуру, сначала нужно подготовить параметры его конструктора.
             object?[] propValues = new object[_activator.ConstructorArguments.Count];
 
+            // Будем запоминать индексы замапленых параметров что-бы в конце определить вле ли замапились.
+            Span<bool> mapped = stackalloc bool[_activator.ConstructorArguments.Count];
+            
+            // Односторонний маппингт: БД -> DTO, поэтому пляшем от БД.
             for (int i = 0; i < reader.FieldCount; i++)
             {
                 // Имя колонки в БД.
-                string columnName = reader.GetName(i);
+                string sqlColumnName = reader.GetName(i);
 
-                if (_activator.ConstructorArguments.TryGetValue(columnName, out ConstructorArgument? anonProp))
+                if (_sqlOrm.UseSnakeCaseNamingConvention)
                 {
+                    sqlColumnName = sqlColumnName.SnakeToPascalCase();
+                }
+
+                // Допускается иметь в SQL больше полей чем в ДТО.
+                if (_activator.ConstructorArguments.TryGetValue(sqlColumnName, out ConstructorArgument? ctorArg))
+                {
+                    mapped[ctorArg.Index] = true;
+
                     object? value = reader[i];
                     Type columnSourceType = reader.GetFieldType(i);
 
@@ -87,20 +101,29 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                         value = null;
 
                     object? finalValue;
-                    if (_activator.Contract.TryGetOrmPropertyFromLazy(columnName, out OrmProperty ormProperty))
+                    if (_activator.Contract.TryGetOrmPropertyFromLazy(sqlColumnName, out OrmProperty ormProperty))
                     {
-                        finalValue = ormProperty.Convert(value, columnSourceType, columnName);
+                        finalValue = ormProperty.Convert(value, columnSourceType, sqlColumnName);
                     }
                     else
                     {
                         // конвертируем значение.
-                        finalValue = SqlTypeConverter.ChangeType(value, anonProp.ParameterType, columnSourceType, columnName);
+                        finalValue = SqlTypeConverter.ChangeType(value, ctorArg.ParameterType, columnSourceType, sqlColumnName);
                     }
-                    propValues[anonProp.Index] = finalValue;
+                    propValues[ctorArg.Index] = finalValue;
                 }
             }
 
-            var obj = _activator.CreateInstance(propValues);
+            // Не допускается иметь в DTO больше полей чем в SQL.
+            foreach ((string key, var arg) in _activator.ConstructorArguments)
+            {
+                if (!mapped[arg.Index])
+                {
+                    throw new MicroOrmException($"В Sql не найдено поле \"{key}\"");
+                }
+            }
+
+            object obj = _activator.CreateInstance(propValues);
             return obj;
         }
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -14,24 +15,24 @@ namespace DanilovSoft.MicroORM
     public class SqlQuery : SqlReader
     {
         private readonly Dictionary<string, object?> _parameters;
-        private readonly DbProviderFactory _dbProvider;
-        private readonly string _connectionString;
         private readonly string _commandText;
+        private protected readonly SqlORM _sqlOrm;
         private int _anonimParamCount;
 
-        internal SqlQuery(string commandText, string connectionString, DbProviderFactory factory)
+        // ctor
+        internal SqlQuery(SqlORM sqlOrm, string commandText) : base(sqlOrm)
         {
-            _dbProvider = factory;
-            _connectionString = connectionString;
+            _sqlOrm = sqlOrm;
             _commandText = commandText;
             _parameters = new Dictionary<string, object?>();
         }
 
         internal virtual DbConnection GetConnection()
         {
-            DbConnection connection = _dbProvider.CreateConnection();
+            DbConnection? connection = _sqlOrm.Factory.CreateConnection();
+            Debug.Assert(connection != null);
             DbConnection? toDispose = connection;
-            connection.ConnectionString = _connectionString;
+            connection.ConnectionString = _sqlOrm.ConnectionString;
             try
             {
                 connection.Open();
@@ -46,9 +47,10 @@ namespace DanilovSoft.MicroORM
 
         internal virtual ValueTask<DbConnection> GetOpenConnectionAsync(CancellationToken cancellationToken)
         {
-            DbConnection connection = _dbProvider.CreateConnection();
+            DbConnection? connection = _sqlOrm.Factory.CreateConnection();
+            Debug.Assert(connection != null);
             DbConnection? toDispose = connection;
-            connection.ConnectionString = _connectionString;
+            connection.ConnectionString = _sqlOrm.ConnectionString;
             try
             {
                 Task task = connection.OpenAsync(cancellationToken);
@@ -135,7 +137,7 @@ namespace DanilovSoft.MicroORM
         public virtual MultiSqlReader MultiResult()
         {
             DbCommand command = GetCommand();
-            var sqlReader = new AutoCloseMultiSqlReader(command);
+            var sqlReader = new AutoCloseMultiSqlReader(command, _sqlOrm);
             sqlReader.ExecuteReader();
             return sqlReader;
         }
@@ -148,7 +150,7 @@ namespace DanilovSoft.MicroORM
         public virtual async ValueTask<MultiSqlReader> MultiResultAsync(CancellationToken cancellationToken)
         {
             DbCommand command = await GetCommandAsync(cancellationToken).ConfigureAwait(false);
-            var sqlReader = new AutoCloseMultiSqlReader(command);
+            var sqlReader = new AutoCloseMultiSqlReader(command, _sqlOrm);
             await sqlReader.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
             return sqlReader;
         }
@@ -193,6 +195,7 @@ namespace DanilovSoft.MicroORM
             }
         }
 
+        /// <exception cref="ArgumentNullException"/>
         public SqlQuery Parameters(params object?[] parameters)
         {
             if (parameters != null)

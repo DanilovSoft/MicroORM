@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,9 +12,11 @@ namespace DanilovSoft.MicroORM
     {
         private readonly DbConnection _con;
 
-        public AutoCloseMultiSqlReader(DbCommand command) : base(command)
+        public AutoCloseMultiSqlReader(DbCommand command, SqlORM sqlOrm) : base(command, sqlOrm)
         {
-            _con = command.Connection;
+            var con = command.Connection;
+            Debug.Assert(_con != null);
+            _con = con;
         }
 
         protected override void Dispose(bool disposing)

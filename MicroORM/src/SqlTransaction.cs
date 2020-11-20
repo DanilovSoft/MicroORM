@@ -11,18 +11,19 @@ namespace DanilovSoft.MicroORM
 {
     public sealed class SqlTransaction : ISqlORM, IDisposable
     {
-        private readonly string _connectionString;
         private readonly DbConnection _connection;
-        private readonly DbProviderFactory _factory;
+        private readonly SqlORM _sqlOrm;
         private DbTransaction? _transaction;
         private bool _disposed;
 
-        internal SqlTransaction(string connectionString, DbProviderFactory factory)
+        internal SqlTransaction(SqlORM sqlOrm)
         {
-            _factory = factory;
-            _connectionString = connectionString;
-            _connection = _factory.CreateConnection();
-            _connection.ConnectionString = connectionString;
+            _sqlOrm = sqlOrm;
+            var connection = sqlOrm.Factory.CreateConnection();
+            Debug.Assert(connection != null);
+            _connection = connection;
+
+            _connection.ConnectionString = sqlOrm.ConnectionString;
         }
 
         public void OpenTransaction()
@@ -56,11 +57,12 @@ namespace DanilovSoft.MicroORM
         }
 
         /// <exception cref="MicroOrmException"/>
-        public SqlQuery Sql(string query, params object[] parameters)
+        /// <exception cref="ArgumentNullException"/>
+        public SqlQuery Sql(string query, params object?[] parameters)
         {
             if (_transaction != null)
             {
-                SqlQuery sql = new SqlQueryTransaction(_transaction, query, _connectionString, _factory);
+                SqlQuery sql = new SqlQueryTransaction(_sqlOrm, _transaction, query);
                 sql.Parameters(parameters);
                 return sql;
             }

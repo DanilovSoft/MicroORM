@@ -22,21 +22,21 @@ namespace DanilovSoft.MicroORM
         T ScalarOrDefault<T>();
         T Single<T>();
         T Single<T>(T anonymousType) where T : class;
-        T Single<T>(Action<T, DbDataReader> selector) where T : class;
-        T Single<T>(Func<DbDataReader, T> selector);
+        //T Single<T>(Action<T, DbDataReader> selector) where T : class;
+        //T Single<T>(Func<DbDataReader, T> selector);
         T SingleOrDefault<T>();
         T? SingleOrDefault<T>(T anonymousType) where T : class;
-        T? SingleOrDefault<T>(Action<T, DbDataReader> selector) where T : class;
-        T SingleOrDefault<T>(Func<DbDataReader, T> selector);
+        //T? SingleOrDefault<T>(Action<T, DbDataReader> selector) where T : class;
+        //T SingleOrDefault<T>(Func<DbDataReader, T> selector);
         List<T> List<T>();
         List<T> List<T>(T anonymousType) where T : class;
-        List<T> List<T>(Func<DbDataReader, T> selector);
-        List<T> List<T>(Action<T, DbDataReader> selector) where T : class;
+        //List<T> List<T>(Func<DbDataReader, T> selector);
+        //List<T> List<T>(Action<T, DbDataReader> selector) where T : class;
         T[] Array<T>();
         T[] Array<T>(T anonymousType) where T : class;
-        T[] Array<T>(Func<DbDataReader, T> selector);
-        T[] Array<T>(Action<T, DbDataReader> selector) where T : class;
+        //T[] Array<T>(Func<DbDataReader, T> selector);
+        //T[] Array<T>(Action<T, DbDataReader> selector) where T : class;
         TCollection Collection<TItem, TCollection>() where TCollection : ICollection<TItem>, new();
-        TCollection Collection<TItem, TCollection>(Action<TItem, DbDataReader> selector) where TCollection : ICollection<TItem>, new() where TItem : class;
+        //TCollection Collection<TItem, TCollection>(Action<TItem, DbDataReader> selector) where TCollection : ICollection<TItem>, new() where TItem : class;
     }
 }

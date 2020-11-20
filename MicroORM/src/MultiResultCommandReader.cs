@@ -97,7 +97,7 @@ namespace DanilovSoft.MicroORM
 
         public void Dispose()
         {
-            
+
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -12,20 +13,25 @@ namespace DanilovSoft.MicroORM
     {
         private readonly DbTransaction _transaction;
 
-        internal SqlQueryTransaction(DbTransaction transaction, string commandText, string connectionString, DbProviderFactory factory) : base(commandText, connectionString, factory)
+        internal SqlQueryTransaction(SqlORM sqlOrm, DbTransaction transaction, string commandText) 
+            : base(sqlOrm, commandText)
         {
             _transaction = transaction;
         }
 
         internal override DbConnection GetConnection()
         {
-            DbConnection connection = _transaction.Connection;
+            DbConnection? connection = _transaction.Connection;
+            Debug.Assert(connection != null);
+
             return connection;
         }
 
         internal override ValueTask<DbConnection> GetOpenConnectionAsync(CancellationToken cancellationToken)
         {
-            DbConnection connection = _transaction.Connection;
+            DbConnection? connection = _transaction.Connection;
+            Debug.Assert(connection != null);
+
             return new ValueTask<DbConnection>(result: connection);
         }
 
@@ -46,7 +52,7 @@ namespace DanilovSoft.MicroORM
         public override MultiSqlReader MultiResult()
         {
             DbCommand command = GetCommand();
-            MultiSqlReader sqlReader = new MultiSqlReader(command);
+            MultiSqlReader sqlReader = new MultiSqlReader(command, _sqlOrm);
             sqlReader.ExecuteReader();
             return sqlReader;
         }
@@ -61,18 +67,19 @@ namespace DanilovSoft.MicroORM
             }
             else
             {
-                return WaitAsync(task, cancellationToken);
-                static async ValueTask<MultiSqlReader> WaitAsync(ValueTask<DbCommand> task, CancellationToken cancellationToken)
-                {
-                    DbCommand command = await task.ConfigureAwait(false);
-                    return await CreateReaderAsync(command, cancellationToken).ConfigureAwait(false);
-                }
+                return WaitMultiResultAsync(task, cancellationToken);
             }
         }
 
-        private static ValueTask<MultiSqlReader> CreateReaderAsync(DbCommand command, CancellationToken cancellationToken)
+        private async ValueTask<MultiSqlReader> WaitMultiResultAsync(ValueTask<DbCommand> task, CancellationToken cancellationToken)
         {
-            var sqlReader = new MultiSqlReader(command);
+            DbCommand command = await task.ConfigureAwait(false);
+            return await CreateReaderAsync(command, cancellationToken).ConfigureAwait(false);
+        }
+
+        private ValueTask<MultiSqlReader> CreateReaderAsync(DbCommand command, CancellationToken cancellationToken)
+        {
+            var sqlReader = new MultiSqlReader(command, _sqlOrm);
             MultiSqlReader? toDispose = sqlReader;
             ValueTask task;
             try

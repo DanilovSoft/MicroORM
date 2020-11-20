@@ -19,7 +19,7 @@ namespace DanilovSoft.MicroORM
         private MultiResultCommandReader? _commandReader;
 
         // ctor.
-        internal MultiSqlReader(DbCommand command)
+        internal MultiSqlReader(DbCommand command, SqlORM sqlOrm) : base(sqlOrm)
         {
             _dbCommand = command;
         }
@@ -80,6 +80,7 @@ namespace DanilovSoft.MicroORM
             {
                 _reader?.Dispose();
                 _dbCommand.Dispose();
+                _commandReader?.Dispose();
             }
         }
     }

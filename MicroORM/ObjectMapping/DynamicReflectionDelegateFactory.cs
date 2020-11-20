@@ -98,11 +98,12 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             for (int i = 0; i < args.Length; i++)
             {
                 ParameterInfo parameter = args[i];
-                Type parameterType = parameter.ParameterType;
+                Type? parameterType = parameter.ParameterType;
 
                 if (parameterType.IsByRef)
                 {
                     parameterType = parameterType.GetElementType();
+                    Debug.Assert(parameterType != null);
 
                     LocalBuilder localVariable = generator.DeclareLocal(parameterType);
 
@@ -169,7 +170,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                     if (parameterType.IsPrimitive)
                     {
                         // for primitive types we need to handle type widening (e.g. short -> int)
-                        MethodInfo toParameterTypeMethod = typeof(IConvertible)
+                        MethodInfo? toParameterTypeMethod = typeof(IConvertible)
                             .GetMethod("To" + parameterType.Name, new[] { typeof(IFormatProvider) });
 
                         if (toParameterTypeMethod != null)
@@ -259,7 +260,10 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             else
             {
                 ConstructorInfo? constructorInfo =
-                    type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
+                    type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, 
+                    binder: null, 
+                    types: Type.EmptyTypes, 
+                    modifiers: null);
 
                 if (constructorInfo == null)
                 {

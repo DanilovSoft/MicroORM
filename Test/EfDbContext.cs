@@ -15,11 +15,13 @@ namespace ConsoleTest
             Category.OnModelCreating(builder);
 
             builder.Entity<GalleryDb>().HasNoKey();
+            builder.Entity<GalleryRec>().HasNoKey();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder builder)
         {
             builder.UseNpgsql(Program.PgConnectionString);
+                //.UseSnakeCaseNamingConvention();
         }
     }
 }

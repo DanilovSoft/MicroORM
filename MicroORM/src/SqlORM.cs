@@ -12,23 +12,27 @@ namespace DanilovSoft.MicroORM
 {
     public sealed class SqlORM : ISqlORM
     {
+        /// <remarks>Default value is 30 seconds.</remarks>
         public static int DefaultQueryTimeoutSec { get; set; } = 30;
         /// <summary>
         /// -1 means infinite.
         /// </summary>
+        /// <remarks>Default value is 30 seconds.</remarks>
         public static int CloseConnectionPenaltySec { get; set; } = 30;
         public string ConnectionString { get; }
-        private readonly DbProviderFactory _factory;
+        internal readonly DbProviderFactory Factory;
+        internal readonly bool UseSnakeCaseNamingConvention;
 
         // ctor.
-        public SqlORM(string connectionString, DbProviderFactory factory)
+        public SqlORM(string connectionString, DbProviderFactory factory, bool usePascalCaseNamingConvention = false)
         {
             if (!string.IsNullOrEmpty(connectionString))
             {
                 if (factory != null)
                 {
-                    _factory = factory;
+                    Factory = factory;
                     ConnectionString = connectionString;
+                    UseSnakeCaseNamingConvention = usePascalCaseNamingConvention;
                 }
                 else
                     throw new ArgumentNullException(nameof(factory));
@@ -39,14 +43,14 @@ namespace DanilovSoft.MicroORM
 
         public SqlQuery Sql(string query, params object?[] parameters)
         {
-            var sqlQuery = new SqlQuery(query, ConnectionString, _factory);
+            var sqlQuery = new SqlQuery(this, query);
             sqlQuery.Parameters(parameters);
             return sqlQuery;
         }
 
         public SqlTransaction OpenTransaction()
         {
-            var tsql = new SqlTransaction(ConnectionString, _factory);
+            var tsql = new SqlTransaction(this);
             SqlTransaction? toDispose = tsql;
             try
             {
@@ -67,7 +71,7 @@ namespace DanilovSoft.MicroORM
 
         public ValueTask<SqlTransaction> OpenTransactionAsync(CancellationToken cancellationToken)
         {
-            var tsql = new SqlTransaction(ConnectionString, _factory);
+            var tsql = new SqlTransaction(this);
             SqlTransaction? toDispose = tsql;
 
             ValueTask task;
@@ -107,7 +111,7 @@ namespace DanilovSoft.MicroORM
 
         public SqlTransaction Transaction()
         {
-            var tsql = new SqlTransaction(ConnectionString, _factory);
+            var tsql = new SqlTransaction(this);
             return tsql;
         }
     }
