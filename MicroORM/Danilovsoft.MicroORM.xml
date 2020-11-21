@@ -189,6 +189,19 @@
             	<c>true</c> if the property is an indexed property; otherwise, <c>false</c>.
             </returns>
         </member>
+        <member name="T:DanilovSoft.MicroORM.NonNullableConvention">
+            <summary>
+                A base type for conventions that configure model aspects based on whether the member type
+                is a non-nullable reference type.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.NonNullableConvention.IsNonNullableReferenceType2(System.Reflection.MemberInfo)">
+            <summary>
+                Returns a value indicating whether the member type is a non-nullable reference type.
+            </summary>
+            <param name="memberInfo"> The member info. </param>
+            <returns> <see langword="true" /> if the member type is a non-nullable reference type. </returns>
+        </member>
         <member name="P:DanilovSoft.MicroORM.SqlORM.DefaultQueryTimeoutSec">
             <remarks>Default value is 30 seconds.</remarks>
         </member>
