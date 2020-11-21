@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -29,6 +30,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             const BindingFlags DefaultMembersSearchFlags = BindingFlags.Instance | BindingFlags.Public;
             var defaultMembers = ReflectionUtils.GetFieldsAndProperties(type, DefaultMembersSearchFlags).Where(x => !ReflectionUtils.IsIndexedProperty(x)).ToHashSet();
 
+            // Свойства и поля.
             foreach (MemberInfo member in allMembers)
             {
                 if (member.IsDefined(typeof(CompilerGeneratedAttribute)) || member.IsDefined(typeof(SqlIgnoreAttribute)))
@@ -71,11 +73,11 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                     }
                 }
 
-                if(canIgnoreMember)
+                if (canIgnoreMember)
                 {
                     if (!defaultMembers.Contains(member))
-                    {  // свойство скорее всего приватное.
-
+                    {  
+                        // свойство скорее всего приватное.
                         continue;
                     }
                 }
@@ -92,16 +94,16 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         /// Инициирует ленивое свойство при первом обращении.
         /// Этот метод потокобезопасен.
         /// </summary>
-        public bool TryGetOrmPropertyFromLazy(string memberName, out OrmProperty ormProperty)
+        public bool TryGetOrmPropertyFromLazy(string memberName, [NotNullWhen(true)] out OrmProperty? ormProperty)
         {
-            if(StaticCache.TypesProperties.TryGetValue((ContractType, memberName), out OrmLazyProperty lazyOrmProperty))
+            if (StaticCache.TypesProperties.TryGetValue((ContractType, memberName), out OrmLazyProperty? lazyOrmProperty))
             {
                 ormProperty = lazyOrmProperty.Value;
                 return true;
             }
             else
             {
-                ormProperty = default;
+                ormProperty = null;
                 return false;
             }
         }

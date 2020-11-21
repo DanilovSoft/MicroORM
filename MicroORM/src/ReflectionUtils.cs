@@ -81,7 +81,7 @@ namespace DanilovSoft.MicroORM
         /// <returns> <see langword="true" /> if the member type is a non-nullable reference type. </returns>
         public static bool IsNonNullableReferenceType2(MemberInfo memberInfo)
         {
-            if (memberInfo.GetMemberType().IsValueType)
+            if (memberInfo.GetMemberType()?.IsValueType == true)
             {
                 return false;
             }
@@ -169,46 +169,46 @@ namespace DanilovSoft.MicroORM
                 return false;
         }
 
-        // со стек-оверфлоу.
-        public static bool IsNullable(PropertyInfo property)
-        {
-            if (property.PropertyType.IsValueType)
-                return Nullable.GetUnderlyingType(property.PropertyType) != null;
+        //// со стек-оверфлоу.
+        //public static bool IsNullable(PropertyInfo property)
+        //{
+        //    if (property.PropertyType.IsValueType)
+        //        return Nullable.GetUnderlyingType(property.PropertyType) != null;
 
-            // The [Nullable] attribute is synthesized by the compiler. It's best to just compare the type name.
-            CustomAttributeData? nullable = property.CustomAttributes
-                .FirstOrDefault(x => string.Equals(x.AttributeType.FullName, "System.Runtime.CompilerServices.NullableAttribute", StringComparison.Ordinal));
+        //    // The [Nullable] attribute is synthesized by the compiler. It's best to just compare the type name.
+        //    CustomAttributeData? nullable = property.CustomAttributes
+        //        .FirstOrDefault(x => string.Equals(x.AttributeType.FullName, "System.Runtime.CompilerServices.NullableAttribute", StringComparison.Ordinal));
 
-            if (nullable is not null and { ConstructorArguments: { Count: 1 } })
-            {
-                var attributeArgument = nullable.ConstructorArguments[0];
-                if (attributeArgument.ArgumentType == typeof(byte[]))
-                {
-                    var args = (ReadOnlyCollection<CustomAttributeTypedArgument>)attributeArgument.Value;
-                    if (args.Count > 0 && args[0].ArgumentType == typeof(byte))
-                    {
-                        return (byte)args[0].Value == 2;
-                    }
-                }
-                else if (attributeArgument.ArgumentType == typeof(byte))
-                {
-                    return (byte)attributeArgument.Value == 2;
-                }
-            }
+        //    if (nullable is not null and { ConstructorArguments: { Count: 1 } })
+        //    {
+        //        var attributeArgument = nullable.ConstructorArguments[0];
+        //        if (attributeArgument.ArgumentType == typeof(byte[]))
+        //        {
+        //            var args = (ReadOnlyCollection<CustomAttributeTypedArgument>)attributeArgument.Value;
+        //            if (args.Count > 0 && args[0].ArgumentType == typeof(byte))
+        //            {
+        //                return (byte)args[0].Value == 2;
+        //            }
+        //        }
+        //        else if (attributeArgument.ArgumentType == typeof(byte))
+        //        {
+        //            return (byte)attributeArgument.Value == 2;
+        //        }
+        //    }
 
-            var context = property.DeclaringType.CustomAttributes
-                .FirstOrDefault(x => x.AttributeType.FullName == "System.Runtime.CompilerServices.NullableContextAttribute");
+        //    var context = property.DeclaringType.CustomAttributes
+        //        .FirstOrDefault(x => x.AttributeType.FullName == "System.Runtime.CompilerServices.NullableContextAttribute");
 
-            if (context != null
-                && context.ConstructorArguments.Count == 1
-                && context.ConstructorArguments[0].ArgumentType == typeof(byte))
-            {
-                return (byte)context.ConstructorArguments[0].Value == 2;
-            }
+        //    if (context != null
+        //        && context.ConstructorArguments.Count == 1
+        //        && context.ConstructorArguments[0].ArgumentType == typeof(byte))
+        //    {
+        //        return (byte)context.ConstructorArguments[0].Value == 2;
+        //    }
 
-            // Couldn't find a suitable attribute
-            return false;
-        }
+        //    // Couldn't find a suitable attribute
+        //    return false;
+        //}
 
 
         // The [Nullable] attribute is synthesized by the compiler. It's best to just compare the type name.
@@ -223,21 +223,33 @@ namespace DanilovSoft.MicroORM
         private const byte NotNullableFlag = 1;
         private const byte NullableFlag = 2;
 
+        public static bool IsNonNullableReferenceType(ParameterInfo parameterInfo)
+        {
+            Debug.Assert(parameterInfo != null);
+
+            return IsNonNullableReferenceType(parameterInfo, parameterInfo.ParameterType, parameterInfo.Member.DeclaringType);
+        }
+
         public static bool IsNonNullableReferenceType(MemberInfo memberInfo)
+        {
+            return IsNonNullableReferenceType(memberInfo, memberInfo.GetMemberType(), memberInfo.DeclaringType);
+        }
+
+        private static bool IsNonNullableReferenceType(ICustomAttributeProvider memberInfo, Type memberType, Type? declaringType)
         {
             Debug.Assert(memberInfo != null);
 
-            if (memberInfo.GetMemberType().IsValueType)
-            {
+            if (memberType.IsValueType == true)
                 return false;
-            }
 
             // First check for [MaybeNull] on the return value. If it exists, the member is nullable.
             // Note: avoid using GetCustomAttribute<> below because of https://github.com/mono/mono/issues/17477
-            var isMaybeNull = memberInfo switch
+            bool isMaybeNull = memberInfo switch
             {
                 FieldInfo f
                     => f.CustomAttributes.Any(a => a.AttributeType == typeof(MaybeNullAttribute)),
+                ParameterInfo pi
+                    => pi.CustomAttributes.Any(a => a.AttributeType == typeof(MaybeNullAttribute)),
                 PropertyInfo p
                     => p.GetMethod?.ReturnParameter?.CustomAttributes?.Any(a => a.AttributeType == typeof(MaybeNullAttribute)) == true,
                 _ => false
@@ -262,12 +274,12 @@ namespace DanilovSoft.MicroORM
 
             // No attribute on the member, try to find a NullableContextAttribute on the declaring type.
             // The [NullableContext] attribute can appear on a method or on the module.
-            return IsNonNullableBasedOnContext(memberInfo);
+            return IsNonNullableBasedOnContext(declaringType, memberType.Module);
         }
 
-        internal static bool TryIsNonNullableMember(MemberInfo memberInfo, out bool isNonNullable)
+        private static bool TryIsNonNullableMember(ICustomAttributeProvider memberInfo, out bool isNonNullable)
         {
-            if (Attribute.GetCustomAttributes(memberInfo).FirstOrDefault(a => a.GetType().FullName == NullableAttributeFullName)
+            if (memberInfo.GetCustomAttributes(inherit: false).FirstOrDefault(a => a.GetType().FullName == NullableAttributeFullName)
                 is Attribute attribute)
             {
                 // We don't handle cases where generics and NNRT are used. This runs into a
@@ -282,51 +294,51 @@ namespace DanilovSoft.MicroORM
                 {
                     // First element is the property/parameter type.
                     isNonNullable = flags.FirstOrDefault() == NotNullableFlag;
-                    return true; // [Nullable] found and type is an NNRT
+                    return true; // Найден [Nullable]
                 }
             }
             isNonNullable = default;
-            return false; // [Nullable] not found
+            return false; // Не найден [Nullable]
         }
 
-        internal static bool IsNonNullableBasedOnContext(MemberInfo memberInfo)
+        private static bool IsNonNullableBasedOnContext(Type? declaringType, Module module)
         {
             // Check on the containing type.
-            Type? containingType = memberInfo.DeclaringType;
-            if (containingType != null)
+            //Type? declaringType = memberInfo.DeclaringType;
+            if (declaringType != null)
             {
                 // For generic types, inspecting the nullability requirement additionally requires
                 // inspecting the nullability constraint on generic type parameters. This is fairly non-triviial
                 // so we'll just avoid calculating it. Users should still be able to apply an explicit [Required]
                 // attribute on these members.
-                if (containingType.IsGenericType == true)
+                if (declaringType.IsGenericType == true)
                 {
                     return false; // Может быть Null по умолчанию.
                 }
 
                 do
                 {
-                    Attribute[] attributes = Attribute.GetCustomAttributes(containingType, inherit: false);
+                    Attribute[] attributes = Attribute.GetCustomAttributes(declaringType, inherit: false);
                     if (TryFindNullableContext(attributes, out bool isNonNullable))
                     {
                         return isNonNullable;
                     }
 
-                    containingType = containingType.DeclaringType;
-                } while (containingType != null);
-
-                // If we don't find the attribute on the declaring type then repeat at the module level.
-                return IsNonNullableBasedOnModule(memberInfo);
+                    declaringType = declaringType.DeclaringType;
+                } while (declaringType != null);
             }
             else
             {
-                return false; // Может быть Null по умолчанию.
+                //return false; // Может быть Null по умолчанию.
             }
+
+            // If we don't find the attribute on the declaring type then repeat at the module level.
+            return IsNonNullableBasedOnModule(module);
         }
 
-        private static bool IsNonNullableBasedOnModule(MemberInfo memberInfo)
+        private static bool IsNonNullableBasedOnModule(Module module)
         {
-            var attributes = Attribute.GetCustomAttributes(memberInfo.Module, inherit: false);
+            var attributes = Attribute.GetCustomAttributes(module, inherit: false);
             return TryFindNullableContext(attributes, out bool isNonNullable) && isNonNullable;
         }
 

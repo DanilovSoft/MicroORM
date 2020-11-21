@@ -15,7 +15,7 @@ namespace ConsoleTest
             Category.OnModelCreating(builder);
 
             builder.Entity<GalleryDb>().HasNoKey();
-            builder.Entity<GalleryRec>().HasNoKey();
+            builder.Entity<Program.GalleryRec>().HasNoKey();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder builder)

@@ -24,7 +24,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             // GetOrAdd может одновременно создать 2 экземпляра но потоки всегда получат одинаковый экземпляр.
             var lazy = LazyTypesContracts.GetOrAdd(type, static t =>
             {
-                return new Lazy<ContractActivator>(() => new ContractActivator(t, anonimousType: false), LazyThreadSafetyMode.ExecutionAndPublication);
+                return new Lazy<ContractActivator>(() => new ContractActivator(t, anonymousType: false), LazyThreadSafetyMode.ExecutionAndPublication);
             });
 
             return lazy.Value;
@@ -37,7 +37,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         {
             var lazy = LazyTypesContracts.GetOrAdd(type, static t =>
             {
-                return new Lazy<ContractActivator>(() => new ContractActivator(t, anonimousType: true), LazyThreadSafetyMode.ExecutionAndPublication);
+                return new Lazy<ContractActivator>(() => new ContractActivator(t, anonymousType: true), LazyThreadSafetyMode.ExecutionAndPublication);
             });
 
             return lazy.Value;

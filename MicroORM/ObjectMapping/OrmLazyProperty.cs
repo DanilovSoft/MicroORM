@@ -16,6 +16,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
     internal sealed class OrmLazyProperty
     {
         private readonly Lazy<OrmProperty, MemberInfo> _lazy;
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public OrmProperty Value => _lazy.Value;
 

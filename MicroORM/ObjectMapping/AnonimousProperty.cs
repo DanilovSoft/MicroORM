@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -15,11 +16,25 @@ namespace DanilovSoft.MicroORM.ObjectMapping
     {
         public readonly int Index;
         public readonly Type ParameterType;
+        public readonly bool IsNonNullable;
+        public readonly string ParameterName;
 
-        public ConstructorArgument(int index, Type type)
+        public ConstructorArgument(int index, PropertyInfo property)
         {
             Index = index;
-            ParameterType = type;
+            ParameterName = property.Name;
+            ParameterType = property.PropertyType;
+
+            IsNonNullable = NonNullableConvention.IsNonNullableReferenceType(property);
+        }
+
+        public ConstructorArgument(int index, ParameterInfo parameterInfo)
+        {
+            Index = index;
+            ParameterName = parameterInfo.Name!;
+            ParameterType = parameterInfo.ParameterType;
+
+            IsNonNullable = NonNullableConvention.IsNonNullableReferenceType(parameterInfo);
         }
     }
 }

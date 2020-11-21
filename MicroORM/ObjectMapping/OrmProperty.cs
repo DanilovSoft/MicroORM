@@ -17,26 +17,19 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         public readonly SetValueDelegate? SetValueHandler;
         public readonly TypeConverter? Converter;
         public readonly Type MemberType;
+        public readonly bool IsNonNullable;
+        public readonly string PropertyName;
 
         // ctor.
         public OrmProperty(MemberInfo memberInfo)
         {
-            if(memberInfo is PropertyInfo propertyInfo)
-            {
-                MemberType = propertyInfo.PropertyType;
-            }
-            else
-            {
-                var fieldInfo = (FieldInfo)memberInfo;
-                MemberType = fieldInfo.FieldType;
-            }
+            Debug.Assert(memberInfo != null);
 
+            PropertyName = memberInfo.Name;
+            MemberType = memberInfo.GetMemberType();
+            
             var attribute = memberInfo.GetCustomAttribute<SqlConverterAttribute>();
-            if (attribute == null)
-            {
-                Converter = null;
-            }
-            else
+            if (attribute != null)
             {
                 Converter = StaticCache.TypeConverters.GetOrAdd(attribute.ConverterType, ConverterValueFactory);
             }
@@ -46,10 +39,8 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             {
                 SetValueHandler = new SetValueDelegate(setAction);
             }
-            else
-            {
-                SetValueHandler = null;
-            }
+
+            IsNonNullable = NonNullableConvention.IsNonNullableReferenceType(memberInfo);
         }
 
         private static TypeConverter ConverterValueFactory(Type converterType)
@@ -58,7 +49,8 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return ctor.Invoke();
         }
 
-        public object? Convert(object? value, Type columnSourceType, string columnName)
+        /// <param name="sqlColumnName">Используется только для ошибок.</param>
+        public object? Convert(object? value, Type columnSourceType, string sqlColumnName)
         {
             if (Converter != null)
             {
@@ -74,15 +66,16 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             }
             else
             {
-                return SqlTypeConverter.ChangeType(value, MemberType, columnSourceType, columnName);
+                return SqlTypeConverter.ChangeType(value, MemberType, columnSourceType, sqlColumnName);
             }
         }
 
-        public void ConvertAndSetValue(object obj, object? value, Type columnSourceType, string columnName)
+        /// <param name="sqlColumnName">Используется только для ошибок.</param>
+        public void ConvertAndSetValue(object obj, object? value, Type columnSourceType, string sqlColumnName)
         {
             Debug.Assert(SetValueHandler != null);
 
-            object? finalValue = Convert(value, columnSourceType, columnName);
+            object? finalValue = Convert(value, columnSourceType, sqlColumnName);
 
             SetValueHandler.Invoke(obj, finalValue);
         }

@@ -8,3 +8,6 @@ dotnet_diagnostic.CA1716.severity = none
 
 # CA1303: Не передавать литералы в качестве локализованных параметров
 dotnet_diagnostic.CA1303.severity = none
+
+# CS1573: Параметр не имеет соответствующий тег параметра в комментарии XML (в отличие от остальных параметров)
+dotnet_diagnostic.CS1573.severity = none

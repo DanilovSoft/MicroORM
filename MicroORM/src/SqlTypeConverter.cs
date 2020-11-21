@@ -9,13 +9,15 @@ namespace DanilovSoft.MicroORM
 {
     internal static class SqlTypeConverter
     {
-        public static T ChangeType<T>(object? value, Type columnType, string columnName)
+        /// <param name="sqlColumnName">Используется только для ошибок.</param>
+        public static T ChangeType<T>(object? value, Type columnType, string sqlColumnName)
         {
-            object? convertedValue = ChangeType(value, typeof(T), columnType, columnName);
+            object? convertedValue = ChangeType(value, typeof(T), columnType, sqlColumnName);
             return (T)convertedValue!;
         }
 
-        public static object? ChangeType(object? value, Type propertyType, Type columnType, string columnName)
+        /// <param name="sqlColumnName">Используется только для ошибок.</param>
+        public static object? ChangeType(object? value, Type propertyType, Type columnType, string sqlColumnName)
         {
             bool isAssignable = propertyType.IsAssignableFrom(columnType);
             if (!isAssignable || value == null)
@@ -27,26 +29,27 @@ namespace DanilovSoft.MicroORM
                     {
                         if (propertyType != columnType)
                         {
-                            value = ChangeType(value, propertyType, columnName);
+                            value = ChangeType(value, propertyType, sqlColumnName);
                         }
                     }
                     else
                     {
-                        throw new MicroOrmException($"Error converting value {{null}} to type '{propertyType.FullName}'. Column name '{columnName}'.");
+                        throw new MicroOrmException($"Error converting value {{null}} to type '{propertyType.FullName}'. Column name '{sqlColumnName}'.");
                     }
                 }
                 else
                 {
                     if (value != null && nullableType != columnType)
                     {
-                        value = ChangeType(value, nullableType, columnName);
+                        value = ChangeType(value, nullableType, sqlColumnName);
                     }
                 }
             }
             return value;
         }
 
-        private static object? ChangeType(object? value, Type conversionType, string columnName)
+        /// <param name="sqlColumnName">Используется только для ошибок.</param>
+        private static object? ChangeType(object? value, Type conversionType, string sqlColumnName)
         {
             try
             {
@@ -68,7 +71,7 @@ namespace DanilovSoft.MicroORM
             }
             catch (Exception ex)
             {
-                throw new MicroOrmException($"Error converting value '{value}' to type '{conversionType.FullName}'. Column name '{columnName}'.", ex);
+                throw new MicroOrmException($"Error converting value '{value}' to type '{conversionType.FullName}'. Column name '{sqlColumnName}'.", ex);
             }
         }
     }

@@ -73,15 +73,18 @@
             Создаёт объект через пустой конструктор.
             </summary>
         </member>
-        <member name="F:DanilovSoft.MicroORM.ObjectMapping.ContractActivator._ctorActivator">
+        <member name="F:DanilovSoft.MicroORM.ObjectMapping.ContractActivator._anonymousCtorActivator">
             <summary>
             Создаёт объект через параметризованный конструктор.
             </summary>
         </member>
         <member name="F:DanilovSoft.MicroORM.ObjectMapping.ContractActivator.ConstructorArguments">
             <summary>
-            Для маппинга значений для конструктора по именам параметров.
+            Для маппинга параметров конструктора по именам.
             </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ContractActivator.GetIsReadonlyStruct(System.Type)">
+            <returns><see langword="true"/> если <paramref name="type"/> является <see langword="readonly struct"/></returns>
         </member>
         <member name="M:DanilovSoft.MicroORM.ObjectMapping.DynamicReflectionDelegateFactory.CreateDefaultConstructor``1(System.Type)">
             <summary>
@@ -113,6 +116,12 @@
             <summary>
             Хранится в словаре поэтому извлекается быстрее как класс, а не как структура.
             </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.OrmProperty.Convert(System.Object,System.Type,System.String)">
+            <param name="sqlColumnName">Используется только для ошибок.</param>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.OrmProperty.ConvertAndSetValue(System.Object,System.Object,System.Type,System.String)">
+            <param name="sqlColumnName">Используется только для ошибок.</param>
         </member>
         <member name="F:DanilovSoft.MicroORM.ObjectMapping.StaticCache.TypesProperties">
             <summary>
@@ -234,6 +243,15 @@
             Rolls back a transaction from a pending state.
             Try/Catch exception handling should always be used when committing or rolling back a SqlTransaction.
             </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ChangeType``1(System.Object,System.Type,System.String)">
+            <param name="sqlColumnName">Используется только для ошибок.</param>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ChangeType(System.Object,System.Type,System.Type,System.String)">
+            <param name="sqlColumnName">Используется только для ошибок.</param>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ChangeType(System.Object,System.Type,System.String)">
+            <param name="sqlColumnName">Используется только для ошибок.</param>
         </member>
         <member name="T:System.Threading.DelayedAction`1">
             <summary>

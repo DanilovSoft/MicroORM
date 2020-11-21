@@ -23,11 +23,11 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         /// <summary>
         /// Создаёт объект через параметризованный конструктор.
         /// </summary>
-        private readonly Func<object?[], object>? _ctorActivator;
+        private readonly Func<object?[], object>? _anonymousCtorActivator;
         public readonly OnDeserializingDelegate? OnDeserializingHandle;
         public readonly OnDeserializedDelegate? OnDeserializedHandle;
         /// <summary>
-        /// Для маппинга значений для конструктора по именам параметров.
+        /// Для маппинга параметров конструктора по именам.
         /// </summary>
         public readonly Dictionary<string, ConstructorArgument>? ConstructorArguments;
         public readonly bool IsEmptyCtor;
@@ -35,83 +35,101 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
         // ctor.
         // Мы защищены от одновременного создания с помощью Lazy.ExecutionAndPublication.
-        public ContractActivator(Type type, bool anonimousType)
+        public ContractActivator(Type type, bool anonymousType)
         {
-            if (!anonimousType)
+            if (!anonymousType)
             {
                 // Тип может быть readonly структурой, определить можно только перебором всех свойств и полей.
                 bool isReadonlyStruct = GetIsReadonlyStruct(type);
 
                 if (isReadonlyStruct)
                 {
-                    if (SingleNonEmptyCtor(type, out var singleCtor))
-                    {
-                        IsEmptyCtor = false;
-
-                        _ctorActivator = DynamicReflectionDelegateFactory.CreateConstructor(type, singleCtor);
-
-                        ConstructorArguments = singleCtor.GetParameters()
-                            .Select((x, Index) => new { ParameterInfo = x, Index })
-                            .ToDictionary(x => x.ParameterInfo.Name!, x => new ConstructorArgument(x.Index, x.ParameterInfo.ParameterType));
-                    }
-                    else
-                    {
-                        IsEmptyCtor = true;
-
-                        _emptyCtorActivator = DynamicReflectionDelegateFactory.CreateDefaultConstructor<object>(type);
-
-                        MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-                        for (int i = 0; i < methods.Length; i++)
-                        {
-                            MethodInfo method = methods[i];
-                            if (method.IsDefined(typeof(OnDeserializingAttribute), false))
-                            {
-                                OnDeserializingHandle = DynamicReflectionDelegateFactory.CreateOnDeserializingMethodCall(method, type);
-                            }
-
-                            if (method.IsDefined(typeof(OnDeserializedAttribute), false))
-                            {
-                                OnDeserializedHandle = DynamicReflectionDelegateFactory.CreateOnDeserializedMethodCall(method, type);
-                            }
-                        }
-                    }
-                }
-                else
-                // readonly структура.
-                {
                     // Хоть у структуры и есть пустой конструктор, нам он не подходит.
                     IsEmptyCtor = false;
 
                     ConstructorInfo[] ctors = type.GetConstructors();
-                    Debug.Assert(ctors.Length > 0, "Не найден открытый конструктор");
+                    Debug.Assert(ctors.Length > 0, "У типа должны быть открытые конструкторы");
+
                     if (ctors.Length != 0)
                     {
                         ConstructorInfo ctor = ctors[0];
-                        _ctorActivator = DynamicReflectionDelegateFactory.CreateConstructor(type, ctor);
+                        _anonymousCtorActivator = DynamicReflectionDelegateFactory.CreateConstructor(type, ctor);
 
-                        ConstructorArguments = ctor.GetParameters()
-                            .Select((x, Index) => new { ParameterInfo = x, Index })
-                            .ToDictionary(x => x.ParameterInfo.Name!, x => new ConstructorArgument(x.Index, x.ParameterInfo.ParameterType));
+                        ConstructorArguments = CreateConstructorArguments(ctor);
                     }
                     else
                         throw new MicroOrmException("Не найден открытый конструктор");
                 }
+                else
+                // Не анонимный class
+                {
+                    if (SingleNonEmptyCtor(type, out var singleCtor))
+                    {
+                        IsEmptyCtor = false;
+                        _anonymousCtorActivator = DynamicReflectionDelegateFactory.CreateConstructor(type, singleCtor);
+
+                        ConstructorArguments = CreateConstructorArguments(singleCtor);
+                    }
+                    else
+                    {
+                        // Хоть у структуры и есть пустой конструктор, нам он не подходит.
+                        IsEmptyCtor = true;
+                        _emptyCtorActivator = DynamicReflectionDelegateFactory.CreateDefaultConstructor<object>(type);
+                    }
+
+                    InitializeStreamingMethods(type, out OnDeserializingHandle, out OnDeserializedHandle);
+
+                    //IsEmptyCtor = true;
+                    //_emptyCtorActivator = DynamicReflectionDelegateFactory.CreateDefaultConstructor<object>(type);
+                }
             }
             else
             {
-                _ctorActivator = DynamicReflectionDelegateFactory.CreateAnonimousConstructor(type);
+                _anonymousCtorActivator = DynamicReflectionDelegateFactory.CreateAnonimousConstructor(type);
 
                 // поля у анонимных типов не рассматриваются.
                 // берем только свойства по умолчанию.
-                var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
                 // порядок полей такой же как у конструктора.
-                ConstructorArguments = properties
-                    .Select((x, Index) => new { PropertyInfo = x, Index })
-                    .ToDictionary(x => x.PropertyInfo.Name, x => new ConstructorArgument(x.Index, x.PropertyInfo.PropertyType));
+                ConstructorArguments = CreateConstructorArguments(properties);
             }
-
             Contract = new TypeContract(type);
+        }
+
+        private static Dictionary<string, ConstructorArgument> CreateConstructorArguments(ConstructorInfo ctor)
+        {
+            return ctor.GetParameters()
+                .Select((x, Index) => new { ParameterInfo = x, Index })
+                .ToDictionary(x => x.ParameterInfo.Name!, x => new ConstructorArgument(x.Index, x.ParameterInfo));
+        }
+
+        private static Dictionary<string, ConstructorArgument> CreateConstructorArguments(PropertyInfo[] properties)
+        {
+            return properties
+                .Select((x, Index) => new { PropertyInfo = x, Index })
+                .ToDictionary(x => x.PropertyInfo.Name, x => new ConstructorArgument(x.Index, x.PropertyInfo));
+        }
+
+        private static void InitializeStreamingMethods(Type type, out OnDeserializingDelegate? onDeserializingHandle, out OnDeserializedDelegate? onDeserializedHandle)
+        {
+            onDeserializingHandle = null;
+            onDeserializedHandle = null;
+
+            MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                MethodInfo method = methods[i];
+                if (method.IsDefined(typeof(OnDeserializingAttribute), false))
+                {
+                    onDeserializingHandle = DynamicReflectionDelegateFactory.CreateOnDeserializingMethodCall(method, type);
+                }
+
+                if (method.IsDefined(typeof(OnDeserializedAttribute), false))
+                {
+                    onDeserializedHandle = DynamicReflectionDelegateFactory.CreateOnDeserializedMethodCall(method, type);
+                }
+            }
         }
 
         private static bool SingleNonEmptyCtor(Type type, [NotNullWhen(true)] out ConstructorInfo? ctor)
@@ -129,6 +147,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             }
         }
 
+        /// <returns><see langword="true"/> если <paramref name="type"/> является <see langword="readonly struct"/></returns>
         private static bool GetIsReadonlyStruct(Type type)
         {
             if (!type.IsValueType)
@@ -180,9 +199,9 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
         public object CreateInstance(object?[] args)
         {
-            Debug.Assert(_ctorActivator != null);
+            Debug.Assert(_anonymousCtorActivator != null);
 
-            return _ctorActivator.Invoke(args);
+            return _anonymousCtorActivator.Invoke(args);
         }
 
         //public object CreateReadonlyInstance(object?[] args)

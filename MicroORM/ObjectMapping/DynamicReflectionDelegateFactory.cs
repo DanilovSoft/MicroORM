@@ -267,7 +267,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
                 if (constructorInfo == null)
                 {
-                    throw new MicroOrmException($"Could not find constructor for type {type}.");
+                    throw new MicroOrmException($"Could not find empty constructor for type {type}.");
                 }
 
                 generator.Emit(OpCodes.Newobj, constructorInfo);

@@ -133,7 +133,7 @@ namespace DanilovSoft.MicroORM
             {
                 object? value = reader.GetValue(0);
                 NullIfDBNull(ref value);
-                T convertedValue = SqlTypeConverter.ChangeType<T>(value: value, columnType: reader.GetFieldType(0), columnName: reader.GetName(0));
+                T convertedValue = SqlTypeConverter.ChangeType<T>(value: value, columnType: reader.GetFieldType(0), sqlColumnName: reader.GetName(0));
                 list.Add(convertedValue);
             }
             return list;
@@ -729,7 +729,7 @@ namespace DanilovSoft.MicroORM
             {
                 object? value = reader.GetValue(0);
                 NullIfDBNull(ref value);
-                T convertedValue = SqlTypeConverter.ChangeType<T>(value, columnType: reader.GetFieldType(0), columnName: reader.GetName(0));
+                T convertedValue = SqlTypeConverter.ChangeType<T>(value, columnType: reader.GetFieldType(0), sqlColumnName: reader.GetName(0));
                 list.Add(convertedValue);
             }
             return list;
