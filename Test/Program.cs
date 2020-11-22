@@ -24,14 +24,19 @@ using System.Threading.Tasks;
 
 class Program
 {
-    //public sealed record GalleryRec(string OrigTitle, int Gid, DateTime PostedDate, string Title);
+    public sealed record GalleryRec(string OrigTitle, int Gid, DateTime PostedDate, string Title);
 
-    public sealed class GalleryRec
+    public sealed class GalleryDb
     {
+        //public int Gid { get; set; }
         public string OrigTitle { get; set; }
-        public int Gid { get; set; }
+
+        [SqlProperty("title")]
+        private string Title { get; set; }
         public DateTime PostedDate { get; set; }
-        public string Title { get; set; }
+
+        [SqlProperty("gid")]
+        private readonly int _gid;
     }
 
     //public readonly struct GalleryDb
@@ -68,8 +73,8 @@ class Program
     {
         Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
 
-        const string Query = @"SELECT g.gid AS ""Gid"", g.posted_date AS ""PostedDate"", gi.title AS ""Title"", Null AS ""OrigTitle"",
-f.file_name AS ""FileName"", gt.file_extension AS ""FileExtension""
+        const string Query = @"SELECT g.gid, g.posted_date, gi.title, Null AS orig_title,
+f.file_name, gt.file_extension
 FROM gallery g
 JOIN gallery_info gi ON g.gid = gi.gid
 JOIN gallery_thumb gt ON g.gid = gt.gid
@@ -79,10 +84,10 @@ ORDER BY g.posted_date DESC
 LIMIT 25";
 
         var ef = new EfDbContext();
-        var efList = ef.Set<GalleryRec>().FromSqlRaw(Query).ToList();
+        //var efList = ef.Set<GalleryRec>().FromSqlRaw(Query).ToList();
         
-        var listClass = _pgOrm.Sql(Query).List<GalleryRec>();
-        var list = _pgOrm.Sql(Query).List<GalleryRec>();
+        var listClass = _pgOrm.Sql(Query).List<GalleryDb>();
+        var list = _pgOrm.Sql(Query).List<GalleryDb>();
 
         //_pgOrm.Sql(Query).List<TestStruct>();
 
@@ -93,7 +98,7 @@ LIMIT 25";
         for (int i = 0; i < 10; i++)
         {
             var sw = Stopwatch.StartNew();
-            var list2 = ef.Set<GalleryRec>().FromSqlRaw(Query).ToList();
+            var list2 = ef.Set<GalleryDb>().FromSqlRaw(Query).ToList();
             sw.Stop();
             Console.WriteLine($"EF: {sw.ElapsedMilliseconds:0} msec");
         }
@@ -101,7 +106,7 @@ LIMIT 25";
         for (int i = 0; i < 10; i++)
         {
             var sw = Stopwatch.StartNew();
-            list = _pgOrm.Sql(Query).List<GalleryRec>();
+            list = _pgOrm.Sql(Query).List<GalleryDb>();
             sw.Stop();
 
             Console.WriteLine($"MicroORM: {sw.ElapsedMilliseconds:0} msec");

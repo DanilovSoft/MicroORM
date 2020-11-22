@@ -40,9 +40,9 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
         private object InnerReadObject(DbDataReader reader)
         {
-            object obj = _activator.CreateInstance();
+            object dbo = _activator.CreateInstance();
 
-            _activator.OnDeserializingHandle?.Invoke(obj, DefaultStreamingContext);
+            _activator.OnDeserializingHandle?.Invoke(dbo, DefaultStreamingContext);
 
             if (reader.FieldCount > 0)
             {
@@ -50,33 +50,44 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 {
                     // Имя колонки в БД.
                     string sqlColumnName = reader.GetName(i);
-                    string convertedSqlColumnName = _sqlOrm.UseSnakeCaseNamingConvention
-                        ? sqlColumnName.SnakeToPascalCase()
-                        : sqlColumnName;
 
-                    if (_activator.Contract.TryGetOrmPropertyFromLazy(convertedSqlColumnName, out OrmProperty? ormProperty))
+                    if (_activator.Contract.TryGetOrmPropertyFromLazy(sqlColumnName, out OrmProperty? ormProperty))
                     {
-                        Type sqlColumnType = reader.GetFieldType(i);
-                        object? value = reader[i];
+                        MapDboProperty(reader, dbo, i, sqlColumnName, ormProperty);
+                    }
+                    else if (_sqlOrm.UseSnakeCaseNamingConvention)
+                    {
+                        string convertedSqlColumnName = sqlColumnName.SnakeToPascalCase();
 
-                        if (value == DBNull.Value)
+                        if (_activator.Contract.TryGetOrmPropertyFromLazy(convertedSqlColumnName, out ormProperty))
                         {
-                            if (!ormProperty.IsNonNullable)
-                            {
-                                value = null;
-                            }
-                            else
-                                ThrowHelper.ThrowCantSetNull(ormProperty.PropertyName, sqlColumnName);
+                            MapDboProperty(reader, dbo, i, sqlColumnName, ormProperty);
                         }
-
-                        ormProperty.ConvertAndSetValue(obj, value, sqlColumnType, sqlColumnName);
                     }
                 }
             }
 
-            _activator.OnDeserializedHandle?.Invoke(obj, DefaultStreamingContext);
+            _activator.OnDeserializedHandle?.Invoke(dbo, DefaultStreamingContext);
 
-            return obj;
+            return dbo;
+        }
+
+        private static void MapDboProperty(DbDataReader reader, object dbo, int index, string sqlColumnName, OrmProperty ormProperty)
+        {
+            Type sqlColumnType = reader.GetFieldType(index);
+            object? value = reader[index];
+
+            if (value == DBNull.Value)
+            {
+                if (!ormProperty.IsNonNullable)
+                {
+                    value = null;
+                }
+                else
+                    ThrowHelper.ThrowCantSetNull(ormProperty.PropertyName, sqlColumnName);
+            }
+
+            ormProperty.ConvertAndSetValue(dbo, value, sqlColumnType, sqlColumnName);
         }
 
         private object ReadToNonEmptyCtor(DbDataReader reader)
