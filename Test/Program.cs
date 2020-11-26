@@ -26,17 +26,26 @@ class Program
 {
     public sealed record GalleryRec(string OrigTitle, int Gid, DateTime PostedDate, string Title);
 
+    public const string ConnectionString =
+            "Database=postgres;Uid=postgres;Pwd=test;Host=localhost;Pooling=true;MinPoolSize=10;MaxPoolSize=100;CommandTimeout=200;Timeout=300; ReadBufferSize=819200";
+
     public sealed class GalleryDb
     {
-        //public int Gid { get; set; }
         public string OrigTitle { get; set; }
 
         [SqlProperty("title")]
-        private string Title { get; set; }
+        public string Title { get; set; }
+
         public DateTime PostedDate { get; set; }
 
         [SqlProperty("gid")]
         private readonly int _gid;
+
+        public GalleryDb(string origTitle, string title)
+        {
+            OrigTitle = origTitle;
+            Title = title;
+        }
     }
 
     //public readonly struct GalleryDb
