@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -57,14 +58,24 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                     // Проверять этот атрибут нужно после SqlPropertyAttribute.
                     if (!member.IsDefined(typeof(IgnoreDataMemberAttribute)))
                     {
-                        var dataMember = member.GetCustomAttribute<DataMemberAttribute>();
-                        if (dataMember != null)
+                        if (member.GetCustomAttribute<ColumnAttribute>() is ColumnAttribute columnAttrib)
                         {
-                            // если есть атрибут DataMember то это свойство игнорировать нельзя.
                             canIgnoreMember = false;
 
-                            if (dataMember.Name != null)
-                                propName = dataMember.Name;
+                            if (columnAttrib.Name != null)
+                                propName = columnAttrib.Name;
+                        }
+                        else
+                        {
+                            var dataMember = member.GetCustomAttribute<DataMemberAttribute>();
+                            if (dataMember != null)
+                            {
+                                // если есть атрибут DataMember то это свойство игнорировать нельзя.
+                                canIgnoreMember = false;
+
+                                if (dataMember.Name != null)
+                                    propName = dataMember.Name;
+                            }
                         }
                     }
                     else

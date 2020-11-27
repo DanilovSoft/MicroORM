@@ -23,6 +23,12 @@ namespace DanilovSoft.MicroORM
         internal readonly DbProviderFactory Factory;
         internal readonly bool UsePascalCaseNamingConvention;
 
+        public SqlORM(string connectionString, DbConnection connection, bool usePascalCaseNamingConvention = false) 
+            : this(connectionString, new ConnectionFactoryWrapper(connection), usePascalCaseNamingConvention)
+        {
+            
+        }
+
         // ctor.
         public SqlORM(string connectionString, DbProviderFactory factory, bool usePascalCaseNamingConvention = false)
         {
