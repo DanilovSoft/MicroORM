@@ -55,11 +55,9 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                     {
                         MapDboProperty(reader, dbo, i, sqlColumnName, ormProperty);
                     }
-                    else if (_sqlOrm.UseSnakeCaseNamingConvention)
+                    else if (_sqlOrm.UsePascalCaseNamingConvention)
                     {
-                        string convertedSqlColumnName = sqlColumnName.SnakeToPascalCase();
-
-                        if (_activator.Contract.TryGetOrmPropertyFromLazy(convertedSqlColumnName, out ormProperty))
+                        if (_activator.Contract.TryGetOrmPropertyFromLazy(sqlColumnName.SnakeToPascalCase(), out ormProperty))
                         {
                             MapDboProperty(reader, dbo, i, sqlColumnName, ormProperty);
                         }
@@ -96,7 +94,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             Debug.Assert(_activator.ConstructorArguments != null);
 
             // Что-бы сконструировать структуру, сначала нужно подготовить параметры его конструктора.
-            object?[] propValues = new object[_activator.ConstructorArguments.Count];
+            object?[] ctorParamValues = new object[_activator.ConstructorArguments.Count];
 
             // Будем запоминать индексы замапленых параметров что-бы в конце определить все ли замапились.
             Span<bool> mapped = stackalloc bool[_activator.ConstructorArguments.Count];
@@ -107,57 +105,65 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 // Имя колонки в БД.
                 string sqlColumnName = reader.GetName(i);
 
-                string convertedSqlColumnName = _sqlOrm.UseSnakeCaseNamingConvention
-                    ? sqlColumnName.SnakeToPascalCase()
-                    : sqlColumnName;
-
                 // Допускается иметь в SQL больше полей чем в ДТО.
-                if (_activator.ConstructorArguments.TryGetValue(convertedSqlColumnName, out ConstructorArgument? ctorArg))
+                if (_activator.ConstructorArguments.TryGetValue(sqlColumnName, out ConstructorArgument? ctorArg))
                 {
-                    object? value = reader[i];
-                    Type columnSqlType = reader.GetFieldType(i);
-
-                    if (value == DBNull.Value)
+                    MapDboProperty(reader, i, sqlColumnName, ctorArg, ctorParamValues, mapped);
+                }
+                else if (_sqlOrm.UsePascalCaseNamingConvention)
+                {
+                    if (_activator.ConstructorArguments.TryGetValue(sqlColumnName.SnakeToPascalCase(), out ctorArg))
                     {
-                        if (!ctorArg.IsNonNullable)
-                        {
-                            value = null;
-                        }
-                        else
-                            ThrowHelper.ThrowCantSetNull(ctorArg.ParameterName, sqlColumnName);
+                        MapDboProperty(reader, i, sqlColumnName, ctorArg, ctorParamValues, mapped);
                     }
-
-                    object? finalValue;
-                    if (_activator.Contract.TryGetOrmPropertyFromLazy(convertedSqlColumnName, out OrmProperty? ormProperty))
-                    {
-                        finalValue = ormProperty.Convert(value, columnSqlType, sqlColumnName);
-                    }
-                    else
-                    {
-                        // конвертируем значение.
-                        finalValue = SqlTypeConverter.ChangeType(value, ctorArg.ParameterType, columnSqlType, sqlColumnName);
-                    }
-                    propValues[ctorArg.Index] = finalValue;
-
-                    // Запомним что этот параметр мы замапили.
-                    mapped[ctorArg.Index] = true;
                 }
             }
 
-            // Не допускается иметь в DTO больше полей чем в SQL.
+            // Не допускается иметь в конструкторе DBO больше параметров чем полей в SQL.
             foreach ((string paramName, var arg) in _activator.ConstructorArguments)
             {
                 if (!mapped[arg.Index])
                 {
-                    throw new MicroOrmException($"В Sql не найдена колонка соответствующая свойству \"{paramName}\"");
+                    throw new MicroOrmException($"В результате SQL запроса не найдена колонка соответствующая аргументу конструктора \"{paramName}\"");
                 }
             }
 
-            object obj = _activator.CreateInstance(propValues);
+            object obj = _activator.CreateInstance(ctorParamValues);
 
             _activator.OnDeserializedHandle?.Invoke(obj, DefaultStreamingContext);
 
             return obj;
+        }
+
+        private void MapDboProperty(DbDataReader reader, int index, string sqlColumnName, ConstructorArgument ctorArg, object?[] propValues, Span<bool> mapped)
+        {
+            object? value = reader[index];
+            Type columnSqlType = reader.GetFieldType(index);
+
+            if (value == DBNull.Value)
+            {
+                if (!ctorArg.IsNonNullable)
+                {
+                    value = null;
+                }
+                else
+                    ThrowHelper.ThrowCantSetNull(ctorArg.ParameterName, sqlColumnName);
+            }
+
+            object? finalValue;
+            if (_activator.Contract.TryGetOrmPropertyFromLazy(sqlColumnName, out OrmProperty? ormProperty))
+            {
+                finalValue = ormProperty.Convert(value, columnSqlType, sqlColumnName);
+            }
+            else
+            {
+                // конвертируем значение.
+                finalValue = SqlTypeConverter.ChangeType(value, ctorArg.ParameterType, columnSqlType, sqlColumnName);
+            }
+            propValues[ctorArg.Index] = finalValue;
+
+            // Запомним что этот параметр мы замапили.
+            mapped[ctorArg.Index] = true;
         }
     }
 }

@@ -7,10 +7,10 @@ using System.Runtime.Serialization;
 
 namespace DanilovSoft.MicroORM
 {
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
     public sealed class SqlPropertyAttribute : Attribute
     {
-        internal readonly string Name;
+        internal readonly string? Name;
 
         public SqlPropertyAttribute()
         {
@@ -19,7 +19,7 @@ namespace DanilovSoft.MicroORM
 
         public SqlPropertyAttribute(string name)
         {
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
         }
     }
 }

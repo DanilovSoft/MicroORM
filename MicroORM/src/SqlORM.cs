@@ -21,7 +21,7 @@ namespace DanilovSoft.MicroORM
         public static int CloseConnectionPenaltySec { get; set; } = 30;
         public string ConnectionString { get; }
         internal readonly DbProviderFactory Factory;
-        internal readonly bool UseSnakeCaseNamingConvention;
+        internal readonly bool UsePascalCaseNamingConvention;
 
         // ctor.
         public SqlORM(string connectionString, DbProviderFactory factory, bool usePascalCaseNamingConvention = false)
@@ -32,7 +32,7 @@ namespace DanilovSoft.MicroORM
                 {
                     Factory = factory;
                     ConnectionString = connectionString;
-                    UseSnakeCaseNamingConvention = usePascalCaseNamingConvention;
+                    UsePascalCaseNamingConvention = usePascalCaseNamingConvention;
                 }
                 else
                     throw new ArgumentNullException(nameof(factory));

@@ -39,17 +39,17 @@ class Program
         private readonly int _gid;
     }
 
-    //public readonly struct GalleryDb
-    //{
-    //    public readonly int Gid;
-    //    public readonly string? OrigTitle;
+    public readonly struct GalleryStruct
+    {
+        public readonly int Gid;
+        public readonly string? OrigTitle;
 
-    //    public GalleryDb(int Gid, string? OrigTitle)
-    //    {
-    //        this.Gid = Gid;
-    //        this.OrigTitle = OrigTitle;
-    //    }
-    //}
+        public GalleryStruct(int gid, [SqlProperty("orig_title")] string? origTitle)
+        {
+            Gid = gid;
+            OrigTitle = origTitle;
+        }
+    }
 
     //public class GalleryDb
     //{
@@ -69,8 +69,14 @@ class Program
 
     private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
+    class F : DbProviderFactory
+    {
+        
+    }
+
     static void Main()
     {
+       
         Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
 
         const string Query = @"SELECT g.gid, g.posted_date, gi.title, Null AS orig_title,
@@ -86,7 +92,7 @@ LIMIT 25";
         var ef = new EfDbContext();
         //var efList = ef.Set<GalleryRec>().FromSqlRaw(Query).ToList();
         
-        var listClass = _pgOrm.Sql(Query).List<GalleryDb>();
+        var listClass = _pgOrm.Sql(Query).List<GalleryStruct>();
         var list = _pgOrm.Sql(Query).List<GalleryDb>();
 
         //_pgOrm.Sql(Query).List<TestStruct>();

@@ -101,7 +101,16 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         {
             return ctor.GetParameters()
                 .Select((x, Index) => new { ParameterInfo = x, Index })
-                .ToDictionary(x => x.ParameterInfo.Name!, x => new ConstructorArgument(x.Index, x.ParameterInfo));
+                .ToDictionary(x => GetConstructorParamName(x.ParameterInfo), x => new ConstructorArgument(x.Index, x.ParameterInfo));
+        }
+
+        private static string GetConstructorParamName(ParameterInfo param)
+        {
+            if (Attribute.GetCustomAttribute(param, typeof(SqlPropertyAttribute)) is SqlPropertyAttribute sqlAtrib)
+            {
+                return sqlAtrib.Name ?? param.Name!;
+            }
+            return param.Name!;
         }
 
         private static Dictionary<string, ConstructorArgument> CreateConstructorArguments(PropertyInfo[] properties)
