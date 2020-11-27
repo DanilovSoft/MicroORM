@@ -15,15 +15,21 @@ namespace DanilovSoft.MicroORM.ObjectMapping
     [DebuggerDisplay(@"\{MemberInfo = {_lazy.Metadata}\}")]
     internal sealed class OrmLazyProperty
     {
-        private readonly Lazy<OrmProperty, MemberInfo> _lazy;
+        private readonly Lazy<OrmProperty> _lazy;
+        private readonly MemberInfo _memberInfo;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public OrmProperty Value => _lazy.Value;
 
+
         // ctor.
         public OrmLazyProperty(MemberInfo memberInfo)
         {
-            _lazy = new Lazy<OrmProperty, MemberInfo>(() => new OrmProperty(_lazy.Metadata), memberInfo, LazyThreadSafetyMode.ExecutionAndPublication);
+            _memberInfo = memberInfo;
+
+            _lazy = new Lazy<OrmProperty>(Factory, LazyThreadSafetyMode.ExecutionAndPublication);
         }
+
+        private OrmProperty Factory() => new OrmProperty(_memberInfo);
     }
 }

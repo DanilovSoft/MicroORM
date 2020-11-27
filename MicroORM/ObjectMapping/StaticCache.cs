@@ -12,9 +12,9 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         /// <summary>
         /// Хранит свойства и поля каждого типа.
         /// </summary>
-        public static readonly ConcurrentDictionary<(Type, string), OrmLazyProperty> TypesProperties = new ConcurrentDictionary<(Type, string), OrmLazyProperty>();
-        public static readonly ConcurrentDictionary<Type, Lazy<ContractActivator>> LazyTypesContracts = new ConcurrentDictionary<Type, Lazy<ContractActivator>>();
-        public static readonly ConcurrentDictionary<Type, TypeConverter> TypeConverters = new ConcurrentDictionary<Type, TypeConverter>();
+        public static readonly ConcurrentDictionary<(Type, string), OrmLazyProperty> TypesProperties = new();
+        public static readonly ConcurrentDictionary<Type, Lazy<ContractActivator>> LazyTypesContracts = new();
+        public static readonly ConcurrentDictionary<Type, TypeConverter> TypeConverters = new();
 
         /// <summary>
         /// Инициализирует контракт для типа <paramref name="type"/> из ленивой фабрики.

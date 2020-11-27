@@ -39,6 +39,11 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             {
                 SetValueHandler = new SetValueDelegate(setAction);
             }
+            else
+            {
+                Debug.Assert(false, "Это свойство только для чтения");
+                throw new InvalidOperationException();
+            }
 
             IsNonNullable = NonNullableConvention.IsNonNullableReferenceType(memberInfo);
         }

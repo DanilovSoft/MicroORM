@@ -53,13 +53,13 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
                     if (_activator.Contract.TryGetOrmProperty(sqlColumnName, out OrmProperty? ormProperty))
                     {
-                        MapDboProperty(reader, dbo, i, sqlColumnName, ormProperty);
+                        SetDboProperty(reader, dbo, i, sqlColumnName, ormProperty);
                     }
                     else if (_sqlOrm.UsePascalCaseNamingConvention)
                     {
                         if (_activator.Contract.TryGetOrmProperty(sqlColumnName.SnakeToPascalCase(), out ormProperty))
                         {
-                            MapDboProperty(reader, dbo, i, sqlColumnName, ormProperty);
+                            SetDboProperty(reader, dbo, i, sqlColumnName, ormProperty);
                         }
                     }
                 }
@@ -69,7 +69,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return dbo;
         }
 
-        private static void MapDboProperty(DbDataReader reader, object dbo, int ordinal, string sqlColumnName, OrmProperty ormProperty)
+        private static void SetDboProperty(DbDataReader reader, object dbo, int ordinal, string sqlColumnName, OrmProperty ormProperty)
         {
             object sqlRawValue = ReadSqlRawValue(reader, ordinal, out Type sqlColumnType);
             ormProperty.ConvertAndSetValue(dbo, sqlRawValue, sqlColumnType, sqlColumnName);

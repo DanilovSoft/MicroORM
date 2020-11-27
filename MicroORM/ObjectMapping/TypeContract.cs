@@ -21,20 +21,29 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         public readonly Type ContractType;
 
         // Конструктор определенного Type синхронизирован. (Потокобезопасно для каждого Type).
-        public TypeContract(Type type)
+        public TypeContract(Type dboType)
         {
-            ContractType = type;
+            ContractType = dboType;
 
             const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
-            IEnumerable<MemberInfo> allMembers = ReflectionUtils.GetFieldsAndProperties(type, bindingFlags).Where(x => !ReflectionUtils.IsIndexedProperty(x));
+            IEnumerable<MemberInfo> allMembers = ReflectionUtils
+                .GetFieldsAndProperties(dboType, bindingFlags)
+                .Where(x => !ReflectionUtils.IsIndexedProperty(x));
+
             const BindingFlags DefaultMembersSearchFlags = BindingFlags.Instance | BindingFlags.Public;
-            var defaultMembers = ReflectionUtils.GetFieldsAndProperties(type, DefaultMembersSearchFlags).Where(x => !ReflectionUtils.IsIndexedProperty(x)).ToHashSet();
+
+            HashSet<MemberInfo> defaultMembers = ReflectionUtils
+                .GetFieldsAndProperties(dboType, DefaultMembersSearchFlags)
+                .Where(x => !ReflectionUtils.IsIndexedProperty(x))
+                .ToHashSet();
 
             // Свойства и поля.
-            foreach (MemberInfo member in allMembers)
+            foreach (MemberInfo memberInfo in allMembers)
             {
-                if (member.IsDefined(typeof(CompilerGeneratedAttribute)) || member.IsDefined(typeof(SqlIgnoreAttribute)))
+                if (memberInfo.IsDefined(typeof(CompilerGeneratedAttribute)) 
+                    || memberInfo.IsDefined(typeof(SqlIgnoreAttribute))
+                    || memberInfo.IsDefined(typeof(NotMappedAttribute)))
                 {
                     continue;
                 }
@@ -42,39 +51,39 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 // Свои аттрибуты приоритетнее DataMember атрибутов.
 
                 bool canIgnoreMember = true;
-                string propName = member.Name;
+                string memberName = memberInfo.Name;
 
-                var sqlPropAttr = member.GetCustomAttribute<SqlPropertyAttribute>();
+                var sqlPropAttr = memberInfo.GetCustomAttribute<SqlPropertyAttribute>();
                 if (sqlPropAttr != null)
                 // Есть атрибут SqlProperty — это свойство игнорировать нельзя.
                 {
                     canIgnoreMember = false;
 
                     if (sqlPropAttr.Name != null)
-                        propName = sqlPropAttr.Name;
+                        memberName = sqlPropAttr.Name;
                 }
                 else
                 {
                     // Проверять этот атрибут нужно после SqlPropertyAttribute.
-                    if (!member.IsDefined(typeof(IgnoreDataMemberAttribute)))
+                    if (!memberInfo.IsDefined(typeof(IgnoreDataMemberAttribute)))
                     {
-                        if (member.GetCustomAttribute<ColumnAttribute>() is ColumnAttribute columnAttrib)
+                        if (memberInfo.GetCustomAttribute<ColumnAttribute>() is ColumnAttribute columnAttrib)
                         {
                             canIgnoreMember = false;
 
                             if (columnAttrib.Name != null)
-                                propName = columnAttrib.Name;
+                                memberName = columnAttrib.Name;
                         }
                         else
                         {
-                            var dataMember = member.GetCustomAttribute<DataMemberAttribute>();
+                            var dataMember = memberInfo.GetCustomAttribute<DataMemberAttribute>();
                             if (dataMember != null)
                             {
                                 // если есть атрибут DataMember то это свойство игнорировать нельзя.
                                 canIgnoreMember = false;
 
                                 if (dataMember.Name != null)
-                                    propName = dataMember.Name;
+                                    memberName = dataMember.Name;
                             }
                         }
                     }
@@ -86,17 +95,21 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
                 if (canIgnoreMember)
                 {
-                    if (!defaultMembers.Contains(member))
+                    if (!defaultMembers.Contains(memberInfo))
                     {  
                         // свойство скорее всего приватное.
                         continue;
                     }
                 }
 
-                if (!StaticCache.TypesProperties.TryAdd((type, propName), new OrmLazyProperty(member)))
+                if (memberInfo is PropertyInfo propertyInfo && propertyInfo.SetMethod == null)
+                    throw new MicroOrmException($"Property '{propertyInfo.Name}' is not writable.");
+
+                if (!StaticCache.TypesProperties.TryAdd((dboType, memberName), new OrmLazyProperty(memberInfo)))
                 {
                     // если не удалось добавить, причина может быть только одна — в словаре уже есть такой ключ.
-                    throw new MicroOrmSerializationException($"A member with the name '{propName}' already exists on '{type}'. Use the {nameof(SqlPropertyAttribute)} to specify another name.");
+                    throw new MicroOrmSerializationException($"A member with the name '{memberName}' already exists on '{dboType}'." +
+                        $" Use the {nameof(SqlPropertyAttribute)} to specify another name.");
                 }
             }
         }

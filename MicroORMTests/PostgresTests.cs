@@ -29,9 +29,9 @@ namespace UnitTests
         [Test]
         public void TestConverter()
         {
-            UserDbo result = _orm.Sql("SELECT point(@0, @1) AS location")
+            UserWithLocation result = _orm.Sql("SELECT point(@0, @1) AS location")
                 .Parameters(1, 2)
-                .Single<UserDbo>();
+                .Single<UserWithLocation>();
 
             Assert.AreEqual(1, result.Location.X);
             Assert.AreEqual(2, result.Location.Y);
