@@ -10,7 +10,7 @@ namespace DanilovSoft.MicroORM
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
     public sealed class SqlPropertyAttribute : Attribute
     {
-        internal readonly string Name;
+        internal readonly string? Name;
 
         public SqlPropertyAttribute()
         {
