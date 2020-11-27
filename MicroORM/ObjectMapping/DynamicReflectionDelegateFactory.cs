@@ -280,7 +280,9 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         {
             Debug.Assert(method.DeclaringType != null);
 
-            DynamicMethod dynamicMethod = CreateDynamicMethod("", returnType: typeof(void), parameterTypes: new[] { typeof(object), typeof(object) }, owner: method.DeclaringType);
+            DynamicMethod dynamicMethod = CreateDynamicMethod("", returnType: typeof(void), 
+                parameterTypes: new[] { typeof(object), typeof(StreamingContext) }, owner: method.DeclaringType);
+
             ILGenerator generator = dynamicMethod.GetILGenerator();
 
             GenerateCreateMethodCallIL(method, generator, type);
@@ -288,21 +290,23 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return (OnDeserializingDelegate)dynamicMethod.CreateDelegate(typeof(OnDeserializingDelegate));
         }
 
-        public static OnDeserializedDelegate CreateOnDeserializedMethodCall(MethodInfo method, Type type)
+        public static OnDeserializedDelegate CreateOnDeserializedMethodCall(MethodInfo method, Type instanceType)
         {
-            DynamicMethod dynamicMethod = CreateDynamicMethod("", returnType: typeof(void), parameterTypes: new[] { typeof(object), typeof(object) }, owner: type);
+            DynamicMethod dynamicMethod = CreateDynamicMethod("", returnType: typeof(void), 
+                parameterTypes: new[] { typeof(object), typeof(StreamingContext) }, owner: instanceType);
+
             ILGenerator generator = dynamicMethod.GetILGenerator();
 
-            GenerateCreateMethodCallIL(method, generator, type);
+            GenerateCreateMethodCallIL(method, generator, instanceType);
 
             return (OnDeserializedDelegate)dynamicMethod.CreateDelegate(typeof(OnDeserializedDelegate));
         }
 
-        private static void GenerateCreateMethodCallIL(MethodInfo method, ILGenerator generator, Type type)
+        private static void GenerateCreateMethodCallIL(MethodInfo method, ILGenerator generator, Type instanceType)
         {
-            generator.PushInstance(type);
+            generator.PushInstance(instanceType);
             generator.Emit(OpCodes.Ldarg_1);
-            generator.UnboxIfNeeded(typeof(StreamingContext));
+            //generator.UnboxIfNeeded(typeof(StreamingContext));
             generator.CallMethod(method);
             generator.Return();
         }

@@ -9,16 +9,30 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DanilovSoft.MicroORM;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace MicroORMTests
 {
-    [TestClass]
+    class TestClass
+    {
+        public string Name { get; set; }
+    }
+
     public class SqliteTest
     {
         private static readonly SqlORM _orm = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
 
-        [TestMethod]
+        //[Test]
+        //public void NullResult()
+        //{
+        //    TestClass result = _orm.Sql("SELECT @0")
+        //        .Parameter(null)
+        //        .Single<TestClass>();
+
+        //    Assert.AreEqual(null, result);
+        //}
+
+        [Test]
         public void TestScalar()
         {
             string result = _orm.Sql("SELECT @0")
@@ -28,7 +42,7 @@ namespace MicroORMTests
             Assert.AreEqual("OK", result);
         }
 
-        [TestMethod]
+        [Test]
         public void TestNamedParameterAndScalar()
         {
             using (var t = _orm.OpenTransaction())
@@ -42,29 +56,34 @@ namespace MicroORMTests
             }
         }
 
-        [TestMethod]
-        public void TestSelector()
+        [Test]
+        public void NonNullableProperty()
         {
-            var result = _orm.Sql("SELECT 1 AS col1")
-                .Single(x => new
-                {
-                    col1 = Convert.ChangeType(x["col1"], typeof(int))
-                });
-
-            Assert.AreEqual(1, result.col1);
+            try
+            {
+                UserDbo? result = _orm.Sql("SELECT @name AS name, @count AS count")
+                    .ParametersFromObject(new { count = 128, name = default(string) })
+                    .SingleOrDefault<UserDbo>();
+            }
+            catch (MicroOrmException)
+            {
+                Assert.Pass();
+            }
+            Assert.Fail();
         }
 
-        [TestMethod]
-        public void TestParametersFromObject()
+        [Test]
+        public void ParametersFromObject()
         {
-            var result = _orm.Sql("SELECT @name AS name, @count AS count")
-                .ParametersFromObject(new { count = 128, name = "Alfred" })
-                .SingleOrDefault<UserModel>();
+            UserDbo result = _orm.Sql("SELECT @name AS name, @count AS count, @age AS age")
+                .ParametersFromObject(new { count = 128, name = "Alfred", age = 25 })
+                .Single<UserDbo>();
 
             Assert.AreEqual("Alfred", result.Name);
+            Assert.AreEqual(25, result.Age);
         }
 
-        [TestMethod]
+        [Test]
         public void TestAnonimouseType()
         {
             var result = _orm.Sql("SELECT @name AS name, @age AS age")
@@ -76,7 +95,7 @@ namespace MicroORMTests
             Assert.AreEqual(30, result.age);
         }
 
-        [TestMethod]
+        [Test]
         public void TestAnonimouseRows()
         {
             var result = _orm.Sql("SELECT @name AS qwer, @age AS a")
@@ -86,19 +105,6 @@ namespace MicroORMTests
 
             Assert.AreEqual(1, result.Count);
         }
-    }
-
-    class UserModel
-    {
-        [DataMember(Name = "name")]
-        public string Name { get; private set; }
-
-        [SqlProperty("age")]
-        public int Age { get; private set; }
-
-        [SqlProperty("location")]
-        [SqlConverter(typeof(LocationConverter))]
-        public Point Location { get; private set; }
     }
 
     class LocationConverter : TypeConverter

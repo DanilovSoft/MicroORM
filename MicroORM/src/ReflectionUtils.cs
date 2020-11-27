@@ -79,6 +79,7 @@ namespace DanilovSoft.MicroORM
         /// </summary>
         /// <param name="memberInfo"> The member info. </param>
         /// <returns> <see langword="true" /> if the member type is a non-nullable reference type. </returns>
+        [Obsolete]
         public static bool IsNonNullableReferenceType2(MemberInfo memberInfo)
         {
             if (memberInfo.GetMemberType()?.IsValueType == true)
@@ -228,6 +229,11 @@ namespace DanilovSoft.MicroORM
             Debug.Assert(parameterInfo != null);
 
             return IsNonNullableReferenceType(parameterInfo, parameterInfo.ParameterType, parameterInfo.Member.DeclaringType);
+        }
+
+        public static bool IsNonNullableReferenceType(Type memberType)
+        {
+            return IsNonNullableReferenceType(memberType, memberType, memberType.DeclaringType);
         }
 
         public static bool IsNonNullableReferenceType(MemberInfo memberInfo)

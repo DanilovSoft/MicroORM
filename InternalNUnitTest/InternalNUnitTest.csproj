@@ -1,14 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-
     <IsPackable>false</IsPackable>
-
     <SignAssembly>true</SignAssembly>
-
     <AssemblyOriginatorKeyFile>DanilovSoft.MicroORM.pfx</AssemblyOriginatorKeyFile>
-
     <Nullable>enable</Nullable>
   </PropertyGroup>
 

@@ -63,6 +63,11 @@
             Хранится в словаре поэтому извлекается быстрее как класс, а не структура.
             </summary>
         </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ConstructorArgument.#ctor(System.Int32,System.Reflection.PropertyInfo)">
+            <summary>
+            Конструктор для анонимного типа.
+            </summary>
+        </member>
         <member name="T:DanilovSoft.MicroORM.ObjectMapping.ContractActivator">
             <summary>
             Создание данного экземпляра должно выполняться синхронизированно.
@@ -81,6 +86,11 @@
         <member name="F:DanilovSoft.MicroORM.ObjectMapping.ContractActivator.ConstructorArguments">
             <summary>
             Для маппинга параметров конструктора по именам.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ContractActivator.CreateConstructorArguments(System.Reflection.PropertyInfo[])">
+            <summary>
+            Конструктор анонимного типа.
             </summary>
         </member>
         <member name="M:DanilovSoft.MicroORM.ObjectMapping.ContractActivator.GetIsReadonlyStruct(System.Type)">
@@ -106,6 +116,25 @@
             Помещает целочисленное значение <paramref name="n"/> в стек вычислений как <see langword="int32"/>.
             </summary>
         </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ObjectMapper`1.ReadSqlRawValue(System.Data.Common.DbDataReader,System.Int32,System.Type@)">
+            <returns>Значение которое может быть <see cref="T:System.DBNull"/>.</returns>
+        </member>
+        <member name="F:DanilovSoft.MicroORM.ObjectMapping.ObjectMapper`1.PropertyToSet.ClrValue">
+            <summary>
+            Не может быть <see cref="T:System.DBNull"/>.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ObjectMapper`1.AccumulateSqlValue(System.Data.Common.DbDataReader,System.Int32,System.String,DanilovSoft.MicroORM.ObjectMapping.OrmProperty,System.Collections.Generic.List{DanilovSoft.MicroORM.ObjectMapping.ObjectMapper{`0}.PropertyToSet}@)">
+            <param name="sqlColumnName">Используется только для ошибок.</param>
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ObjectMapper`1.ValidateAllParametersMapped(System.Span{System.Boolean},System.Collections.Generic.IEnumerable{DanilovSoft.MicroORM.ObjectMapping.ConstructorArgument})">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ObjectMapper`1.AccumulateCtorParameter(System.Data.Common.DbDataReader,System.Int32,System.String,DanilovSoft.MicroORM.ObjectMapping.ConstructorArgument)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+            <returns>CLR значение.</returns>
+        </member>
         <member name="T:DanilovSoft.MicroORM.ObjectMapping.OrmLazyProperty">
             <summary>
             Хранит мета информацию о свойстве или поле.
@@ -117,10 +146,13 @@
             Хранится в словаре поэтому извлекается быстрее как класс, а не как структура.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MicroORM.ObjectMapping.OrmProperty.Convert(System.Object,System.Type,System.String)">
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.OrmProperty.ConvertSqlToClrValue(System.Object,System.Type,System.String)">
             <param name="sqlColumnName">Используется только для ошибок.</param>
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+            <returns>CLR значение.</returns>
         </member>
         <member name="M:DanilovSoft.MicroORM.ObjectMapping.OrmProperty.ConvertAndSetValue(System.Object,System.Object,System.Type,System.String)">
+            <param name="sqlRawValue">Может быть <see cref="T:System.DBNull"/>.</param>
             <param name="sqlColumnName">Используется только для ошибок.</param>
         </member>
         <member name="F:DanilovSoft.MicroORM.ObjectMapping.StaticCache.TypesProperties">
@@ -138,7 +170,7 @@
             Инициализирует контракт для типа <paramref name="type"/> из ленивой фабрики.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MicroORM.ObjectMapping.TypeContract.TryGetOrmPropertyFromLazy(System.String,DanilovSoft.MicroORM.ObjectMapping.OrmProperty@)">
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.TypeContract.TryGetOrmProperty(System.String,DanilovSoft.MicroORM.ObjectMapping.OrmProperty@)">
             <summary>
             Инициирует ленивое свойство при первом обращении.
             Этот метод потокобезопасен.
@@ -223,9 +255,9 @@
         <member name="M:DanilovSoft.MicroORM.SqlQuery.Parameters(System.Object[])">
             <exception cref="T:System.ArgumentNullException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.SqlReader.NullIfDBNull(System.Object@)">
+        <member name="M:DanilovSoft.MicroORM.SqlReader.NullIfDBNull(System.Object)">
             <summary>
-            Если <paramref name="dbValue"/> является DBNull то заменяется на Null.
+            Если <paramref name="sqlRawValue"/> является DBNull то заменяется на Null.
             </summary>
         </member>
         <member name="M:DanilovSoft.MicroORM.SqlTransaction.Sql(System.String,System.Object[])">
@@ -244,14 +276,38 @@
             Try/Catch exception handling should always be used when committing or rolling back a SqlTransaction.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ChangeType``1(System.Object,System.Type,System.String)">
-            <param name="sqlColumnName">Используется только для ошибок.</param>
+        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ConvertSqlToCtorValue(System.Object,System.Type,System.String,System.Boolean,System.String,System.Type)">
+            <param name="sqlRawValue">Значение которое может быть <see cref="T:System.DBNull"/>.</param>
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ChangeType(System.Object,System.Type,System.Type,System.String)">
+        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ConvertRawSqlToClrType``1(System.Object,System.Type,System.String)">
+            <param name="sqlRawValue">Значение которое может быть <see cref="T:System.DBNull"/>.</param>
             <param name="sqlColumnName">Используется только для ошибок.</param>
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ConvertRawSqlToClrType(System.Object,System.Type,System.String,System.Type)">
+            <param name="sqlRawValue">Значение которое может быть <see cref="T:System.DBNull"/>.</param>
+            <param name="sqlColumnName">Используется только для ошибок.</param>
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ConvertSqlToClrType(System.Object,System.Type,System.String,System.Type)">
+            <param name="sqlValue">Значение которое не может быть <see cref="T:System.DBNull"/>.</param>
+            <param name="sqlColumnName">Используется только для ошибок.</param>
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ChangeType(System.Object,System.Type,System.String)">
             <param name="sqlColumnName">Используется только для ошибок.</param>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ConvertNullableRawSqlType(System.Object,System.String,System.Boolean,System.String,System.String)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+            <returns><paramref name="sqlRawValue"/> который может иметь Null вместо DBNull.</returns>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ConvertNullableRawSqlType(System.Object)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+            <returns><paramref name="sqlRawValue"/> который может иметь Null вместо DBNull.</returns>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ThrowHelper.ThrowCantSetNull(System.String,System.String,System.String)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="T:System.Threading.DelayedAction`1">
             <summary>

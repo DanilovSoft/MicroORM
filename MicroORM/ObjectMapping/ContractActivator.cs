@@ -59,6 +59,8 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                     }
                     else
                         throw new MicroOrmException("Не найден открытый конструктор");
+
+                    InitializeStreamingMethods(type, out OnDeserializingHandle, out OnDeserializedHandle);
                 }
                 else
                 // Не анонимный class
@@ -100,8 +102,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         private static Dictionary<string, ConstructorArgument> CreateConstructorArguments(ConstructorInfo ctor)
         {
             return ctor.GetParameters()
-                .Select((x, Index) => new { ParameterInfo = x, Index })
-                .ToDictionary(x => GetConstructorParamName(x.ParameterInfo), x => new ConstructorArgument(x.Index, x.ParameterInfo));
+                .ToDictionary(x => GetConstructorParamName(x), x => new ConstructorArgument(x));
         }
 
         private static string GetConstructorParamName(ParameterInfo param)
@@ -113,6 +114,9 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return param.Name!;
         }
 
+        /// <summary>
+        /// Конструктор анонимного типа.
+        /// </summary>
         private static Dictionary<string, ConstructorArgument> CreateConstructorArguments(PropertyInfo[] properties)
         {
             return properties

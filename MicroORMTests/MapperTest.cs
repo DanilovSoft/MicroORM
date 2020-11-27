@@ -1,6 +1,6 @@
 ﻿using DanilovSoft.MicroORM;
 using DanilovSoft.MicroORM.ObjectMapping;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,15 +22,14 @@ namespace UnitTests
         }
     }
 
-    [TestClass]
-    public class MapperTest
-    {
-        [TestMethod]
-        public void TestList()
-        {
+    //public class MapperTest
+    //{
+    //    [Test]
+    //    public void TestList()
+    //    {
             
-            //var toObject = new ObjectMapper<TestStruct>();
-            //return toObject.ReadObject();
-        }
-    }
+    //        //var toObject = new ObjectMapper<TestStruct>();
+    //        //return toObject.ReadObject();
+    //    }
+    //}
 }

@@ -118,7 +118,6 @@ namespace DanilovSoft.MicroORM
                 }
             }
 
-
             return string.Create(newLength, str, (span, s) =>
             {
                 bool wordStart = true;
@@ -137,6 +136,20 @@ namespace DanilovSoft.MicroORM
                     }
                 }
             });
+        }
+
+        public static string ToLowerFirstLetter(this string str)
+        {
+            if (str != null && str.Length > 0)
+            {
+                return string.Create(str.Length, str, (span, s) =>
+                {
+                    span[0] = char.ToLowerInvariant(s[0]);
+                    s.AsSpan(1).CopyTo(span[1..]);
+                });
+            }
+            else
+                throw new ArgumentOutOfRangeException(nameof(str));
         }
     }
 }

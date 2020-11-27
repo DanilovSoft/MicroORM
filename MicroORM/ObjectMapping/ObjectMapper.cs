@@ -51,13 +51,13 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                     // Имя колонки в БД.
                     string sqlColumnName = reader.GetName(i);
 
-                    if (_activator.Contract.TryGetOrmPropertyFromLazy(sqlColumnName, out OrmProperty? ormProperty))
+                    if (_activator.Contract.TryGetOrmProperty(sqlColumnName, out OrmProperty? ormProperty))
                     {
                         MapDboProperty(reader, dbo, i, sqlColumnName, ormProperty);
                     }
                     else if (_sqlOrm.UsePascalCaseNamingConvention)
                     {
-                        if (_activator.Contract.TryGetOrmPropertyFromLazy(sqlColumnName.SnakeToPascalCase(), out ormProperty))
+                        if (_activator.Contract.TryGetOrmProperty(sqlColumnName.SnakeToPascalCase(), out ormProperty))
                         {
                             MapDboProperty(reader, dbo, i, sqlColumnName, ormProperty);
                         }
@@ -66,26 +66,39 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             }
 
             _activator.OnDeserializedHandle?.Invoke(dbo, DefaultStreamingContext);
-
             return dbo;
         }
 
-        private static void MapDboProperty(DbDataReader reader, object dbo, int index, string sqlColumnName, OrmProperty ormProperty)
+        private static void MapDboProperty(DbDataReader reader, object dbo, int ordinal, string sqlColumnName, OrmProperty ormProperty)
         {
-            Type sqlColumnType = reader.GetFieldType(index);
-            object? value = reader[index];
+            object sqlRawValue = ReadSqlRawValue(reader, ordinal, out Type sqlColumnType);
+            ormProperty.ConvertAndSetValue(dbo, sqlRawValue, sqlColumnType, sqlColumnName);
+        }
 
-            if (value == DBNull.Value)
+        /// <returns>Значение которое может быть <see cref="DBNull"/>.</returns>
+        private static object ReadSqlRawValue(DbDataReader reader, int ordinal, out Type sqlColumnType)
+        {
+            sqlColumnType = reader.GetFieldType(ordinal);
+            object sqlRawValue = reader[ordinal];
+            return sqlRawValue;
+        }
+
+        [StructLayout(LayoutKind.Auto)]
+        private readonly struct PropertyToSet
+        {
+            /// <summary>
+            /// Не может быть <see cref="DBNull"/>.
+            /// </summary>
+            public readonly object? ClrValue;
+            public readonly OrmProperty OrmProperty;
+
+            public PropertyToSet(object? clrValue, OrmProperty ormProperty)
             {
-                if (!ormProperty.IsNonNullable)
-                {
-                    value = null;
-                }
-                else
-                    ThrowHelper.ThrowCantSetNull(ormProperty.PropertyName, sqlColumnName);
-            }
+                Debug.Assert(clrValue != DBNull.Value);
 
-            ormProperty.ConvertAndSetValue(dbo, value, sqlColumnType, sqlColumnName);
+                ClrValue = clrValue;
+                OrmProperty = ormProperty;
+            }
         }
 
         private object ReadToNonEmptyCtor(DbDataReader reader)
@@ -94,11 +107,14 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             Debug.Assert(_activator.ConstructorArguments != null);
 
             // Что-бы сконструировать структуру, сначала нужно подготовить параметры его конструктора.
-            object?[] ctorParamValues = new object[_activator.ConstructorArguments.Count];
+            object?[] ctorParamClrValues = new object[_activator.ConstructorArguments.Count];
 
             // Будем запоминать индексы замапленых параметров что-бы в конце определить все ли замапились.
             Span<bool> mapped = stackalloc bool[_activator.ConstructorArguments.Count];
-            
+
+            // После конструктора нужно инициализировать свойства/поля.
+            List<PropertyToSet>? sqlAccumulatedValues = null;
+
             // Односторонний маппингт: БД -> DTO, поэтому пляшем от БД.
             for (int i = 0; i < reader.FieldCount; i++)
             {
@@ -108,62 +124,106 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 // Допускается иметь в SQL больше полей чем в ДТО.
                 if (_activator.ConstructorArguments.TryGetValue(sqlColumnName, out ConstructorArgument? ctorArg))
                 {
-                    MapDboProperty(reader, i, sqlColumnName, ctorArg, ctorParamValues, mapped);
+                    ctorParamClrValues[ctorArg.ParameterIndex] = AccumulateCtorParameter(reader, i, sqlColumnName, ctorArg);
+                    mapped[ctorArg.ParameterIndex] = true;  // Запомним что этот параметр мы замапили.
                 }
                 else if (_sqlOrm.UsePascalCaseNamingConvention)
                 {
-                    if (_activator.ConstructorArguments.TryGetValue(sqlColumnName.SnakeToPascalCase(), out ctorArg))
+                    string pascalSqlColumn = sqlColumnName.SnakeToPascalCase();
+
+                    // Параметр с маленькой буквы.
+                    if (_activator.ConstructorArguments.TryGetValue(pascalSqlColumn, out ctorArg))
                     {
-                        MapDboProperty(reader, i, sqlColumnName, ctorArg, ctorParamValues, mapped);
+                        ctorParamClrValues[ctorArg.ParameterIndex] = AccumulateCtorParameter(reader, i, sqlColumnName, ctorArg);
+                        mapped[ctorArg.ParameterIndex] = true;  // Запомним что этот параметр мы замапили.
+                    }
+                    else
+                    {
+                        // Параметр с большой буквы.
+                        if (_activator.ConstructorArguments.TryGetValue(pascalSqlColumn.ToLowerFirstLetter(), out ctorArg))
+                        {
+                            ctorParamClrValues[ctorArg.ParameterIndex] = AccumulateCtorParameter(reader, i, sqlColumnName, ctorArg);
+                            mapped[ctorArg.ParameterIndex] = true;  // Запомним что этот параметр мы замапили.
+                        }
+                        else
+                        // Ищем не в конструкторе, а среди свойств/полей.
+                        {
+                            if (!_activator.Contract.TryGetOrmProperty(sqlColumnName, out OrmProperty? ormProperty))
+                            {
+                                if (_sqlOrm.UsePascalCaseNamingConvention)
+                                    _activator.Contract.TryGetOrmProperty(sqlColumnName.SnakeToPascalCase(), out ormProperty);
+                            }
+
+                            if (ormProperty != null)
+                                AccumulateSqlValue(reader, i, sqlColumnName, ormProperty, ref sqlAccumulatedValues);
+                        }
+                    }
+                }
+                else
+                // Ищем не в конструкторе, а среди свойств/полей.
+                {
+                    if (_activator.Contract.TryGetOrmProperty(sqlColumnName, out OrmProperty? ormProperty))
+                    {
+                        AccumulateSqlValue(reader, i, sqlColumnName, ormProperty, ref sqlAccumulatedValues);
                     }
                 }
             }
 
-            // Не допускается иметь в конструкторе DBO больше параметров чем полей в SQL.
-            foreach ((string paramName, var arg) in _activator.ConstructorArguments)
+            ValidateAllParametersMapped(mapped, _activator.ConstructorArguments.Values);
+
+            object dbo = _activator.CreateInstance(ctorParamClrValues);
+            _activator.OnDeserializingHandle?.Invoke(dbo, DefaultStreamingContext);
+
+            // Инициализация свойств найденных в SQL.
+            if (sqlAccumulatedValues != null)
             {
-                if (!mapped[arg.Index])
-                {
-                    throw new MicroOrmException($"В результате SQL запроса не найдена колонка соответствующая аргументу конструктора \"{paramName}\"");
-                }
+                foreach (var acumValue in sqlAccumulatedValues)
+                    acumValue.OrmProperty.SetClrValue(dbo, acumValue.ClrValue);
             }
 
-            object obj = _activator.CreateInstance(ctorParamValues);
-
-            _activator.OnDeserializedHandle?.Invoke(obj, DefaultStreamingContext);
-
-            return obj;
+            _activator.OnDeserializedHandle?.Invoke(dbo, DefaultStreamingContext);
+            return dbo;
         }
 
-        private void MapDboProperty(DbDataReader reader, int index, string sqlColumnName, ConstructorArgument ctorArg, object?[] propValues, Span<bool> mapped)
+        /// <param name="sqlColumnName">Используется только для ошибок.</param>
+        /// <exception cref="MicroOrmException"/>
+        private static void AccumulateSqlValue(DbDataReader reader, int ordinal, string sqlColumnName, OrmProperty ormProperty, ref List<PropertyToSet>? sqlAccumulatedValues)
         {
-            object? value = reader[index];
-            Type columnSqlType = reader.GetFieldType(index);
+            object sqlRawValue = ReadSqlRawValue(reader, ordinal, out Type sqlColumnType);
+            object? clrValue = ormProperty.ConvertSqlToClrValue(sqlRawValue, sqlColumnType, sqlColumnName);
 
-            if (value == DBNull.Value)
+            sqlAccumulatedValues ??= new();
+            sqlAccumulatedValues.Add(new PropertyToSet(clrValue, ormProperty));
+        }
+
+        /// <exception cref="MicroOrmException"/>
+        private static void ValidateAllParametersMapped(Span<bool> mapped, IEnumerable<ConstructorArgument> constructorArguments)
+        {
+            // Не допускается иметь в конструкторе DBO больше параметров чем полей в SQL.
+            foreach (var arg in constructorArguments)
             {
-                if (!ctorArg.IsNonNullable)
-                {
-                    value = null;
-                }
-                else
-                    ThrowHelper.ThrowCantSetNull(ctorArg.ParameterName, sqlColumnName);
+                if (mapped[arg.ParameterIndex])
+                    continue;
+
+                throw new MicroOrmException($"В результате SQL запроса не найдена колонка соответствующая аргументу конструктора \"{arg.ParameterName}\"");
             }
+        }
 
-            object? finalValue;
-            if (_activator.Contract.TryGetOrmPropertyFromLazy(sqlColumnName, out OrmProperty? ormProperty))
+        /// <exception cref="MicroOrmException"/>
+        /// <returns>CLR значение.</returns>
+        private object? AccumulateCtorParameter(DbDataReader reader, int ordinal, string sqlColumnName, ConstructorArgument ctorArg)
+        {
+            object sqlRawValue = ReadSqlRawValue(reader, ordinal, out Type sqlColumnType);
+
+            if (_activator.Contract.TryGetOrmProperty(sqlColumnName, out OrmProperty? ormProperty))
             {
-                finalValue = ormProperty.Convert(value, columnSqlType, sqlColumnName);
+                return ormProperty.ConvertSqlToClrValue(sqlRawValue, sqlColumnType, sqlColumnName);
             }
             else
             {
                 // конвертируем значение.
-                finalValue = SqlTypeConverter.ChangeType(value, ctorArg.ParameterType, columnSqlType, sqlColumnName);
+                return SqlTypeConverter.ConvertSqlToCtorValue(sqlRawValue, sqlColumnType, sqlColumnName, ctorArg.IsNonNullable, ctorArg.ParameterName, ctorArg.ParameterType);
             }
-            propValues[ctorArg.Index] = finalValue;
-
-            // Запомним что этот параметр мы замапили.
-            mapped[ctorArg.Index] = true;
         }
     }
 }

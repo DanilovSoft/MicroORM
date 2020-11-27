@@ -6,6 +6,14 @@
 
     public class NullableModuleTests
     {
+        //[Test]
+        //public void NotNull_Type()
+        //{
+        //    bool isNonNull = NonNullableConvention.IsNonNullableReferenceType(memberType: typeof(string));
+
+        //    Assert.IsTrue(isNonNull, "Ссылочное свойство не допускает Null на основе контекста");
+        //}
+
         [Test]
         public void NotNull_Property()
         {

@@ -105,7 +105,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         /// Инициирует ленивое свойство при первом обращении.
         /// Этот метод потокобезопасен.
         /// </summary>
-        public bool TryGetOrmPropertyFromLazy(string memberName, [NotNullWhen(true)] out OrmProperty? ormProperty)
+        public bool TryGetOrmProperty(string memberName, [NotNullWhen(true)] out OrmProperty? ormProperty)
         {
             if (StaticCache.TypesProperties.TryGetValue((ContractType, memberName), out OrmLazyProperty? lazyOrmProperty))
             {

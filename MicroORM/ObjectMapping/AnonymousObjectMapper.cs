@@ -41,7 +41,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                         value = null;
 
                     // конвертируем значение.
-                    propValues[anonProp.Index] = SqlTypeConverter.ChangeType(value, anonProp.ParameterType, columnType, columnName);
+                    propValues[anonProp.ParameterIndex] = SqlTypeConverter.ConvertSqlToClrType(value, columnType, columnName, anonProp.ParameterType);
                 }
             }
 

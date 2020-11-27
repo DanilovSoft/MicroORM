@@ -7,6 +7,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Diagnostics;
@@ -48,15 +49,25 @@ class Program
         }
     }
 
-    public readonly struct GalleryStruct
+    public struct GalleryStruct
     {
         public readonly int Gid;
         public readonly string? OrigTitle;
 
-        public GalleryStruct(int gid, [SqlProperty("orig_title")] string? origTitle)
+        [Column("posted_date")]
+        public DateTime PostedDate { get; set; }
+
+        public GalleryStruct(int gid, string? origTitle)
         {
             Gid = gid;
             OrigTitle = origTitle;
+            PostedDate = default;
+        }
+
+        [OnDeserialized]
+        public void OnDeserialized(StreamingContext _)
+        {
+
         }
     }
 
@@ -67,7 +78,7 @@ class Program
     //    public string Title { get; set; }
     //}
 
-    public const string PgConnectionString = "Server=10.0.0.99; Port=5432; User Id=hh; Password=test; Database=hh; " +
+    public const string PgConnectionString = "Server=localhost; Port=5432; User Id=postgres; Password=test; Database=postgres; " +
         "Pooling=true; MinPoolSize=1; MaxPoolSize=10";
 
     //public const string PgConnectionString = "Server=10.0.0.99;Port=5432;User Id = test; Password=test;Database=test;Pooling=true;" +
@@ -85,18 +96,9 @@ class Program
 
     static void Main()
     {
-       
         Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
 
-        const string Query = @"SELECT g.gid, g.posted_date, gi.title, Null AS orig_title,
-f.file_name, gt.file_extension
-FROM gallery g
-JOIN gallery_info gi ON g.gid = gi.gid
-JOIN gallery_thumb gt ON g.gid = gt.gid
-JOIN page_file f ON gt.fid = f.fid
-WHERE g.visible = 'yes'
-ORDER BY g.posted_date DESC
-LIMIT 25";
+        const string Query = @"SELECT now() AS posted_date, 123 as gid, 'Title Example' AS title, 'test' AS orig_title";
 
         var ef = new EfDbContext();
         //var efList = ef.Set<GalleryRec>().FromSqlRaw(Query).ToList();

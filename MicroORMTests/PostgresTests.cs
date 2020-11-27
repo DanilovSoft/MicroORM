@@ -1,6 +1,6 @@
 ﻿using DanilovSoft.MicroORM;
 using MicroORMTests;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,13 +10,12 @@ using System.Threading.Tasks;
 
 namespace UnitTests
 {
-    [TestClass]
     public class PostgresTests
     {
         private static readonly SqlORM _orm = new SqlORM("Server=10.0.0.99; Port=5432; User Id=test; Password=test; Database=hh; " +
             "Pooling=true; MinPoolSize=1; MaxPoolSize=100", Npgsql.NpgsqlFactory.Instance);
 
-        [TestMethod]
+        [Test]
         public void ScalarArray()
         {
             decimal[] result = _orm.Sql("SELECT unnest(array['1', '2', '3'])")
@@ -27,18 +26,18 @@ namespace UnitTests
             Assert.AreEqual(3, result[2]);
         }
 
-        [TestMethod]
+        [Test]
         public void TestConverter()
         {
-            UserModel result = _orm.Sql("SELECT point(@0, @1) AS location")
+            UserDbo result = _orm.Sql("SELECT point(@0, @1) AS location")
                 .Parameters(1, 2)
-                .Single<UserModel>();
+                .Single<UserDbo>();
 
             Assert.AreEqual(1, result.Location.X);
             Assert.AreEqual(2, result.Location.Y);
         }
 
-        [TestMethod]
+        [Test]
         public async Task TestTimeout5Sec()
         {
             try
@@ -54,7 +53,7 @@ namespace UnitTests
             }
         }
 
-        [TestMethod]
+        [Test]
         public void TestTransactionWithMultiResult()
         {
             using (var multiResult = _orm.Sql("SELECT @0 AS row1; SELECT unnest(array['1', '2'])")
@@ -71,7 +70,7 @@ namespace UnitTests
             }
         }
 
-        [TestMethod]
+        [Test]
         public async Task TestUserCancelled1Sec()
         {
             var cts = new CancellationTokenSource();
@@ -109,7 +108,7 @@ namespace UnitTests
             return sb.ToString();
         }
 
-        [TestMethod]
+        [Test]
         public void TestList()
         {
             string query = GetSqlQuery();

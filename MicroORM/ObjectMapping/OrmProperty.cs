@@ -15,7 +15,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
     internal sealed class OrmProperty
     {
         public readonly SetValueDelegate? SetValueHandler;
-        public readonly TypeConverter? Converter;
+        public readonly TypeConverter? TypeConverter;
         public readonly Type MemberType;
         public readonly bool IsNonNullable;
         public readonly string PropertyName;
@@ -31,7 +31,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             var attribute = memberInfo.GetCustomAttribute<SqlConverterAttribute>();
             if (attribute != null)
             {
-                Converter = StaticCache.TypeConverters.GetOrAdd(attribute.ConverterType, ConverterValueFactory);
+                TypeConverter = StaticCache.TypeConverters.GetOrAdd(attribute.ConverterType, ConverterValueFactory);
             }
 
             Action<object, object?>? setAction = DynamicReflectionDelegateFactory.CreateSet<object>(memberInfo);
@@ -50,34 +50,47 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         }
 
         /// <param name="sqlColumnName">Используется только для ошибок.</param>
-        public object? Convert(object? value, Type columnSourceType, string sqlColumnName)
+        /// <exception cref="MicroOrmException"/>
+        /// <returns>CLR значение.</returns>
+        public object? ConvertSqlToClrValue(object sqlRawValue, Type sqlColumnType, string sqlColumnName)
         {
-            if (Converter != null)
+            object? sqlValue = SqlTypeConverter.ConvertNullableRawSqlType(sqlRawValue, sqlColumnName, IsNonNullable, PropertyName, "property");
+
+            if (TypeConverter != null)
             {
-                if (Converter.CanConvertFrom(columnSourceType))
+                if (TypeConverter.CanConvertFrom(sqlColumnType))
                 {
-                    return Converter.ConvertFrom(value);
+                    return TypeConverter.ConvertFrom(sqlValue);
                 }
                 else
                 // Безусловно вызываем конвертацию.
                 {
-                    return Converter.ConvertTo(value, MemberType);
+                    return TypeConverter.ConvertTo(sqlValue, MemberType);
                 }
             }
             else
             {
-                return SqlTypeConverter.ChangeType(value, MemberType, columnSourceType, sqlColumnName);
+                return SqlTypeConverter.ConvertSqlToClrType(sqlValue, sqlColumnType, sqlColumnName, MemberType);
             }
         }
 
+        /// <param name="sqlRawValue">Может быть <see cref="DBNull"/>.</param>
         /// <param name="sqlColumnName">Используется только для ошибок.</param>
-        public void ConvertAndSetValue(object obj, object? value, Type columnSourceType, string sqlColumnName)
+        public void ConvertAndSetValue(object instance, object sqlRawValue, Type sqlColumnType, string sqlColumnName)
         {
             Debug.Assert(SetValueHandler != null);
 
-            object? finalValue = Convert(value, columnSourceType, sqlColumnName);
+            object? clrValue = ConvertSqlToClrValue(sqlRawValue, sqlColumnType, sqlColumnName);
 
-            SetValueHandler.Invoke(obj, finalValue);
+            SetValueHandler.Invoke(instance, clrValue);
+        }
+
+        public void SetClrValue(object instance, object? clrValue)
+        {
+            Debug.Assert(clrValue != DBNull.Value);
+            Debug.Assert(SetValueHandler != null);
+
+            SetValueHandler.Invoke(instance, clrValue);
         }
     }
 }

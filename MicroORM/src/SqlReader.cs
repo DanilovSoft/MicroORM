@@ -39,15 +39,14 @@ namespace DanilovSoft.MicroORM
         public IAsyncSqlReader ToAsync() => this;
 
         /// <summary>
-        /// Если <paramref name="dbValue"/> является DBNull то заменяется на Null.
+        /// Если <paramref name="sqlRawValue"/> является DBNull то заменяется на Null.
         /// </summary>
         [DebuggerStepThrough]
-        private static void NullIfDBNull(ref object? dbValue)
+        private static object? NullIfDBNull(object sqlRawValue)
         {
-            if (dbValue == DBNull.Value)
-            {
-                dbValue = null;
-            }
+            return sqlRawValue == DBNull.Value 
+                ? null 
+                : sqlRawValue;
         }
 
         public int Execute()
@@ -84,23 +83,21 @@ namespace DanilovSoft.MicroORM
         private object? Scalar(DbDataReader reader)
         {
             reader.Read();
-            object? value = reader.GetValue(0);
-            NullIfDBNull(ref value);
-            return value;
+            object sqlRawValue = reader.GetValue(0);
+            return NullIfDBNull(sqlRawValue);
         }
         private static object? Scalar<T>(DbDataReader reader)
         {
             reader.Read();
-            object? value = reader.GetValue(0);
-            NullIfDBNull(ref value);
-            return SqlTypeConverter.ChangeType(value, typeof(T), reader.GetFieldType(0), reader.GetName(0));
+            object sqlRawValue = reader.GetValue(0);
+            return SqlTypeConverter.ConvertRawSqlToClrType(sqlRawValue, reader.GetFieldType(0), reader.GetName(0), toType: typeof(T));
         }
+
         [return: MaybeNull]
         public T Scalar<T>()
         {
             return (T)Wrapper(Scalar<T>);
         }
-
 
         public object?[] ScalarArray()
         {
@@ -131,9 +128,8 @@ namespace DanilovSoft.MicroORM
             var list = new List<T>();
             while (reader.Read())
             {
-                object? value = reader.GetValue(0);
-                NullIfDBNull(ref value);
-                T convertedValue = SqlTypeConverter.ChangeType<T>(value: value, columnType: reader.GetFieldType(0), sqlColumnName: reader.GetName(0));
+                object sqlRawValue = reader.GetValue(0);
+                T convertedValue = SqlTypeConverter.ConvertRawSqlToClrType<T>(sqlRawValue, reader.GetFieldType(0), reader.GetName(0));
                 list.Add(convertedValue);
             }
             return list;
@@ -143,9 +139,9 @@ namespace DanilovSoft.MicroORM
             var list = new List<object?>();
             while (reader.Read())
             {
-                object? value = reader.GetValue(0);
-                NullIfDBNull(ref value);
-                list.Add(value);
+                object sqlRawValue = reader.GetValue(0);
+                object? sqlValue = NullIfDBNull(sqlRawValue);
+                list.Add(sqlValue);
             }
             return list;
         }
@@ -159,12 +155,8 @@ namespace DanilovSoft.MicroORM
         {
             if (reader.Read())
             {
-                object? value = reader.GetValue(0);
-                NullIfDBNull(ref value);
-                Type columnType = reader.GetFieldType(0);
-                string columnName = reader.GetName(0);
-                value = SqlTypeConverter.ChangeType(value, typeof(T), columnType, columnName);
-                return value;
+                object sqlRawValue = reader.GetValue(0);
+                return SqlTypeConverter.ConvertRawSqlToClrType(sqlRawValue, reader.GetFieldType(0), reader.GetName(0), toType: typeof(T));
             }
             else
             {
@@ -190,15 +182,15 @@ namespace DanilovSoft.MicroORM
         //        return Single(reader, sel);
         //    }
         //}
-        public T Single<T>(Func<DbDataReader, T> selector)
-        {
-            return Wrapper(Wrap, selector);
+        //public T Single<T>(Func<DbDataReader, T> selector)
+        //{
+        //    return Wrapper(Wrap, selector);
 
-            static T Wrap(DbDataReader reader, Func<DbDataReader, T> sel)
-            {
-                return Single(reader, sel);
-            }
-        }
+        //    static T Wrap(DbDataReader reader, Func<DbDataReader, T> sel)
+        //    {
+        //        return Single(reader, sel);
+        //    }
+        //}
         private object Single<T>(DbDataReader reader) // T - сложный тип и не может быть Null.
         {
             reader.Read();
@@ -647,20 +639,15 @@ namespace DanilovSoft.MicroORM
 
             static object? Read(DbDataReader reader)
             {
-                object? value = reader.GetValue(0);
-                NullIfDBNull(ref value);
-                return value;
+                object sqlRawValue = reader.GetValue(0);
+                return NullIfDBNull(sqlRawValue);
             }
         }
         private static async Task<T> ScalarAsync<T>(DbDataReader reader, CancellationToken cancellationToken)
         {
             await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-            object? value = reader.GetValue(0);
-            NullIfDBNull(ref value);
-            Type columnType = reader.GetFieldType(0);
-            string columnName = reader.GetName(0);
-            value = SqlTypeConverter.ChangeType(value, typeof(T), columnType, columnName);
-            return (T)value;
+            object sqlRawValue = reader.GetValue(0);
+            return (T)SqlTypeConverter.ConvertRawSqlToClrType(sqlRawValue, reader.GetFieldType(0), reader.GetName(0), typeof(T));
         }
         Task<T> IAsyncSqlReader.Scalar<T>()
         {
@@ -727,9 +714,8 @@ namespace DanilovSoft.MicroORM
             var list = new List<T>();
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
-                object? value = reader.GetValue(0);
-                NullIfDBNull(ref value);
-                T convertedValue = SqlTypeConverter.ChangeType<T>(value, columnType: reader.GetFieldType(0), sqlColumnName: reader.GetName(0));
+                object sqlRawValue = reader.GetValue(0);
+                T convertedValue = SqlTypeConverter.ConvertRawSqlToClrType<T>(sqlRawValue, sqlColumnType: reader.GetFieldType(0), sqlColumnName: reader.GetName(0));
                 list.Add(convertedValue);
             }
             return list;
@@ -739,9 +725,9 @@ namespace DanilovSoft.MicroORM
             var list = new List<object?>();
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
-                object? value = reader.GetValue(0);
-                NullIfDBNull(ref value);
-                list.Add(value);
+                object sqlRawValue = reader.GetValue(0);
+                object? sqlValue = NullIfDBNull(sqlRawValue);
+                list.Add(sqlValue);
             }
             return list;
         }
@@ -760,12 +746,8 @@ namespace DanilovSoft.MicroORM
         {
             if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
-                object? value = reader.GetValue(0);
-                Type columnType = reader.GetFieldType(0);
-                string columnName = reader.GetName(0);
-                NullIfDBNull(ref value);
-                value = SqlTypeConverter.ChangeType(value, typeof(T), columnType, columnName);
-                return (T)value;
+                object sqlRawValue = reader.GetValue(0);
+                return SqlTypeConverter.ConvertRawSqlToClrType<T>(sqlRawValue, reader.GetFieldType(0), reader.GetName(0));
             }
             else
             {
@@ -1096,44 +1078,6 @@ namespace DanilovSoft.MicroORM
         {
             return WrapperAsync(AnonymousSingleOrDefaultAsync<T>, cancellationToken)!;
         }
-        //Task<T> IAsyncSqlReader.SingleOrDefault<T>(Action<T, DbDataReader> selector)
-        //{
-        //    return AsAsync.SingleOrDefault(selector, CancellationToken.None);
-        //}
-        //Task<T> IAsyncSqlReader.SingleOrDefault<T>(Action<T, DbDataReader> selector, CancellationToken cancellationToken)
-        //{
-        //    return WrapperAsync(Wrap, selector, cancellationToken);
-
-        //    static Task<T> Wrap(DbDataReader reader, Action<T, DbDataReader> sel, CancellationToken token)
-        //    {
-        //        return SingleOrDefaultAsync(reader, sel, token);
-        //    }
-        //}
-        //Task<T> IAsyncSqlReader.SingleOrDefault<T>(Func<DbDataReader, T> selector)
-        //{
-        //    return AsAsync.SingleOrDefault(selector, CancellationToken.None);
-        //}
-        //Task<T> IAsyncSqlReader.SingleOrDefault<T>(Func<DbDataReader, T> selector, CancellationToken cancellationToken)
-        //{
-        //    return WrapperAsync(Wrap, selector, cancellationToken);
-
-        //    static Task<T> Wrap(DbDataReader reader, Func<DbDataReader, T> sel, CancellationToken token)
-        //    {
-        //        return SingleOrDefaultAsync(reader, sel, token);
-        //    }
-        //}
-        //private static async Task<T> SingleOrDefaultAsync<T>(DbDataReader reader, Func<DbDataReader, T> selector, CancellationToken cancellationToken)
-        //{
-        //    if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-        //    {
-        //        T result = selector(reader);
-        //        return result;
-        //    }
-        //    else
-        //    {
-        //        return default;
-        //    }
-        //}
         private async Task<T> SingleOrDefaultAsync<T>(DbDataReader reader, CancellationToken cancellationToken)
         {
             if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
@@ -1276,12 +1220,7 @@ namespace DanilovSoft.MicroORM
         }
         private T Wrapper<T>(Func<DbDataReader, T> selector)
         {
-            return Wrapper(Wrap, selector);
-
-            static T Wrap(DbDataReader reader, Func<DbDataReader, T> sel)
-            {
-                return sel(reader);
-            }
+            return Wrapper(static (reader, s) => s(reader), selector);
         }
         private T Wrapper<T, TArg>(Func<DbDataReader, TArg, T> selector, TArg state)
         {

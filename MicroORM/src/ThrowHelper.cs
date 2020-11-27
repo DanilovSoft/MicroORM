@@ -5,15 +5,19 @@
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Reflection;
     using System.Text;
     using System.Threading.Tasks;
 
     internal static class ThrowHelper
     {
+        /// <exception cref="MicroOrmException"/>
         [DoesNotReturn]
         [DebuggerStepThrough]
-        public static void ThrowCantSetNull(string parameterName, string sqlColumnName)
-            => throw new MicroOrmException($"Failed to set Null value for property '{parameterName}' " +
-                $"because it does not allow Null values. Column name '{sqlColumnName}'.");
+        public static void ThrowCantSetNull(string memberName, string sqlColumnName, string memberType)
+        {
+            throw new MicroOrmException($"Failed to set Null value for {memberType} '{memberName}' " +
+                $"because it does not allow Null values. SQL column name '{sqlColumnName}'.");
+        }
     }
 }
