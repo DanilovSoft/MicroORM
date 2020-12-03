@@ -78,11 +78,11 @@ class Program
     //    public string Title { get; set; }
     //}
 
-    //public const string PgConnectionString = "Server=localhost; Port=5432; User Id=postgres; Password=test; Database=postgres; " +
-    //    "Pooling=true; MinPoolSize=1; MaxPoolSize=10";
+    public const string PgConnectionString = "Server=localhost; Port=5432; User Id=postgres; Password=test; Database=postgres; " +
+        "Pooling=true; MinPoolSize=1; MaxPoolSize=10";
 
-    public const string PgConnectionString = "Server=10.0.0.99;Port=5432;User Id = test; Password=test;Database=test;Pooling=true;" +
-        "MinPoolSize=10;MaxPoolSize=16;CommandTimeout=30;Timeout=30";
+    //public const string PgConnectionString = "Server=10.0.0.99;Port=5432;User Id = test; Password=test;Database=test;Pooling=true;" +
+    //    "MinPoolSize=10;MaxPoolSize=16;CommandTimeout=30;Timeout=30";
 
     private readonly SqlORM _sqlite = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
     private static readonly SqlORM _pgOrm = new SqlORM(PgConnectionString, Npgsql.NpgsqlFactory.Instance, usePascalCaseNamingConvention: true);
@@ -103,7 +103,7 @@ class Program
         var ef = new EfDbContext();
         //var efList = ef.Set<GalleryRec>().FromSqlRaw(Query).ToList();
         
-        var listClass = _pgOrm.Sql(Query).List<GalleryStruct>();
+        var listClass = _pgOrm.Sql(Query).List(new { posted_date = default(DateTime), test = 0 });
         var list = _pgOrm.Sql(Query).List<GalleryDb>();
 
         //_pgOrm.Sql(Query).List<TestStruct>();
