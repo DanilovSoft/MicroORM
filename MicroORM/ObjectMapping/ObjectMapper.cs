@@ -26,6 +26,11 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             _activator = StaticCache.FromLazyActivator(typeof(T));
         }
 
+        public TAnon ReadAsAnonymousObject<TAnon>() where TAnon : class
+        {
+            return (ReadObject() as TAnon)!;
+        }
+
         public object ReadObject()
         {
             if (_activator.IsEmptyCtor)

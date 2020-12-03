@@ -86,26 +86,6 @@ class Program
 
     private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
-    internal sealed class DbFactoryWrapper : DbProviderFactory
-    {
-        private readonly EfDbContext _efContext;
-
-        public DbFactoryWrapper(EfDbContext efContext)
-        {
-            _efContext = efContext;
-        }
-
-        public override DbCommand? CreateCommand()
-        {
-            return _efContext.Database.GetDbConnection().CreateCommand();
-        }
-
-        public override DbConnection? CreateConnection()
-        {
-            return _efContext.Database.GetDbConnection();
-        }
-    }
-
     static void Main()
     {
         Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
@@ -116,12 +96,12 @@ class Program
 
         var ef = new EfDbContext();
 
-        _pgOrm = new SqlORM(PgConnectionString, new DbFactoryWrapper(ef), usePascalCaseNamingConvention: true);
+        //_pgOrm = new SqlORM(PgConnectionString, new DbFactoryWrapper(ef), usePascalCaseNamingConvention: true);
 
         //var efList = ef.Set<GalleryRec>().FromSqlRaw(Query).ToList();
         
-        var listClass = _pgOrm.Sql(Query).List(new { posted_date = default(DateTime), test = 0 });
-        var list = _pgOrm.Sql(Query).List<GalleryDb>();
+        var listClass = _pgOrm.SqlInterpolated(Query).List(new { test = 0, posted_date = default(DateTime) });
+        var list = _pgOrm.SqlInterpolated(Query).List<GalleryDb>();
 
         //_pgOrm.Sql(Query).List<TestStruct>();
 

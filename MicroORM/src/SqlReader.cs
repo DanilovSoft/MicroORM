@@ -130,7 +130,7 @@ namespace DanilovSoft.MicroORM
             {
                 object sqlRawValue = reader.GetValue(0);
                 T convertedValue = SqlTypeConverter.ConvertRawSqlToClrType<T>(sqlRawValue, reader.GetFieldType(0), reader.GetName(0));
-                list.Add(convertedValue);
+                list.Add(convertedValue!);
             }
             return list;
         }
@@ -197,11 +197,11 @@ namespace DanilovSoft.MicroORM
             var toObject = new ObjectMapper<T>(reader, _sqlORM);
             return toObject.ReadObject();
         }
-        private static T AnonymousSingle<T>(DbDataReader reader) where T : class
+        private T AnonymousSingle<T>(DbDataReader reader) where T : class
         {
             reader.Read();
-            var toObject = new AnonymousObjectMapper<T>(reader);
-            return toObject.ReadObject();
+            var toObject = new ObjectMapper<T>(reader, _sqlORM);
+            return toObject.ReadAsAnonymousObject<T>();
         }
         private static T Single<T>(DbDataReader reader, Func<DbDataReader, T> selector)
         {
@@ -261,16 +261,16 @@ namespace DanilovSoft.MicroORM
                 return default(T);
             }
         }
-        private static T? AnonymousSingleOrDefault<T>(DbDataReader reader) where T : class
+        private T? AnonymousSingleOrDefault<T>(DbDataReader reader) where T : class
         {
             if (reader.Read())
             {
-                var toObject = new AnonymousObjectMapper<T>(reader);
-                return toObject.ReadObject();
+                var toObject = new ObjectMapper<T>(reader, _sqlORM);
+                return toObject.ReadAsAnonymousObject<T>();
             }
             else
             {
-                return default;
+                return null;
             }
         }
         
@@ -310,7 +310,7 @@ namespace DanilovSoft.MicroORM
 
         private List<TResult> FromAnonList<TAnon, TResult>(Func<TAnon, TResult> selector) where TAnon : class
         {
-            return Wrapper(static (reader, sel) => AnonumouseList(reader, sel), selector);
+            return Wrapper((reader, sel) => AnonumouseList(reader, sel), selector);
         }
 
         private TResult[] FromAnonArray<TAnon, TResult>(Func<TAnon, TResult> selector) where TAnon : class
@@ -345,7 +345,7 @@ namespace DanilovSoft.MicroORM
         {
             return WrapperAsync(Wrap, selector, cancellationToken);
 
-            static Task<List<TResult>> Wrap(DbDataReader reader, Func<TAnon, TResult> sel, CancellationToken token)
+            Task<List<TResult>> Wrap(DbDataReader reader, Func<TAnon, TResult> sel, CancellationToken token)
             {
                 return AnonumouseListAsync(reader, sel, token);
             }
@@ -379,27 +379,27 @@ namespace DanilovSoft.MicroORM
         //        return List(reader, sel);
         //    }
         //}
-        private static List<TAnon> AnonumouseList<TAnon>(DbDataReader reader) where TAnon : class
+        private List<TAnon> AnonumouseList<TAnon>(DbDataReader reader) where TAnon : class
         {
             var list = new List<TAnon>();
             if (reader.Read())
             {
-                var toObject = new AnonymousObjectMapper<TAnon>(reader);
+                var toObject = new ObjectMapper<TAnon>(reader, _sqlORM);
                 do
                 {
-                    TAnon rowObj = toObject.ReadObject();
+                    TAnon rowObj = toObject.ReadAsAnonymousObject<TAnon>();
                     list.Add(rowObj);
 
                 } while (reader.Read());
             }
             return list;
         }
-        private static List<TResult> AnonumouseList<TAnon, TResult>(DbDataReader reader, Func<TAnon, TResult> selector) where TAnon : class
+        private List<TResult> AnonumouseList<TAnon, TResult>(DbDataReader reader, Func<TAnon, TResult> selector) where TAnon : class
         {
             var list = new List<TResult>();
             if (reader.Read())
             {
-                var toObject = new AnonymousObjectMapper<TAnon>(reader);
+                var toObject = new ObjectMapper<TAnon>(reader, _sqlORM);
                 do
                 {
                     TResult result = AnonToResult(toObject, selector);
@@ -408,9 +408,9 @@ namespace DanilovSoft.MicroORM
             }
             return list;
 
-            static TResult AnonToResult(AnonymousObjectMapper<TAnon> toObject, Func<TAnon, TResult> selector)
+            static TResult AnonToResult(ObjectMapper<TAnon> toObject, Func<TAnon, TResult> selector)
             {
-                TAnon row = toObject.ReadObject();
+                TAnon row = toObject.ReadAsAnonymousObject<TAnon>();
                 TResult result = selector(row);
                 return result;
             }
@@ -647,7 +647,7 @@ namespace DanilovSoft.MicroORM
         {
             await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
             object sqlRawValue = reader.GetValue(0);
-            return (T)SqlTypeConverter.ConvertRawSqlToClrType(sqlRawValue, reader.GetFieldType(0), reader.GetName(0), typeof(T));
+            return (T)SqlTypeConverter.ConvertRawSqlToClrType(sqlRawValue, reader.GetFieldType(0), reader.GetName(0), typeof(T))!;
         }
         Task<T> IAsyncSqlReader.Scalar<T>()
         {
@@ -716,7 +716,7 @@ namespace DanilovSoft.MicroORM
             {
                 object sqlRawValue = reader.GetValue(0);
                 T convertedValue = SqlTypeConverter.ConvertRawSqlToClrType<T>(sqlRawValue, sqlColumnType: reader.GetFieldType(0), sqlColumnName: reader.GetName(0));
-                list.Add(convertedValue);
+                list.Add(convertedValue!);
             }
             return list;
         }
@@ -747,11 +747,11 @@ namespace DanilovSoft.MicroORM
             if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
                 object sqlRawValue = reader.GetValue(0);
-                return SqlTypeConverter.ConvertRawSqlToClrType<T>(sqlRawValue, reader.GetFieldType(0), reader.GetName(0));
+                return SqlTypeConverter.ConvertRawSqlToClrType<T>(sqlRawValue, reader.GetFieldType(0), reader.GetName(0))!;
             }
             else
             {
-                return default;
+                return default!;
             }
         }
 
@@ -808,27 +808,27 @@ namespace DanilovSoft.MicroORM
         //    }
         //    return list;
         //}
-        private static async Task<List<T>> AnonymousListAsync<T>(DbDataReader reader, CancellationToken cancellationToken) where T : class
+        private async Task<List<T>> AnonymousListAsync<T>(DbDataReader reader, CancellationToken cancellationToken) where T : class
         {
             var list = new List<T>();
             if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
-                var toObject = new AnonymousObjectMapper<T>(reader);
+                var toObject = new ObjectMapper<T>(reader, _sqlORM);
                 do
                 {
-                    T result = toObject.ReadObject();
+                    T result = toObject.ReadAsAnonymousObject<T>();
                     list.Add(result);
 
                 } while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false));
             }
             return list;
         }
-        private static async Task<List<TResult>> AnonumouseListAsync<TAnon, TResult>(DbDataReader reader, Func<TAnon, TResult> selector, CancellationToken cancellationToken) where TAnon : class
+        private async Task<List<TResult>> AnonumouseListAsync<TAnon, TResult>(DbDataReader reader, Func<TAnon, TResult> selector, CancellationToken cancellationToken) where TAnon : class
         {
             var list = new List<TResult>();
             if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
-                var toObject = new AnonymousObjectMapper<TAnon>(reader);
+                var toObject = new ObjectMapper<TAnon>(reader, _sqlORM);
                 do
                 {
                     TResult result = AnonToResult(toObject, selector);
@@ -838,9 +838,9 @@ namespace DanilovSoft.MicroORM
             }
             return list;
 
-            static TResult AnonToResult(AnonymousObjectMapper<TAnon> toObject, Func<TAnon, TResult> selector)
+            static TResult AnonToResult(ObjectMapper<TAnon> toObject, Func<TAnon, TResult> selector)
             {
-                TAnon anonObj = toObject.ReadObject();
+                TAnon anonObj = toObject.ReadAsAnonymousObject<TAnon>();
                 TResult result = selector(anonObj);
                 return result;
             }
@@ -1021,7 +1021,7 @@ namespace DanilovSoft.MicroORM
                 return (T)objectMapper.ReadObject();
             }
         }
-        private static Task<T> AnonymousSingleAsync<T>(DbDataReader reader, CancellationToken cancellationToken) where T : class
+        private Task<T> AnonymousSingleAsync<T>(DbDataReader reader, CancellationToken cancellationToken) where T : class
         {
             Task<bool> task = reader.ReadAsync(cancellationToken);
 
@@ -1033,17 +1033,17 @@ namespace DanilovSoft.MicroORM
             {
                 return WaitAsync(task, reader);
 
-                static async Task<T> WaitAsync(Task<bool> task, DbDataReader reader)
+                async Task<T> WaitAsync(Task<bool> task, DbDataReader reader)
                 {
                     await task.ConfigureAwait(false);
                     return Map(reader);
                 }
             }
 
-            static T Map(DbDataReader reader)
+            T Map(DbDataReader reader)
             {
-                var toObject = new AnonymousObjectMapper<T>(reader);
-                return toObject.ReadObject();
+                var toObject = new ObjectMapper<T>(reader, _sqlORM);
+                return toObject.ReadAsAnonymousObject<T>();
             }
         }
         //private async Task<T> SingleAsync<T>(DbDataReader reader, Action<T, DbDataReader> selector, CancellationToken cancellationToken) where T : class
@@ -1087,10 +1087,11 @@ namespace DanilovSoft.MicroORM
             }
             else
             {
-                return default;
+                return default!;
             }
         }
-        private static Task<T?> AnonymousSingleOrDefaultAsync<T>(DbDataReader reader, CancellationToken cancellationToken) where T : class
+
+        private Task<T?> AnonymousSingleOrDefaultAsync<T>(DbDataReader reader, CancellationToken cancellationToken) where T : class
         {
             Task<bool> task = reader.ReadAsync(cancellationToken);
             if (task.IsCompletedSuccessfully())
@@ -1103,23 +1104,23 @@ namespace DanilovSoft.MicroORM
             {
                 return WaitAsync(task, reader);
 
-                static async Task<T?> WaitAsync(Task<bool> task, DbDataReader reader)
+                async Task<T?> WaitAsync(Task<bool> task, DbDataReader reader)
                 {
                     bool hasRows = await task.ConfigureAwait(false);
                     return MapAnonymousObject(hasRows, reader);
                 }
             }
 
-            static T? MapAnonymousObject(bool hasRows, DbDataReader reader)
+            T? MapAnonymousObject(bool hasRows, DbDataReader reader)
             {
                 if (hasRows)
                 {
-                    var toObject = new AnonymousObjectMapper<T>(reader);
-                    return toObject.ReadObject();
+                    var toObject = new ObjectMapper<T>(reader, _sqlORM);
+                    return toObject.ReadAsAnonymousObject<T>();
                 }
                 else
                 {
-                    return default;
+                    return null;
                 }
             }
         }

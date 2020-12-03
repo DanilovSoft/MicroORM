@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>3.4.6</Version>
+    <Version>3.4.7</Version>
     <Authors>Vitalii Danilov</Authors>
     <Company>Vitalii Danilov</Company>
     <Product>DanilovSoft.MicroORM</Product>

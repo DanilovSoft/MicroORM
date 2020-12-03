@@ -312,17 +312,17 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             generator.Return();
         }
 
-        public static Action<T, object?>? CreateSet<T>(MemberInfo memberInfo)
+        public static Action<TInstance, object?>? CreateSet<TInstance>(MemberInfo memberInfo)
         {
             switch (memberInfo)
             {
                 case PropertyInfo p:
                     {
-                        return CreateSet<T>(p);
+                        return CreateSet<TInstance>(p);
                     }
                 case FieldInfo f:
                     {
-                        return CreateSet<T>(f);
+                        return CreateSet<TInstance>(f);
                     }
                 default:
                     throw new InvalidOperationException($"Could not create setter for {memberInfo}.");
@@ -331,8 +331,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
         public static Action<T, object?>? CreateSet<T>(PropertyInfo propertyInfo)
         {
-            MethodInfo? setMethod = propertyInfo.GetSetMethod(nonPublic: true);
-            if (setMethod != null)
+            if (propertyInfo.GetSetMethod(nonPublic: true) is MethodInfo setMethod)
             {
                 Debug.Assert(propertyInfo.DeclaringType != null);
 

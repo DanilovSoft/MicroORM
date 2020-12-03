@@ -95,14 +95,27 @@ namespace MicroORMTests
         }
 
         [Test]
-        public void TestAnonimouseRows()
+        public void AnonimouseRowsCount()
         {
-            var result = _orm.Sql("SELECT @name AS qwer, @age AS a")
-                .Parameter("name", "Alfred")
-                .Parameter("age", 30)
-                .List(new { name = 0, age = "" });
+            var result = _orm.SqlInterpolated($"SELECT {"Alfred"} AS name, {30} AS age")
+                .List(new { name = "", age = 0 });
 
             Assert.AreEqual(1, result.Count);
+        }
+
+        [Test]
+        public void NotMappedAnonimouseProperty()
+        {
+            try
+            {
+                _orm.SqlInterpolated($"SELECT {"Alfred"} AS name, {30} AS aaaaaa")
+                    .Single(new { name = "", age = 0 });
+            }
+            catch (MicroOrmException)
+            {
+                Assert.Pass();
+            }
+            Assert.Fail();
         }
     }
 

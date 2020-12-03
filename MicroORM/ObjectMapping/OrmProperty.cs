@@ -14,11 +14,12 @@ namespace DanilovSoft.MicroORM.ObjectMapping
     /// </summary>
     internal sealed class OrmProperty
     {
-        public readonly SetValueDelegate? SetValueHandler;
-        public readonly TypeConverter? TypeConverter;
-        public readonly Type MemberType;
-        public readonly bool IsNonNullable;
-        public readonly string PropertyName;
+        private SetValueDelegate? SetValueHandler { get; }
+        public TypeConverter? TypeConverter { get; }
+        public Type MemberType { get; }
+        public bool IsNonNullable { get; }
+        public string PropertyName { get; }
+        public bool IsWritable => SetValueHandler != null;
 
         // ctor.
         public OrmProperty(MemberInfo memberInfo)
@@ -31,20 +32,19 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             var attribute = memberInfo.GetCustomAttribute<TypeConverterAttribute>();
             if (attribute != null)
             {
-                TypeConverter = StaticCache.TypeConverters.GetOrAdd(Type.GetType(attribute.ConverterTypeName), ConverterValueFactory);
+                if (Type.GetType(attribute.ConverterTypeName) is Type converterType)
+                {
+                    TypeConverter = StaticCache.TypeConverters.GetOrAdd(converterType, ConverterValueFactory);
+                }
+                else
+                    throw new MicroOrmException($"Unable to resolve converter type {attribute.ConverterTypeName}");
             }
 
-            Action<object, object?>? setAction = DynamicReflectionDelegateFactory.CreateSet<object>(memberInfo);
-            if (setAction != null)
+            if (DynamicReflectionDelegateFactory.CreateSet<object>(memberInfo) is Action<object, object?> setValueDelegate)
             {
-                SetValueHandler = new SetValueDelegate(setAction);
+                SetValueHandler = new SetValueDelegate(setValueDelegate);
             }
-            else
-            {
-                Debug.Assert(false, "Это свойство только для чтения");
-                throw new InvalidOperationException();
-            }
-
+            
             IsNonNullable = NonNullableConvention.IsNonNullableReferenceType(memberInfo);
         }
 
@@ -83,19 +83,26 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         /// <param name="sqlColumnName">Используется только для ошибок.</param>
         public void ConvertAndSetValue(object instance, object sqlRawValue, Type sqlColumnType, string sqlColumnName)
         {
-            Debug.Assert(SetValueHandler != null);
+            if (SetValueHandler != null)
+            {
+                object? clrValue = ConvertSqlToClrValue(sqlRawValue, sqlColumnType, sqlColumnName);
 
-            object? clrValue = ConvertSqlToClrValue(sqlRawValue, sqlColumnType, sqlColumnName);
-
-            SetValueHandler.Invoke(instance, clrValue);
+                SetValueHandler.Invoke(instance, clrValue);
+            }
+            else
+                throw new MicroOrmException($"Property '{PropertyName}' is not writable.");
         }
 
         public void SetClrValue(object instance, object? clrValue)
         {
-            Debug.Assert(clrValue != DBNull.Value);
-            Debug.Assert(SetValueHandler != null);
+            if (SetValueHandler != null)
+            {
+                Debug.Assert(clrValue != DBNull.Value);
 
-            SetValueHandler.Invoke(instance, clrValue);
+                SetValueHandler.Invoke(instance, clrValue);
+            }
+            else
+                throw new MicroOrmException($"Property '{PropertyName}' is not writable.");
         }
     }
 }

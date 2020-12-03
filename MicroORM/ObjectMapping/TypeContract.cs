@@ -25,7 +25,8 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         {
             ContractType = dboType;
 
-            const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+            const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic 
+                | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
             IEnumerable<MemberInfo> allMembers = ReflectionUtils
                 .GetFieldsAndProperties(dboType, bindingFlags)
@@ -53,8 +54,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 bool canIgnoreMember = true;
                 string memberName = memberInfo.Name;
 
-                var sqlPropAttr = memberInfo.GetCustomAttribute<SqlPropertyAttribute>();
-                if (sqlPropAttr != null)
+                if (memberInfo.GetCustomAttribute<SqlPropertyAttribute>() is SqlPropertyAttribute sqlPropAttr)
                 // Есть атрибут SqlProperty — это свойство игнорировать нельзя.
                 {
                     // Только для своего атрибута мы должны выполнить такую проверку.
@@ -69,7 +69,11 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 else
                 {
                     // Проверять этот атрибут нужно после SqlPropertyAttribute.
-                    if (!memberInfo.IsDefined(typeof(IgnoreDataMemberAttribute)))
+                    if (memberInfo.IsDefined(typeof(IgnoreDataMemberAttribute)))
+                    {
+                        continue;
+                    }
+                    else
                     {
                         if (memberInfo.GetCustomAttribute<ColumnAttribute>() is ColumnAttribute columnAttrib)
                         {
@@ -80,8 +84,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                         }
                         else
                         {
-                            var dataMember = memberInfo.GetCustomAttribute<DataMemberAttribute>();
-                            if (dataMember != null)
+                            if (memberInfo.GetCustomAttribute<DataMemberAttribute>() is DataMemberAttribute dataMember)
                             {
                                 // если есть атрибут DataMember то это свойство игнорировать нельзя.
                                 canIgnoreMember = false;
@@ -90,10 +93,6 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                                     memberName = dataMember.Name;
                             }
                         }
-                    }
-                    else
-                    {
-                        continue;
                     }
                 }
 
