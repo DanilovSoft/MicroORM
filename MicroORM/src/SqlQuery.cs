@@ -14,34 +14,42 @@ namespace DanilovSoft.MicroORM
 {
     public class SqlQuery : SqlReader
     {
-        private readonly Dictionary<string, object?> _parameters;
-        private readonly string _commandText;
+        private readonly string _query;
         private protected readonly SqlORM _sqlOrm;
-        private int _anonimParamCount;
+        private Dictionary<string, object?>? _parameters;
+        private Dictionary<string, object?> LazyParameters => LazyInitializer.EnsureInitialized(ref _parameters, static () => new());
+        private int _anonymParamCount;
 
         // ctor
-        internal SqlQuery(SqlORM sqlOrm, string commandText) : base(sqlOrm)
+        internal SqlQuery(SqlORM sqlOrm, string query) : base(sqlOrm)
         {
             _sqlOrm = sqlOrm;
-            _commandText = commandText;
-            _parameters = new Dictionary<string, object?>();
+            _query = query;
         }
 
         internal virtual DbConnection GetConnection()
         {
             DbConnection? connection = _sqlOrm.Factory.CreateConnection();
             Debug.Assert(connection != null);
-            DbConnection? toDispose = connection;
             connection.ConnectionString = _sqlOrm.ConnectionString;
-            try
+
+            if (connection.State == ConnectionState.Open)
             {
-                connection.Open();
-                toDispose = null;
                 return connection;
             }
-            finally
+            else
             {
-                toDispose?.Dispose();
+                DbConnection? toDispose = connection;
+                try
+                {
+                    connection.Open();
+                    toDispose = null;
+                    return connection;
+                }
+                finally
+                {
+                    toDispose?.Dispose();
+                }
             }
         }
 
@@ -49,13 +57,18 @@ namespace DanilovSoft.MicroORM
         {
             DbConnection? connection = _sqlOrm.Factory.CreateConnection();
             Debug.Assert(connection != null);
-            DbConnection? toDispose = connection;
+
             connection.ConnectionString = _sqlOrm.ConnectionString;
+
+            if (connection.State == ConnectionState.Open)
+                return new ValueTask<DbConnection>(result: connection);
+
+            DbConnection? toDispose = connection;
             try
             {
                 Task task = connection.OpenAsync(cancellationToken);
                 toDispose = null;
-                if (task.IsCompletedSuccessfully())
+                if (task.IsCompletedSuccessfully)
                 {
                     return new ValueTask<DbConnection>(result: connection);
                 }
@@ -90,7 +103,7 @@ namespace DanilovSoft.MicroORM
             DbConnection connection = GetConnection();
             DbCommand command = connection.CreateCommand();
             AddParameters(command);
-            command.CommandText = _commandText;
+            command.CommandText = _query;
             command.CommandTimeout = base.QueryTimeoutSec;
             return command;
         }
@@ -120,7 +133,7 @@ namespace DanilovSoft.MicroORM
         {
             DbCommand command = connection.CreateCommand();
             AddParameters(command);
-            command.CommandText = _commandText;
+            command.CommandText = _query;
 
             // The CommandTimeout property will be ignored during asynchronous method calls such as BeginExecuteReader.
             //command.CommandTimeout = base.QueryTimeoutSec;
@@ -186,51 +199,56 @@ namespace DanilovSoft.MicroORM
 
         private void AddParameters(DbCommand command)
         {
-            foreach (KeyValuePair<string, object?> keyValue in _parameters)
+            foreach ((string pName, object? pValue) in LazyParameters)
             {
                 DbParameter p = command.CreateParameter();
-                p.ParameterName = keyValue.Key;
-                p.Value = keyValue.Value ?? DBNull.Value;
+                p.ParameterName = pName;
+                p.Value = pValue ?? DBNull.Value;
                 command.Parameters.Add(p);
             }
         }
 
         /// <exception cref="ArgumentNullException"/>
-        public SqlQuery Parameters(params object?[] parameters)
+        public SqlQuery Parameters(params object?[] anonymousParameters)
         {
-            if (parameters != null)
+            if (anonymousParameters != null)
             {
-                for (int i = 0; i < parameters.Length; i++)
+                for (int i = 0; i < anonymousParameters.Length; i++)
                 {
-                    Parameter(_anonimParamCount.ToString(CultureInfo.InvariantCulture), parameters[i]);
-                    _anonimParamCount++;
+                    string parameterName = _anonymParamCount.ToString(CultureInfo.InvariantCulture);
+
+                    Parameter(parameterName, anonymousParameters[i]);
+                    _anonymParamCount++;
                 }
                 return this;
             }
             else
-                throw new ArgumentNullException(nameof(parameters));
+                throw new ArgumentNullException(nameof(anonymousParameters));
         }
 
-        public SqlQuery Parameter(object? value)
+        public SqlQuery Parameter(object? anonymousParameter)
         {
-            Parameter(_anonimParamCount.ToString(CultureInfo.InvariantCulture), value);
-            _anonimParamCount++;
+            Parameter(_anonymParamCount.ToString(CultureInfo.InvariantCulture), anonymousParameter);
+            _anonymParamCount++;
             return this;
         }
 
         public SqlQuery Parameter(string name, object? value)
         {
-            _parameters.Add(name, value);
+            LazyParameters.Add(name, value);
             return this;
         }
 
-        public SqlQuery Parameters(IEnumerable<KeyValuePair<string, object>> keyValueParameters)
+        public SqlQuery Parameters(IEnumerable<KeyValuePair<string, object?>> keyValueParameters)
         {
+            // Лучше сделать копию ссылки что-бы в цикле не дёргать ленивку.
+            var parameters = LazyParameters;
+
             if (keyValueParameters != null)
             {
                 foreach (var p in keyValueParameters)
                 {
-                    _parameters.Add(p.Key, p.Value);
+                    parameters.Add(p.Key, p.Value);
                 }
                 return this;
             }

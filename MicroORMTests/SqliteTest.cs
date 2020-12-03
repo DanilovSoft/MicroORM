@@ -22,20 +22,19 @@ namespace MicroORMTests
     {
         private static readonly SqlORM _orm = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
 
-        //[Test]
-        //public void NullResult()
-        //{
-        //    TestClass result = _orm.Sql("SELECT @0")
-        //        .Parameter(null)
-        //        .Single<TestClass>();
+        [Test]
+        public void Interpolated()
+        {
+            var result = _orm.SqlInterpolated($"SELECT {123}")
+                .Scalar<int>();
 
-        //    Assert.AreEqual(null, result);
-        //}
+            Assert.AreEqual(123, result);
+        }
 
         [Test]
         public void TestScalar()
         {
-            string result = _orm.Sql("SELECT @0")
+            string? result = _orm.Sql("SELECT @0")
                 .Parameter("OK")
                 .Scalar<string>();
 
@@ -129,7 +128,7 @@ namespace MicroORMTests
         [DataMember(Name = "col1")]
         public string Col1 { get; private set; }
 
-        [SqlConverter(typeof(IntConverter))]
+        [TypeConverter(typeof(IntConverter))]
         public string col2 { get; private set; }
 
         [SqlProperty("col3")]

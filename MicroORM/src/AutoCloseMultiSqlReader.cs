@@ -14,8 +14,8 @@ namespace DanilovSoft.MicroORM
 
         public AutoCloseMultiSqlReader(DbCommand command, SqlORM sqlOrm) : base(command, sqlOrm)
         {
-            var con = command.Connection;
-            Debug.Assert(_con != null);
+            DbConnection? con = command.Connection;
+            Debug.Assert(con != null);
             _con = con;
         }
 
