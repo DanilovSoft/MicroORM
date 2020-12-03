@@ -3,6 +3,7 @@ using DanilovSoft.MicroORM;
 using DanilovSoft.MicroORM.ObjectMapping;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Npgsql;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -49,25 +50,21 @@ class Program
         }
     }
 
-    public struct GalleryStruct
+    public class GalleryStruct
     {
         public readonly int Gid;
         public readonly string? OrigTitle;
 
-        [Column("posted_date")]
-        public DateTime PostedDate { get; }
+        public Uri Address { get; set; }
 
-        public GalleryStruct(int gid, string? origTitle)
+        public GalleryStruct(
+            int gid, 
+            string? origTitle, 
+            [TypeConverter(typeof(UriTypeConverter)), SqlProperty("uri")] Uri address)
         {
             Gid = gid;
             OrigTitle = origTitle;
-            PostedDate = default;
-        }
-
-        [OnDeserialized]
-        public void OnDeserialized(StreamingContext _)
-        {
-
+            Address = address;
         }
     }
 
@@ -85,26 +82,46 @@ class Program
         "MinPoolSize=10;MaxPoolSize=16;CommandTimeout=30;Timeout=30";
 
     private readonly SqlORM _sqlite = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
-    private static readonly SqlORM _pgOrm = new SqlORM(PgConnectionString, Npgsql.NpgsqlFactory.Instance, usePascalCaseNamingConvention: true);
+    private static SqlORM _pgOrm = new SqlORM(PgConnectionString, NpgsqlFactory.Instance, usePascalCaseNamingConvention: true);
 
     private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
-    class F : DbProviderFactory
+    internal sealed class DbFactoryWrapper : DbProviderFactory
     {
-        
+        private readonly EfDbContext _efContext;
+
+        public DbFactoryWrapper(EfDbContext efContext)
+        {
+            _efContext = efContext;
+        }
+
+        public override DbCommand? CreateCommand()
+        {
+            return _efContext.Database.GetDbConnection().CreateCommand();
+        }
+
+        public override DbConnection? CreateConnection()
+        {
+            return _efContext.Database.GetDbConnection();
+        }
     }
 
     static void Main()
     {
         Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
 
-        const string Query = @"SELECT now() AS posted_date, 123 as gid, 'Title Example' AS title, 'test' AS orig_title";
+        string uri = "http://test.com";
+
+        FormattableString Query = @$"SELECT {uri} AS uri, {DateTime.Now} AS posted_date, 123 as gid, 'Title Example' AS title, 'test' AS orig_title";
 
         var ef = new EfDbContext();
+
+        _pgOrm = new SqlORM(PgConnectionString, new DbFactoryWrapper(ef), usePascalCaseNamingConvention: true);
+
         //var efList = ef.Set<GalleryRec>().FromSqlRaw(Query).ToList();
-        
-        var listClass = _pgOrm.Sql(Query).List<GalleryStruct>();
-        var list = _pgOrm.Sql(Query).List<GalleryDb>();
+
+        var listClass = _pgOrm.SqlInterpolated(Query).List<GalleryStruct>();
+        var list = _pgOrm.SqlInterpolated(Query).List<GalleryDb>();
 
         //_pgOrm.Sql(Query).List<TestStruct>();
 
@@ -115,7 +132,7 @@ class Program
         for (int i = 0; i < 10; i++)
         {
             var sw = Stopwatch.StartNew();
-            var list2 = ef.Set<GalleryDb>().FromSqlRaw(Query).ToList();
+            var list2 = ef.Set<GalleryDb>().FromSqlRaw(Query.ToString()).ToList();
             sw.Stop();
             Console.WriteLine($"EF: {sw.ElapsedMilliseconds:0} msec");
         }
@@ -123,7 +140,7 @@ class Program
         for (int i = 0; i < 10; i++)
         {
             var sw = Stopwatch.StartNew();
-            list = _pgOrm.Sql(Query).List<GalleryDb>();
+            list = _pgOrm.Sql(Query.ToString()).List<GalleryDb>();
             sw.Stop();
 
             Console.WriteLine($"MicroORM: {sw.ElapsedMilliseconds:0} msec");
@@ -185,7 +202,7 @@ class Program
 internal readonly struct TestStruct
 {
     [SqlProperty("url")]
-    [SqlConverter(typeof(UriTypeConverter))]
+    [TypeConverter(typeof(UriTypeConverter))]
     public Uri Url { get; }
 
     [SqlProperty("name")]
@@ -219,11 +236,11 @@ class UserModel
     public int Age { get; private set; }
 
     [SqlProperty("url")]
-    [SqlConverter(typeof(UriTypeConverter))]
+    [TypeConverter(typeof(UriTypeConverter))]
     public Uri Url { get; private set; }
 
     [SqlProperty("location")]
-    [SqlConverter(typeof(LocationConverter))]
+    [TypeConverter(typeof(LocationConverter))]
     public Point Location { get; set; }
 }
 

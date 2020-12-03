@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -18,18 +19,19 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         public readonly Type ParameterType;
         public readonly bool IsNonNullable;
         public readonly string ParameterName;
+        public readonly TypeConverter? TypeConverter;
 
-        /// <summary>
-        /// Конструктор для анонимного типа.
-        /// </summary>
-        public ConstructorArgument(int parameterIndex, PropertyInfo property)
-        {
-            ParameterIndex = parameterIndex;
-            ParameterName = property.Name;
-            ParameterType = property.PropertyType;
+        ///// <summary>
+        ///// Конструктор для анонимного типа.
+        ///// </summary>
+        //public ConstructorArgument(int parameterIndex, PropertyInfo property)
+        //{
+        //    ParameterIndex = parameterIndex;
+        //    ParameterName = property.Name;
+        //    ParameterType = property.PropertyType;
 
-            IsNonNullable = NonNullableConvention.IsNonNullableReferenceType(property);
-        }
+        //    IsNonNullable = NonNullableConvention.IsNonNullableReferenceType(property);
+        //}
 
         public ConstructorArgument(ParameterInfo parameterInfo)
         {
@@ -38,6 +40,22 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             ParameterType = parameterInfo.ParameterType;
 
             IsNonNullable = NonNullableConvention.IsNonNullableReferenceType(parameterInfo);
+
+            if (parameterInfo.GetCustomAttribute<TypeConverterAttribute>() is TypeConverterAttribute typeConverter)
+            {
+                if (Type.GetType(typeConverter.ConverterTypeName) is Type converterType)
+                {
+                    TypeConverter = StaticCache.TypeConverters.GetOrAdd(converterType, ConverterValueFactory);
+                }
+                else
+                    throw new MicroOrmException($"Unknown converter tyoe '{typeConverter.ConverterTypeName}'");
+            }
+        }
+
+        private static TypeConverter ConverterValueFactory(Type converterType)
+        {
+            var ctor = DynamicReflectionDelegateFactory.CreateDefaultConstructor<TypeConverter>(converterType);
+            return ctor.Invoke();
         }
     }
 }

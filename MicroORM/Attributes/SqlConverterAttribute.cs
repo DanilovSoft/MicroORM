@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace DanilovSoft.MicroORM
 {
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-    public sealed class SqlConverterAttribute : Attribute
-    {
-        internal readonly Type ConverterType;
+    //[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+    //public sealed class SqlConverterAttribute : Attribute
+    //{
+    //    internal readonly Type ConverterType;
 
-        public SqlConverterAttribute(Type converter)
-        {
-            ConverterType = converter;
-        }
-    }
+    //    public SqlConverterAttribute(Type converter)
+    //    {
+    //        ConverterType = converter;
+    //    }
+    //}
 }

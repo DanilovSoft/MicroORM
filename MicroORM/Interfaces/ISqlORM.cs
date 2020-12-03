@@ -8,6 +8,7 @@ namespace DanilovSoft.MicroORM
 {
     public interface ISqlORM
     {
-        SqlQuery Sql(string commandText, params object[] parameters);
+        SqlQuery Sql(string query, params object[] parameters);
+        SqlQuery SqlInterpolated(FormattableString query, char parameterPrefix = '@');
     }
 }

@@ -23,7 +23,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         /// <summary>
         /// Создаёт объект через параметризованный конструктор.
         /// </summary>
-        private readonly Func<object?[], object>? _anonymousCtorActivator;
+        private readonly Func<object?[], object>? _ctorActivator;
         public readonly OnDeserializingDelegate? OnDeserializingHandle;
         public readonly OnDeserializedDelegate? OnDeserializedHandle;
         /// <summary>
@@ -35,68 +35,67 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
         // ctor.
         // Мы защищены от одновременного создания с помощью Lazy.ExecutionAndPublication.
-        public ContractActivator(Type type, bool anonymousType)
+        public ContractActivator(Type dboType)
         {
-            if (!anonymousType)
+            if (SingleNonEmptyCtor(dboType, out ConstructorInfo? singleCtor))
             {
-                // Тип может быть readonly структурой, определить можно только перебором всех свойств и полей.
-                bool isReadonlyStruct = GetIsReadonlyStruct(type);
+                IsEmptyCtor = false;
+                _ctorActivator = DynamicReflectionDelegateFactory.CreateConstructor(dboType, singleCtor);
 
-                if (isReadonlyStruct)
-                {
-                    // Хоть у структуры и есть пустой конструктор, нам он не подходит.
-                    IsEmptyCtor = false;
-
-                    ConstructorInfo[] ctors = type.GetConstructors();
-                    Debug.Assert(ctors.Length > 0, "У типа должны быть открытые конструкторы");
-
-                    if (ctors.Length != 0)
-                    {
-                        ConstructorInfo ctor = ctors[0];
-                        _anonymousCtorActivator = DynamicReflectionDelegateFactory.CreateConstructor(type, ctor);
-
-                        ConstructorArguments = CreateConstructorArguments(ctor);
-                    }
-                    else
-                        throw new MicroOrmException("Не найден открытый конструктор");
-
-                    InitializeStreamingMethods(type, out OnDeserializingHandle, out OnDeserializedHandle);
-                }
-                else
-                // Не анонимный class
-                {
-                    if (SingleNonEmptyCtor(type, out var singleCtor))
-                    {
-                        IsEmptyCtor = false;
-                        _anonymousCtorActivator = DynamicReflectionDelegateFactory.CreateConstructor(type, singleCtor);
-
-                        ConstructorArguments = CreateConstructorArguments(singleCtor);
-                    }
-                    else
-                    {
-                        // Хоть у структуры и есть пустой конструктор, нам он не подходит.
-                        IsEmptyCtor = true;
-                        _emptyCtorActivator = DynamicReflectionDelegateFactory.CreateDefaultConstructor<object>(type);
-                    }
-
-                    InitializeStreamingMethods(type, out OnDeserializingHandle, out OnDeserializedHandle);
-
-                    //IsEmptyCtor = true;
-                    //_emptyCtorActivator = DynamicReflectionDelegateFactory.CreateDefaultConstructor<object>(type);
-                }
+                ConstructorArguments = CreateConstructorArguments(singleCtor);
             }
             else
             {
-                _anonymousCtorActivator = DynamicReflectionDelegateFactory.CreateAnonimousConstructor(type);
-
-                // поля у анонимных типов не рассматриваются.
-                // берем только свойства по умолчанию.
-                PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-                // порядок полей такой же как у конструктора.
-                ConstructorArguments = CreateConstructorArguments(properties);
+                // Хоть у структуры и есть пустой конструктор, нам он не подходит.
+                IsEmptyCtor = true;
+                _emptyCtorActivator = DynamicReflectionDelegateFactory.CreateDefaultConstructor<object>(dboType);
             }
-            Contract = new TypeContract(type);
+
+            InitializeStreamingMethods(dboType, out OnDeserializingHandle, out OnDeserializedHandle);
+
+            //if (!anonymousType)
+            //{
+            //    // Тип может быть readonly структурой, определить можно только перебором всех свойств и полей.
+            //    bool isReadonlyStruct = GetIsReadonlyStruct(dboType);
+
+            //    if (isReadonlyStruct)
+            //    {
+            //        // Хоть у структуры и есть пустой конструктор, нам он не подходит.
+            //        IsEmptyCtor = false;
+
+            //        ConstructorInfo[] ctors = dboType.GetConstructors();
+            //        Debug.Assert(ctors.Length > 0, "У типа должны быть открытые конструкторы");
+
+            //        if (ctors.Length != 0)
+            //        {
+            //            ConstructorInfo ctor = ctors[0];
+            //            _ctorActivator = DynamicReflectionDelegateFactory.CreateConstructor(dboType, ctor);
+
+            //            ConstructorArguments = CreateConstructorArguments(ctor);
+            //        }
+            //        else
+            //            throw new MicroOrmException("Не найден открытый конструктор");
+
+            //        InitializeStreamingMethods(dboType, out OnDeserializingHandle, out OnDeserializedHandle);
+            //    }
+            //    else
+            //    // Не анонимный class
+            //    {
+                    
+            //    }
+            //}
+            //else
+            {
+                //_ctorActivator = DynamicReflectionDelegateFactory.CreateAnonimousConstructor(dboType);
+
+                //// поля у анонимных типов не рассматриваются.
+                //// берем только свойства по умолчанию.
+                //PropertyInfo[] properties = dboType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+                //// порядок полей такой же как у конструктора.
+                //ConstructorArguments = CreateConstructorArguments(properties);
+            }
+            Contract = new TypeContract(dboType);
         }
 
         private static Dictionary<string, ConstructorArgument> CreateConstructorArguments(ConstructorInfo ctor)
@@ -114,15 +113,15 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return param.Name!;
         }
 
-        /// <summary>
-        /// Конструктор анонимного типа.
-        /// </summary>
-        private static Dictionary<string, ConstructorArgument> CreateConstructorArguments(PropertyInfo[] properties)
-        {
-            return properties
-                .Select((x, Index) => new { PropertyInfo = x, Index })
-                .ToDictionary(x => x.PropertyInfo.Name, x => new ConstructorArgument(x.Index, x.PropertyInfo));
-        }
+        ///// <summary>
+        ///// Конструктор анонимного типа.
+        ///// </summary>
+        //private static Dictionary<string, ConstructorArgument> CreateConstructorArguments(PropertyInfo[] properties)
+        //{
+        //    return properties
+        //        .Select((x, Index) => new { PropertyInfo = x, Index })
+        //        .ToDictionary(x => x.PropertyInfo.Name, x => new ConstructorArgument(x.Index, x.PropertyInfo));
+        //}
 
         private static void InitializeStreamingMethods(Type type, out OnDeserializingDelegate? onDeserializingHandle, out OnDeserializedDelegate? onDeserializedHandle)
         {
@@ -160,61 +159,61 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             }
         }
 
-        /// <returns><see langword="true"/> если <paramref name="type"/> является <see langword="readonly struct"/></returns>
-        private static bool GetIsReadonlyStruct(Type type)
-        {
-            if (!type.IsValueType)
-                return false;
+        ///// <returns><see langword="true"/> если <paramref name="type"/> является <see langword="readonly struct"/></returns>
+        //private static bool GetIsReadonlyStruct(Type type)
+        //{
+        //    if (!type.IsValueType)
+        //        return false;
 
-            // Поля должны быть IsInitOnly а свойства должны быть без сеттера.
-            // Проверяем и публичные и приватные поля/свойства.
+        //    // Поля должны быть IsInitOnly а свойства должны быть без сеттера.
+        //    // Проверяем и публичные и приватные поля/свойства.
 
-            const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+        //    const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
 
-            var members = ReflectionUtils.GetFieldsAndProperties(type, flags).Where(x => !ReflectionUtils.IsIndexedProperty(x));
+        //    var members = ReflectionUtils.GetFieldsAndProperties(type, flags).Where(x => !ReflectionUtils.IsIndexedProperty(x));
             
-            foreach (var m in members)
-            {
-                if (!m.IsDefined(typeof(CompilerGeneratedAttribute)))
-                {
-                    switch (m)
-                    {
-                        case PropertyInfo p:
-                            {
-                                if (!p.IsSpecialName)
-                                {
-                                    if (p.GetSetMethod(nonPublic: true) != null)
-                                    {
-                                        return false;
-                                    }
-                                }
-                            }
-                            break;
-                        case FieldInfo f:
-                            {
-                                if (!f.IsSpecialName)
-                                {
-                                    if (!f.IsInitOnly)
-                                    {
-                                        return false;
-                                    }
-                                }
-                            }
-                            break;
-                        default: 
-                            throw new InvalidOperationException();
-                    }
-                }
-            }
+        //    foreach (var m in members)
+        //    {
+        //        if (!m.IsDefined(typeof(CompilerGeneratedAttribute)))
+        //        {
+        //            switch (m)
+        //            {
+        //                case PropertyInfo p:
+        //                    {
+        //                        if (!p.IsSpecialName)
+        //                        {
+        //                            if (p.GetSetMethod(nonPublic: true) != null)
+        //                            {
+        //                                return false;
+        //                            }
+        //                        }
+        //                    }
+        //                    break;
+        //                case FieldInfo f:
+        //                    {
+        //                        if (!f.IsSpecialName)
+        //                        {
+        //                            if (!f.IsInitOnly)
+        //                            {
+        //                                return false;
+        //                            }
+        //                        }
+        //                    }
+        //                    break;
+        //                default: 
+        //                    throw new InvalidOperationException();
+        //            }
+        //        }
+        //    }
             
-            return true;
-        }
+        //    return true;
+        //}
 
         public object CreateInstance(object?[] args)
         {
-            Debug.Assert(_anonymousCtorActivator != null);
+            Debug.Assert(_ctorActivator != null);
 
-            return _anonymousCtorActivator.Invoke(args);
+            return _ctorActivator.Invoke(args);
         }
 
         //public object CreateReadonlyInstance(object?[] args)

@@ -57,6 +57,10 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 if (sqlPropAttr != null)
                 // Есть атрибут SqlProperty — это свойство игнорировать нельзя.
                 {
+                    // Только для своего атрибута мы должны выполнить такую проверку.
+                    if (memberInfo is PropertyInfo propertyInfo && propertyInfo.SetMethod == null)
+                        throw new MicroOrmException($"Property '{propertyInfo.Name}' is not writable.");
+
                     canIgnoreMember = false;
 
                     if (sqlPropAttr.Name != null)
@@ -101,9 +105,6 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                         continue;
                     }
                 }
-
-                if (memberInfo is PropertyInfo propertyInfo && propertyInfo.SetMethod == null)
-                    throw new MicroOrmException($"Property '{propertyInfo.Name}' is not writable.");
 
                 if (!StaticCache.TypesProperties.TryAdd((dboType, memberName), new OrmLazyProperty(memberInfo)))
                 {

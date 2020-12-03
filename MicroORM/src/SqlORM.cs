@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -23,11 +24,11 @@ namespace DanilovSoft.MicroORM
         internal readonly DbProviderFactory Factory;
         internal readonly bool UsePascalCaseNamingConvention;
 
-        public SqlORM(string connectionString, DbConnection connection, bool usePascalCaseNamingConvention = false) 
-            : this(connectionString, new ConnectionFactoryWrapper(connection), usePascalCaseNamingConvention)
-        {
+        //public SqlORM(string connectionString, DbConnection connection, bool usePascalCaseNamingConvention = false) 
+        //    : this(connectionString, new ConnectionFactoryWrapper(connection), usePascalCaseNamingConvention)
+        //{
             
-        }
+        //}
 
         // ctor.
         public SqlORM(string connectionString, DbProviderFactory factory, bool usePascalCaseNamingConvention = false)
@@ -52,6 +53,26 @@ namespace DanilovSoft.MicroORM
             var sqlQuery = new SqlQuery(this, query);
             sqlQuery.Parameters(parameters);
             return sqlQuery;
+        }
+
+        public SqlQuery SqlInterpolated(FormattableString query, char parameterPrefix = '@')
+        {
+            if (query != null)
+            {
+                object[] argNames = new object[query.ArgumentCount];
+                for (int i = 0; i < query.ArgumentCount; i++)
+                {
+                    argNames[i] = FormattableString.Invariant($"{parameterPrefix}{i}");
+                }
+
+                string formattedQuery = string.Format(CultureInfo.InvariantCulture, query.Format, argNames);
+
+                var sqlQuery = new SqlQuery(this, formattedQuery);
+                sqlQuery.Parameters(query.GetArguments());
+                return sqlQuery;
+            }
+            else
+                throw new ArgumentNullException(nameof(query));
         }
 
         public SqlTransaction OpenTransaction()

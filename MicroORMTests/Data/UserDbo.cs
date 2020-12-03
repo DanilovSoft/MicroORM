@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Drawing;
 using System.Runtime.Serialization;
 using DanilovSoft.MicroORM;
@@ -14,7 +15,7 @@ namespace MicroORMTests
         public int Age { get; private set; }
 
         [Column("location")]
-        [SqlConverter(typeof(LocationConverter))]
+        [TypeConverter(typeof(LocationConverter))]
         public Point Location { get; private set; }
 
         public UserDbo(string name)

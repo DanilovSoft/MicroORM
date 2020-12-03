@@ -41,6 +41,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             return (Func<T>)dynamicMethod.CreateDelegate(typeof(Func<T>));
         }
 
+        [Obsolete]
         public static Func<object?[], object> CreateAnonimousConstructor(Type type)
         {
             // у анонимных типов всегда есть 1 конструктор, принимающий параметры.

@@ -155,7 +155,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                             }
 
                             if (ormProperty != null)
-                                AccumulateSqlValue(reader, i, sqlColumnName, ormProperty, ref sqlAccumulatedValues);
+                                AccumulateSqlValueForProperty(reader, i, sqlColumnName, ormProperty, ref sqlAccumulatedValues);
                         }
                     }
                 }
@@ -164,7 +164,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 {
                     if (_activator.Contract.TryGetOrmProperty(sqlColumnName, out OrmProperty? ormProperty))
                     {
-                        AccumulateSqlValue(reader, i, sqlColumnName, ormProperty, ref sqlAccumulatedValues);
+                        AccumulateSqlValueForProperty(reader, i, sqlColumnName, ormProperty, ref sqlAccumulatedValues);
                     }
                 }
             }
@@ -187,7 +187,8 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
         /// <param name="sqlColumnName">Используется только для ошибок.</param>
         /// <exception cref="MicroOrmException"/>
-        private static void AccumulateSqlValue(DbDataReader reader, int ordinal, string sqlColumnName, OrmProperty ormProperty, ref List<PropertyToSet>? sqlAccumulatedValues)
+        private static void AccumulateSqlValueForProperty(DbDataReader reader, int ordinal, string sqlColumnName, 
+            OrmProperty ormProperty, ref List<PropertyToSet>? sqlAccumulatedValues)
         {
             object sqlRawValue = ReadSqlRawValue(reader, ordinal, out Type sqlColumnType);
             object? clrValue = ormProperty.ConvertSqlToClrValue(sqlRawValue, sqlColumnType, sqlColumnName);
@@ -205,7 +206,8 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 if (mapped[arg.ParameterIndex])
                     continue;
 
-                throw new MicroOrmException($"В результате SQL запроса не найдена колонка соответствующая аргументу конструктора \"{arg.ParameterName}\"");
+                throw new MicroOrmException($"В результате SQL запроса не найдена колонка " +
+                    $"соответствующая аргументу конструктора '{arg.ParameterName}'");
             }
         }
 
@@ -221,8 +223,19 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             }
             else
             {
-                // конвертируем значение.
-                return SqlTypeConverter.ConvertSqlToCtorValue(sqlRawValue, sqlColumnType, sqlColumnName, ctorArg.IsNonNullable, ctorArg.ParameterName, ctorArg.ParameterType);
+                if (ctorArg.TypeConverter != null && ctorArg.TypeConverter.CanConvertFrom(sqlColumnType))
+                {
+                    object? sqlValue = SqlTypeConverter.ConvertNullableRawSqlType(sqlRawValue, sqlColumnName, 
+                        ctorArg.IsNonNullable, ctorArg.ParameterName, "parameter");
+
+                    return ctorArg.TypeConverter.ConvertFrom(sqlValue);
+                }
+                else
+                {
+                    // конвертируем значение.
+                    return SqlTypeConverter.ConvertSqlToCtorValue(sqlRawValue, sqlColumnType,
+                        sqlColumnName, ctorArg.IsNonNullable, ctorArg.ParameterName, ctorArg.ParameterType);
+                }
             }
         }
     }

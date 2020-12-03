@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -28,25 +29,35 @@ namespace DanilovSoft.MicroORM
 
         public void OpenTransaction()
         {
-            _connection.Open();
+            if (_connection.State != System.Data.ConnectionState.Open)
+                _connection.Open();
+
             _transaction = _connection.BeginTransaction();
         }
 
         public ValueTask OpenTransactionAsync(CancellationToken cancellationToken)
         {
-            Task task = _connection.OpenAsync(cancellationToken);
-            if (task.IsCompletedSuccessfully())
+            if (_connection.State == System.Data.ConnectionState.Open)
             {
                 _transaction = _connection.BeginTransaction();
                 return default;
             }
             else
             {
-                return WaitAsync(task);
-                async ValueTask WaitAsync(Task task)
+                Task task = _connection.OpenAsync(cancellationToken);
+                if (task.IsCompletedSuccessfully)
                 {
-                    await task.ConfigureAwait(false);
                     _transaction = _connection.BeginTransaction();
+                    return default;
+                }
+                else
+                {
+                    return WaitAsync(task);
+                    async ValueTask WaitAsync(Task task)
+                    {
+                        await task.ConfigureAwait(false);
+                        _transaction = _connection.BeginTransaction();
+                    }
                 }
             }
         }
@@ -68,6 +79,31 @@ namespace DanilovSoft.MicroORM
             }
             else
                 throw new MicroOrmException("Transaction is not open.");
+        }
+
+        public SqlQuery SqlInterpolated(FormattableString query, char parameterPrefix = '@')
+        {
+            if (query != null)
+            {
+                if (_transaction != null)
+                {
+                    object[] argNames = new object[query.ArgumentCount];
+                    for (int i = 0; i < query.ArgumentCount; i++)
+                    {
+                        argNames[i] = FormattableString.Invariant($"{parameterPrefix}{i}");
+                    }
+
+                    string formattedQuery = string.Format(CultureInfo.InvariantCulture, query.Format, argNames);
+
+                    SqlQuery sql = new SqlQueryTransaction(_sqlOrm, _transaction, formattedQuery);
+                    sql.Parameters(query.GetArguments());
+                    return sql;
+                }
+                else
+                    throw new MicroOrmException("Transaction is not open.");
+            }
+            else
+                throw new ArgumentNullException(nameof(query));
         }
 
         /// <summary>

@@ -28,10 +28,10 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             PropertyName = memberInfo.Name;
             MemberType = memberInfo.GetMemberType();
             
-            var attribute = memberInfo.GetCustomAttribute<SqlConverterAttribute>();
+            var attribute = memberInfo.GetCustomAttribute<TypeConverterAttribute>();
             if (attribute != null)
             {
-                TypeConverter = StaticCache.TypeConverters.GetOrAdd(attribute.ConverterType, ConverterValueFactory);
+                TypeConverter = StaticCache.TypeConverters.GetOrAdd(Type.GetType(attribute.ConverterTypeName), ConverterValueFactory);
             }
 
             Action<object, object?>? setAction = DynamicReflectionDelegateFactory.CreateSet<object>(memberInfo);

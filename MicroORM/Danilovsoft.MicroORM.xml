@@ -63,11 +63,6 @@
             Хранится в словаре поэтому извлекается быстрее как класс, а не структура.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ConstructorArgument.#ctor(System.Int32,System.Reflection.PropertyInfo)">
-            <summary>
-            Конструктор для анонимного типа.
-            </summary>
-        </member>
         <member name="T:DanilovSoft.MicroORM.ObjectMapping.ContractActivator">
             <summary>
             Создание данного экземпляра должно выполняться синхронизированно.
@@ -78,7 +73,7 @@
             Создаёт объект через пустой конструктор.
             </summary>
         </member>
-        <member name="F:DanilovSoft.MicroORM.ObjectMapping.ContractActivator._anonymousCtorActivator">
+        <member name="F:DanilovSoft.MicroORM.ObjectMapping.ContractActivator._ctorActivator">
             <summary>
             Создаёт объект через параметризованный конструктор.
             </summary>
@@ -87,14 +82,6 @@
             <summary>
             Для маппинга параметров конструктора по именам.
             </summary>
-        </member>
-        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ContractActivator.CreateConstructorArguments(System.Reflection.PropertyInfo[])">
-            <summary>
-            Конструктор анонимного типа.
-            </summary>
-        </member>
-        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ContractActivator.GetIsReadonlyStruct(System.Type)">
-            <returns><see langword="true"/> если <paramref name="type"/> является <see langword="readonly struct"/></returns>
         </member>
         <member name="M:DanilovSoft.MicroORM.ObjectMapping.DynamicReflectionDelegateFactory.CreateDefaultConstructor``1(System.Type)">
             <summary>
@@ -124,7 +111,7 @@
             Не может быть <see cref="T:System.DBNull"/>.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ObjectMapper`1.AccumulateSqlValue(System.Data.Common.DbDataReader,System.Int32,System.String,DanilovSoft.MicroORM.ObjectMapping.OrmProperty,System.Collections.Generic.List{DanilovSoft.MicroORM.ObjectMapping.ObjectMapper{`0}.PropertyToSet}@)">
+        <member name="M:DanilovSoft.MicroORM.ObjectMapping.ObjectMapper`1.AccumulateSqlValueForProperty(System.Data.Common.DbDataReader,System.Int32,System.String,DanilovSoft.MicroORM.ObjectMapping.OrmProperty,System.Collections.Generic.List{DanilovSoft.MicroORM.ObjectMapping.ObjectMapper{`0}.PropertyToSet}@)">
             <param name="sqlColumnName">Используется только для ошибок.</param>
             <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
