@@ -97,7 +97,7 @@ namespace DanilovSoft.MicroORM
             }
         }
 
-        [SuppressMessage("Security", "CA2100:Проверка запросов SQL на уязвимости безопасности", Justification = "Нарушает основную цель микро-орм")]
+        //[SuppressMessage("Security", "CA2100:Проверка запросов SQL на уязвимости безопасности", Justification = "Нарушает основную цель микро-орм")]
         protected virtual DbCommand GetCommand()
         {
             DbConnection connection = GetConnection();
@@ -128,7 +128,7 @@ namespace DanilovSoft.MicroORM
             }
         }
 
-        [SuppressMessage("Security", "CA2100:Проверка запросов SQL на уязвимости безопасности", Justification = "Нарушает основную цель микро-орм")]
+        //[SuppressMessage("Security", "CA2100:Проверка запросов SQL на уязвимости безопасности", Justification = "Нарушает основную цель микро-орм")]
         private DbCommand CreateCommand(DbConnection connection)
         {
             DbCommand command = connection.CreateCommand();

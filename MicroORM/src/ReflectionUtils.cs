@@ -217,12 +217,12 @@ namespace DanilovSoft.MicroORM
         private const string NullableFlagsFieldName = "NullableFlags";
 
         private const string NullableContextAttributeFullName = "System.Runtime.CompilerServices.NullableContextAttribute";
-        private const string NullableContextFlagsFieldName = "Flag";
+        //private const string NullableContextFlagsFieldName = "Flag";
 
         // 2 means "nullable". 1 means "not nullable", and 0 means "oblivious".
-        private const byte ObliviousFlag = 0;
+        //private const byte ObliviousFlag = 0;
         private const byte NotNullableFlag = 1;
-        private const byte NullableFlag = 2;
+        //private const byte NullableFlag = 2;
 
         public static bool IsNonNullableReferenceType(ParameterInfo parameterInfo)
         {
