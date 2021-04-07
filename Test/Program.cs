@@ -76,7 +76,7 @@ class Program
         "MinPoolSize=10;MaxPoolSize=16;CommandTimeout=30;Timeout=30";
 
     private readonly SqlORM _sqlite = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
-    private static SqlORM _pgOrm = new SqlORM(PgConnectionString, NpgsqlFactory.Instance, usePascalCaseNamingConvention: true);
+    private static readonly SqlORM _pgOrm = new SqlORM(PgConnectionString, NpgsqlFactory.Instance, usePascalCaseNamingConvention: true);
 
     private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 

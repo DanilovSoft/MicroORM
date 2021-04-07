@@ -203,12 +203,12 @@ namespace DanilovSoft.MicroORM
             var toObject = new ObjectMapper<T>(reader, _sqlORM);
             return toObject.ReadAsAnonymousObject<T>();
         }
-        private static T Single<T>(DbDataReader reader, Func<DbDataReader, T> selector)
-        {
-            reader.Read();
-            T result = selector(reader);
-            return result;
-        }
+        //private static T Single<T>(DbDataReader reader, Func<DbDataReader, T> selector)
+        //{
+        //    reader.Read();
+        //    T result = selector(reader);
+        //    return result;
+        //}
         //private object Single<T>(DbDataReader reader, Action<T, DbDataReader> selector) where T : class
         //{
         //    T item = Single<T>(reader) as T;
@@ -302,7 +302,7 @@ namespace DanilovSoft.MicroORM
             return new Anonimous<T>(this);
         }
 
-        [SuppressMessage("Usage", "CA1801:Проверьте неиспользуемые параметры", Justification = "Из параметра извлекается анонимный тип")]
+        //[SuppressMessage("Usage", "CA1801:Проверьте неиспользуемые параметры", Justification = "Из параметра извлекается анонимный тип")]
         public IAnonymousReader<T> AsAnonymous<T>(T anonymousType) where T : class
         {
             return new Anonimous<T>(this);
@@ -430,32 +430,32 @@ namespace DanilovSoft.MicroORM
             }
             return list;
         }
-        private static List<T> List<T>(DbDataReader reader, Func<DbDataReader, T> selector)
-        {
-            List<T> list = new List<T>();
-            while (reader.Read())
-            {
-                T result = selector(reader);
-                list.Add(result);
-            }
-            return list;
-        }
-        private List<T> List<T>(DbDataReader reader, Action<T, DbDataReader> selector)
-        {
-            List<T> list = new List<T>();
-            if (reader.Read())
-            {
-                var toObject = new ObjectMapper<T>(reader, _sqlORM);
-                do
-                {
-                    var result = (T)toObject.ReadObject();
-                    selector(result, reader);
-                    list.Add(result);
+        //private static List<T> List<T>(DbDataReader reader, Func<DbDataReader, T> selector)
+        //{
+        //    List<T> list = new List<T>();
+        //    while (reader.Read())
+        //    {
+        //        T result = selector(reader);
+        //        list.Add(result);
+        //    }
+        //    return list;
+        //}
+        //private List<T> List<T>(DbDataReader reader, Action<T, DbDataReader> selector)
+        //{
+        //    List<T> list = new List<T>();
+        //    if (reader.Read())
+        //    {
+        //        var toObject = new ObjectMapper<T>(reader, _sqlORM);
+        //        do
+        //        {
+        //            var result = (T)toObject.ReadObject();
+        //            selector(result, reader);
+        //            list.Add(result);
 
-                } while (reader.Read());
-            }
-            return list;
-        }
+        //        } while (reader.Read());
+        //    }
+        //    return list;
+        //}
 
 
         public T[] Array<T>()
