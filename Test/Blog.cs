@@ -17,7 +17,7 @@ namespace ConsoleTest
 
         public DateTime? Publish { get; set; }
 
-        public string Slug { get; set; }
+        public SlugType Slug { get; set; }
 
         public ICollection<BlogCategory> BlogCategories { get; set; }
 
@@ -25,5 +25,17 @@ namespace ConsoleTest
         {
             modelBuilder.Entity<Blog>().HasKey(entity => entity.Id);
         }
+    }
+
+    public class SlugType
+    {
+        private readonly string _slug;
+
+        public SlugType(string slug)
+        {
+            _slug = slug;
+        }
+
+        public static implicit operator SlugType(string slug) => new SlugType(slug);
     }
 }

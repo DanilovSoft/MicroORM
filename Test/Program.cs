@@ -35,19 +35,13 @@ class Program
     {
         public string OrigTitle { get; set; }
 
-        [SqlProperty("title")]
+        [Column("title")]
         public string Title { get; set; }
 
         public DateTime PostedDate { get; set; }
 
-        [SqlProperty("gid")]
-        private readonly int _gid;
-
-        public GalleryDb(string origTitle, string title)
-        {
-            OrigTitle = origTitle;
-            Title = title;
-        }
+        [Column("gid")]
+        public int Gid { get; set; }
     }
 
     public class GalleryStruct
@@ -75,11 +69,11 @@ class Program
     //    public string Title { get; set; }
     //}
 
-    public const string PgConnectionString = "Server=localhost; Port=5432; User Id=postgres; Password=test; Database=postgres; " +
-        "Pooling=true; MinPoolSize=1; MaxPoolSize=10";
+    //public const string PgConnectionString = "Server=localhost; Port=5432; User Id=postgres; Password=test; Database=postgres; " +
+    //    "Pooling=true; MinPoolSize=1; MaxPoolSize=10";
 
-    //public const string PgConnectionString = "Server=10.0.0.99;Port=5432;User Id = test; Password=test;Database=test;Pooling=true;" +
-    //    "MinPoolSize=10;MaxPoolSize=16;CommandTimeout=30;Timeout=30";
+    public const string PgConnectionString = "Server=10.0.0.99;Port=5432;User Id = test; Password=test;Database=test;Pooling=true;" +
+        "MinPoolSize=10;MaxPoolSize=16;CommandTimeout=30;Timeout=30";
 
     private readonly SqlORM _sqlite = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
     private static SqlORM _pgOrm = new SqlORM(PgConnectionString, NpgsqlFactory.Instance, usePascalCaseNamingConvention: true);
@@ -88,8 +82,6 @@ class Program
 
     static void Main()
     {
-        Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
-
         string uri = "http://test.com";
 
         FormattableString Query = @$"SELECT {uri} AS uri, {DateTime.Now} AS posted_date, 123 as gid, 'Title Example' AS title, 'test' AS orig_title";
@@ -98,12 +90,14 @@ class Program
 
         //_pgOrm = new SqlORM(PgConnectionString, new DbFactoryWrapper(ef), usePascalCaseNamingConvention: true);
 
-        //var efList = ef.Set<GalleryRec>().FromSqlRaw(Query).ToList();
+        var blog = ef.Blogs.First();
         
         var listClass = _pgOrm.SqlInterpolated(Query).List(new { test = 0, posted_date = default(DateTime) });
         var list = _pgOrm.SqlInterpolated(Query).List<GalleryDb>();
 
         //_pgOrm.Sql(Query).List<TestStruct>();
+
+        TypeConverter conv = TypeDescriptor.GetConverter(typeof(Blog).GetProperty("Slug"));
 
 
         //Npgsql.NpgsqlDataReader reader;
