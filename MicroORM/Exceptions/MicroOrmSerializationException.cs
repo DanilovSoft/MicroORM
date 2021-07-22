@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Runtime.Serialization;
 
 namespace DanilovSoft.MicroORM
 {
@@ -20,6 +19,11 @@ namespace DanilovSoft.MicroORM
         public MicroOrmSerializationException(string message, Exception innerException) : base(message, innerException)
         {
 
+        }
+
+        protected MicroOrmSerializationException(SerializationInfo serializationInfo, StreamingContext streamingContext)
+        {
+            
         }
     }
 }

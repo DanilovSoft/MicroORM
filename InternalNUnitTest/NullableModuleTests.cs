@@ -1,6 +1,5 @@
 ﻿namespace InternalNUnitTest
 {
-    using DanilovSoft.MicroORM;
     using NUnit.Common;
     using NUnit.Framework;
 

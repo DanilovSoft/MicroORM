@@ -4,7 +4,6 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
-using System.Text;
 
 namespace DanilovSoft.MicroORM.ObjectMapping
 {

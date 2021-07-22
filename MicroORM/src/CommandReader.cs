@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,15 +8,16 @@ namespace DanilovSoft.MicroORM
     internal class CommandReader : ICommandReader
     {
         private DbDataReader? _reader;
-        public bool SkipNextResult { get; set; }
-        public DbConnection Connection { get; private set; }
-        public DbCommand Command { get; private set; }
         
         internal CommandReader(DbCommand command)
         {
             Command = command;
             Connection = command.Connection;
         }
+
+        public bool SkipNextResult { get; set; }
+        public DbConnection Connection { get; private set; }
+        public DbCommand Command { get; private set; }
 
         public DbDataReader GetReader()
         {

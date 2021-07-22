@@ -25,7 +25,7 @@ class Program
 
             task.GetAwaiter().GetResult();
         }
-        catch (SqlQueryTimeoutException ex)
+        catch (SqlQueryTimeoutException)
         {
             Console.WriteLine("Успешно сработал таймаут");
         }

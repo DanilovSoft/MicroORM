@@ -1,6 +1,5 @@
 ﻿namespace NUnit.Common
 {
-    using System;
     using System.Diagnostics.CodeAnalysis;
 
 #nullable disable

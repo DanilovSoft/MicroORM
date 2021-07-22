@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace DanilovSoft.MicroORM.ObjectMapping
 {
@@ -40,7 +36,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                     throw new MicroOrmException($"Unable to resolve converter type {attribute.ConverterTypeName}");
             }
 
-            if (DynamicReflectionDelegateFactory.CreateSet<object>(memberInfo) is Action<object, object?> setValueDelegate)
+            if (DynamicReflectionDelegateFactory.CreateSet<object>(memberInfo) is { } setValueDelegate)
             {
                 SetValueHandler = new SetValueDelegate(setValueDelegate);
             }

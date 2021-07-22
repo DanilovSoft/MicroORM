@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 
 namespace DanilovSoft.MicroORM
@@ -16,7 +15,6 @@ namespace DanilovSoft.MicroORM
     {
         private readonly CancellationTokenRegistration _tokenRegistration;
         private readonly DelayedAction<DbConnection> _delayedAction;
-        internal bool AbnormallyClosed;
 
         public CloseConnection(int closeConnectionPenaltySec, DbConnection connection, CancellationToken cancellationToken)
         {
@@ -26,8 +24,10 @@ namespace DanilovSoft.MicroORM
             _delayedAction = new DelayedAction<DbConnection>(OnDelayedAction, connection, dueTimeSec: closeConnectionPenaltySec);
 
             // Подписываемся на отмену. (может сработать сразу поэтому эта операция должна быть в конце).
-            _tokenRegistration = cancellationToken.Register(OnCancellationToken, state: _delayedAction, useSynchronizationContext: false);
+            _tokenRegistration = cancellationToken.Register(static s => OnCancellationToken(s), state: _delayedAction, useSynchronizationContext: false);
         }
+
+        internal bool AbnormallyClosed { get; private set; }
 
         private static void OnCancellationToken(object? state)
         {
@@ -40,6 +40,7 @@ namespace DanilovSoft.MicroORM
             delayedAction.TryStart();
         }
 
+        [SuppressMessage("Design", "CA1031:Не перехватывать исключения общих типов", Justification = "<Ожидание>")]
         private static void OnDelayedAction(DbConnection dbСon)
         {
             Debug.WriteLine("DbConnection.Close()");

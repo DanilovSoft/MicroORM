@@ -1,8 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Drawing;
-using System.Runtime.Serialization;
-using DanilovSoft.MicroORM;
 
 namespace MicroORMTests
 {

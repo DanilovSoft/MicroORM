@@ -1,0 +1,17 @@
+# Rules in this file were initially inferred by Visual Studio IntelliCode from the C:\Users\Miles\Source\Repos\DanilovSoft\MicroORM\MicroORM\ codebase based on best match to current usage at 22.07.2021
+# You can modify the rules from these initially generated values to suit your own policies
+# You can learn more about editorconfig here: https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference
+[*.cs]
+
+
+# CA1720: Идентификатор содержит имя типа
+dotnet_diagnostic.CA1720.severity = none
+
+# CA1716: Идентификаторы не должны совпадать с ключевыми словами
+dotnet_diagnostic.CA1716.severity = none
+
+# CA1303: Не передавать литералы в качестве локализованных параметров
+dotnet_diagnostic.CA1303.severity = none
+
+# CS1573: Параметр не имеет соответствующий тег параметра в комментарии XML (в отличие от остальных параметров)
+dotnet_diagnostic.CS1573.severity = none

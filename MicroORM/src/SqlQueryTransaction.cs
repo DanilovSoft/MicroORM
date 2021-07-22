@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DanilovSoft.MicroORM.Helpers;
 
 namespace DanilovSoft.MicroORM
 {
@@ -52,7 +49,7 @@ namespace DanilovSoft.MicroORM
         public override MultiSqlReader MultiResult()
         {
             DbCommand command = GetCommand();
-            MultiSqlReader sqlReader = new MultiSqlReader(command, _sqlOrm);
+            var sqlReader = new MultiSqlReader(command, _sqlOrm);
             sqlReader.ExecuteReader();
             return sqlReader;
         }
@@ -80,17 +77,9 @@ namespace DanilovSoft.MicroORM
         private ValueTask<MultiSqlReader> CreateReaderAsync(DbCommand command, CancellationToken cancellationToken)
         {
             var sqlReader = new MultiSqlReader(command, _sqlOrm);
-            MultiSqlReader? toDispose = sqlReader;
-            ValueTask task;
-            try
-            {
-                task = sqlReader.ExecuteReaderAsync(cancellationToken);
-                toDispose = null;
-            }
-            finally
-            {
-                toDispose?.Dispose();
-            }
+            
+            ValueTask task = sqlReader.ExecuteReaderAsync(cancellationToken);
+            
             if (task.IsCompletedSuccessfully)
             {
                 return new ValueTask<MultiSqlReader>(result: sqlReader);
@@ -100,16 +89,15 @@ namespace DanilovSoft.MicroORM
                 return WaitAsync(task, sqlReader);
                 static async ValueTask<MultiSqlReader> WaitAsync(ValueTask task, MultiSqlReader sqlReader)
                 {
-                    MultiSqlReader? toDispose = sqlReader;
+                    var copy = sqlReader;
                     try
                     {
                         await task.ConfigureAwait(false);
-                        toDispose = null;
-                        return sqlReader;
+                        return NullableHelper.SetNull(ref copy);
                     }
                     finally
                     {
-                        toDispose?.Dispose();
+                        copy?.Dispose();
                     }
                 }
             }

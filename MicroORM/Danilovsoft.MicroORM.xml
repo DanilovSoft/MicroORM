@@ -4,6 +4,20 @@
         <name>DanilovSoft.MicroORM</name>
     </assembly>
     <members>
+        <member name="M:DanilovSoft.MicroORM.Helpers.NullableHelper.AssertNotNull``1(``0,System.String,System.String)">
+            <summary>
+            Бросает исключение если значение <paramref name="value"/> оказалось Null.
+            </summary>
+            <remarks>Дополнительно останавливает отладчик и проваливает тест с соответствующим сообщением.</remarks>
+            <exception cref="T:System.ArgumentNullException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.Helpers.NullableHelper.AssertNotNull``1(System.Nullable{``0},System.String,System.String)">
+            <summary>
+            Бросает исключение если значение <paramref name="value"/> оказалось Null.
+            </summary>
+            <remarks>Дополнительно останавливает отладчик и проваливает тест с соответствующим сообщением.</remarks>
+            <exception cref="T:System.ArgumentNullException"/>
+        </member>
         <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Execute(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
@@ -238,6 +252,9 @@
             -1 means infinite.
             </summary>
             <remarks>Default value is 30 seconds.</remarks>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlQuery.GetConnection">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.SqlQuery.Parameters(System.Object[])">
             <exception cref="T:System.ArgumentNullException"/>

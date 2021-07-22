@@ -1,31 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using DanilovSoft.MicroORM;
 using NUnit.Framework;
 
 namespace MicroORMTests
 {
-    class TestClass
-    {
-        public string Name { get; set; }
-    }
+    //class TestClass
+    //{
+    //    public string Name { get; set; }
+    //}
 
     public class SqliteTest
     {
-        private static readonly SqlORM _orm = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
+        private static readonly SqlORM Orm = new("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
 
         [Test]
         public void Interpolated()
         {
-            var result = _orm.SqlInterpolated($"SELECT {123}")
+            var result = Orm.SqlInterpolated($"SELECT {123}")
                 .Scalar<int>();
 
             Assert.AreEqual(123, result);
@@ -34,7 +31,7 @@ namespace MicroORMTests
         [Test]
         public void TestScalar()
         {
-            string? result = _orm.Sql("SELECT @0")
+            string? result = Orm.Sql("SELECT @0")
                 .Parameter("OK")
                 .Scalar<string>();
 
@@ -44,7 +41,7 @@ namespace MicroORMTests
         [Test]
         public void TestNamedParameterAndScalar()
         {
-            using (var t = _orm.OpenTransaction())
+            using (var t = Orm.OpenTransaction())
             {
                 byte result = t.Sql("SELECT @count")
                     .Parameter("count", 128)
@@ -60,7 +57,7 @@ namespace MicroORMTests
         {
             try
             {
-                UserDbo? result = _orm.Sql("SELECT @name AS name, @count AS count")
+                UserDbo? result = Orm.Sql("SELECT @name AS name, @count AS count")
                     .ParametersFromObject(new { count = 128, name = default(string) })
                     .SingleOrDefault<UserDbo>();
             }
@@ -74,7 +71,7 @@ namespace MicroORMTests
         [Test]
         public void ParametersFromObject()
         {
-            UserDbo result = _orm.Sql("SELECT @name AS name, @count AS count, @age AS age")
+            UserDbo result = Orm.Sql("SELECT @name AS name, @count AS count, @age AS age")
                 .ParametersFromObject(new { count = 128, name = "Alfred", age = 25 })
                 .Single<UserDbo>();
 
@@ -85,7 +82,7 @@ namespace MicroORMTests
         [Test]
         public void TestAnonimouseType()
         {
-            var result = _orm.Sql("SELECT @name AS name, @age AS age")
+            var result = Orm.Sql("SELECT @name AS name, @age AS age")
                 .Parameter("name", "Alfred")
                 .Parameter("age", 30)
                 .Single(new { name = "", age = 0 });
@@ -97,7 +94,7 @@ namespace MicroORMTests
         [Test]
         public void AnonimouseRowsCount()
         {
-            var result = _orm.SqlInterpolated($"SELECT {"Alfred"} AS name, {30} AS age")
+            var result = Orm.SqlInterpolated($"SELECT {"Alfred"} AS name, {30} AS age")
                 .List(new { name = "", age = 0 });
 
             Assert.AreEqual(1, result.Count);
@@ -108,7 +105,7 @@ namespace MicroORMTests
         {
             try
             {
-                _orm.SqlInterpolated($"SELECT {"Alfred"} AS name, {30} AS aaaaaa")
+                Orm.SqlInterpolated($"SELECT {"Alfred"} AS name, {30} AS aaaaaa")
                     .Single(new { name = "", age = 0 });
             }
             catch (MicroOrmException)
@@ -170,7 +167,7 @@ namespace MicroORMTests
         //    return value.ToString();
         //}
 
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        public override object? ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
         {
             return value.ToString();
         }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace System.Threading
@@ -13,7 +12,6 @@ namespace System.Threading
         private readonly Timer _timer;
         private readonly TState _token;
         private readonly Action<TState> _callback;
-        internal readonly int DueTimeSec;
         /// <summary>
         /// -1 — Не запланирован.
         /// 0 — Запланирован.
@@ -31,10 +29,14 @@ namespace System.Threading
             DueTimeSec = dueTimeSec;
 
             // Создать таймер в выключенном состоянии что-бы предотвратить его срабатывание до установки значения поля _timer.
-            _timer = new Timer(s => ((DelayedAction<TState>)s!).OnTimer(), state: this, Timeout.Infinite, Timeout.Infinite);
+            _timer = new Timer(static s => ((DelayedAction<TState>)s!).OnTimer(), state: this, Timeout.Infinite, Timeout.Infinite);
         }
 
+        internal int DueTimeSec { get; }
+
+
         /// <remarks>Может сработать одновременно с TryCancel.</remarks>
+        [SuppressMessage("Reliability", "CA2002:Не блокируйте слабо идентифицируемые объекты", Justification = "Никто не блокирует этот объект")]
         private void OnTimer()
         {
             lock (this)
@@ -52,6 +54,7 @@ namespace System.Threading
         }
 
         /// <remarks>Может сработать одновременно с TryCancel.</remarks>
+        [SuppressMessage("Reliability", "CA2002:Не блокируйте слабо идентифицируемые объекты", Justification = "Никто не блокирует этот объект")]
         public void TryStart()
         {
             // Запланировать таймер если он не был запланирован и не был отменен.
@@ -75,6 +78,7 @@ namespace System.Threading
         /// </summary>
         /// <remarks>Может сработать одновременно с TryStart.</remarks>
         /// <returns>True если удалось отменить запланированную задачу.</returns>
+        [SuppressMessage("Reliability", "CA2002:Не блокируйте слабо идентифицируемые объекты", Justification = "Никто не блокирует этот объект")]
         public bool TryCancel()
         {
             // Атомарно отменяем таймер.

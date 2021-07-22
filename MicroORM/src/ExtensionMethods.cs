@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,7 +17,7 @@ namespace DanilovSoft.MicroORM
         internal static async Task LoadAsync(this DataTable table, DbDataReader reader, CancellationToken cancellationToken)
         {
             bool columnsCreated = false;
-            while(await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
                 if (columnsCreated)
                 {

@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DanilovSoft.MicroORM
 {
@@ -25,12 +20,11 @@ namespace DanilovSoft.MicroORM
         /// <param name="sqlRawValue">Значение которое может быть <see cref="DBNull"/>.</param>
         /// <param name="sqlColumnName">Используется только для ошибок.</param>
         /// <exception cref="MicroOrmException"/>
-        [return: MaybeNull]
-        public static T ConvertRawSqlToClrType<T>(object sqlRawValue, Type sqlColumnType, string sqlColumnName)
+        public static T? ConvertRawSqlToClrType<T>(object sqlRawValue, Type sqlColumnType, string sqlColumnName)
         {
             //bool isNonNullable = NonNullableConvention.IsNonNullableReferenceType(typeof(T));
 
-            return (T)ConvertRawSqlToClrType(sqlRawValue, sqlColumnType, sqlColumnName, toType: typeof(T));
+            return (T?)ConvertRawSqlToClrType(sqlRawValue, sqlColumnType, sqlColumnName, toType: typeof(T));
         }
 
         /// <param name="sqlRawValue">Значение которое может быть <see cref="DBNull"/>.</param>

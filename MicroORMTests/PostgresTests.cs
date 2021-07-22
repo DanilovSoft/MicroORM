@@ -3,7 +3,6 @@ using MicroORMTests;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,13 +11,13 @@ namespace UnitTests
 {
     public class PostgresTests
     {
-        private static readonly SqlORM _orm = new SqlORM("Server=10.0.0.99; Port=5432; User Id=test; Password=test; Database=hh; " +
+        private static readonly SqlORM Orm = new("Server=10.0.0.99; Port=5432; User Id=test; Password=test; Database=hh; " +
             "Pooling=true; MinPoolSize=1; MaxPoolSize=100", Npgsql.NpgsqlFactory.Instance);
 
         [Test]
         public void ScalarArray()
         {
-            decimal[] result = _orm.Sql("SELECT unnest(array['1', '2', '3'])")
+            decimal[] result = Orm.Sql("SELECT unnest(array['1', '2', '3'])")
                 .ScalarArray<decimal>(); // + конвертация
 
             Assert.AreEqual(1, result[0]);
@@ -29,7 +28,7 @@ namespace UnitTests
         [Test]
         public void TestConverter()
         {
-            UserWithLocation result = _orm.Sql("SELECT point(@0, @1) AS location")
+            UserWithLocation result = Orm.Sql("SELECT point(@0, @1) AS location")
                 .Parameters(1, 2)
                 .Single<UserWithLocation>();
 
@@ -42,7 +41,7 @@ namespace UnitTests
         {
             try
             {
-                await _orm.Sql("SELECT pg_sleep(10)")
+                await Orm.Sql("SELECT pg_sleep(10)")
                     .Timeout(timeoutSec: 5) // таймаут запроса
                     .ToAsync()
                     .Execute();
@@ -56,7 +55,7 @@ namespace UnitTests
         [Test]
         public void TestTransactionWithMultiResult()
         {
-            using (var multiResult = _orm.Sql("SELECT @0 AS row1; SELECT unnest(array['1', '2'])")
+            using (var multiResult = Orm.Sql("SELECT @0 AS row1; SELECT unnest(array['1', '2'])")
                 .Parameters(1)
                 .MultiResult())
             {
@@ -77,7 +76,7 @@ namespace UnitTests
 
             try
             {
-                var task = _orm.Sql("SELECT pg_sleep(10)")
+                var task = Orm.Sql("SELECT pg_sleep(10)")
                     .Timeout(5) // таймаут запроса
                     .ToAsync()
                     .Execute(cts.Token);
@@ -93,7 +92,7 @@ namespace UnitTests
             }
         }
 
-        private string GetSqlQuery()
+        private static string GetSqlQuery()
         {
             var sb = new StringBuilder("SELECT * FROM (VALUES ");
             int n = 1;
@@ -112,7 +111,7 @@ namespace UnitTests
         public void TestList()
         {
             string query = GetSqlQuery();
-            List<RowModel> list = _orm.Sql(query)
+            List<RowModel> list = Orm.Sql(query)
                 .List<RowModel>();
         }
     }

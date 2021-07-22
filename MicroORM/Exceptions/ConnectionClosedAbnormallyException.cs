@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Runtime.Serialization;
 
 namespace DanilovSoft.MicroORM
 {
@@ -26,6 +25,11 @@ namespace DanilovSoft.MicroORM
         public ConnectionClosedAbnormallyException(string message, Exception innerException) : base(message, innerException)
         {
 
+        }
+
+        protected ConnectionClosedAbnormallyException(SerializationInfo serializationInfo, StreamingContext streamingContext)
+        {
+            
         }
     }
 }

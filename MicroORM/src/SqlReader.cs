@@ -1,21 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DanilovSoft.MicroORM.Helpers;
 using DanilovSoft.MicroORM.ObjectMapping;
 using static DanilovSoft.MicroORM.ExceptionMessages;
-#if NET45
-using ArrayClass = DanilovSoft.System.Array;
-#else
 using SystemArray = System.Array;
-#endif
 
 
 namespace DanilovSoft.MicroORM
@@ -62,16 +56,14 @@ namespace DanilovSoft.MicroORM
         private DataTable Table(DbDataReader reader)
         {
             var table = new DataTable("Table1");
-            DataTable? toDispose = table;
             try
             {
                 table.LoadData(reader);
-                toDispose = null;
-                return table;
+                return NullableHelper.SetNull(ref table);
             }
             finally
             {
-                toDispose?.Dispose();
+                table?.Dispose();
             }
         }
 
@@ -129,7 +121,7 @@ namespace DanilovSoft.MicroORM
             while (reader.Read())
             {
                 object sqlRawValue = reader.GetValue(0);
-                T convertedValue = SqlTypeConverter.ConvertRawSqlToClrType<T>(sqlRawValue, reader.GetFieldType(0), reader.GetName(0));
+                var convertedValue = SqlTypeConverter.ConvertRawSqlToClrType<T>(sqlRawValue, reader.GetFieldType(0), reader.GetName(0));
                 list.Add(convertedValue!);
             }
             return list;
@@ -146,10 +138,10 @@ namespace DanilovSoft.MicroORM
             return list;
         }
 
-        [return: MaybeNull]
-        public T ScalarOrDefault<T>()
+        //[return: MaybeNull]
+        public T? ScalarOrDefault<T>()
         {
-            return (T)Wrapper(ScalarOrDefault<T>);
+            return (T?)Wrapper(ScalarOrDefault<T>);
         }
         private static object? ScalarOrDefault<T>(DbDataReader reader)
         {
@@ -169,7 +161,7 @@ namespace DanilovSoft.MicroORM
         {
             return (T)Wrapper(Single<T>);
         }
-        public T Single<T>(T @object) where T : class
+        public T Single<T>(T anonymousType) where T : class
         {
             return Wrapper(AnonymousSingle<T>);
         }
@@ -224,31 +216,11 @@ namespace DanilovSoft.MicroORM
             return (T)Wrapper(SingleOrDefault<T>);
         }
         [return: MaybeNull]
-        public T SingleOrDefault<T>(T @object) where T : class
+        public T SingleOrDefault<T>(T anonymousType) where T : class
         {
             return Wrapper(AnonymousSingleOrDefault<T>);
         }
-        //[return: MaybeNull]
-        //public T SingleOrDefault<T>(Action<T, DbDataReader> selector) where T : class
-        //{
-        //    return Wrapper(Wrap, selector) as T;
-
-        //    static object? Wrap(DbDataReader reader, Action<T, DbDataReader> sel)
-        //    {
-        //        return SingleOrDefault(reader, sel);
-        //    }
-        //}
-        //public T SingleOrDefault<T>(Func<DbDataReader, T> selector)
-        //{
-        //    return Wrapper(Wrap, selector);
-        //}
-
-        //[return: MaybeNull]
-        //private static T Wrap<T>(DbDataReader reader, Func<DbDataReader, T> sel)
-        //{
-        //    return SingleOrDefault(reader, sel);
-        //}
-
+        
         private object? SingleOrDefault<T>(DbDataReader reader)
         {
             if (reader.Read())
@@ -302,7 +274,7 @@ namespace DanilovSoft.MicroORM
             return new Anonimous<T>(this);
         }
 
-        //[SuppressMessage("Usage", "CA1801:Проверьте неиспользуемые параметры", Justification = "Из параметра извлекается анонимный тип")]
+        [SuppressMessage("Usage", "CA1801:Проверьте неиспользуемые параметры", Justification = "Из параметра извлекается анонимный тип")]
         public IAnonymousReader<T> AsAnonymous<T>(T anonymousType) where T : class
         {
             return new Anonimous<T>(this);
@@ -575,40 +547,32 @@ namespace DanilovSoft.MicroORM
         private Task<DataTable> TableAsync(DbDataReader reader, CancellationToken cancellationToken)
         {
             var table = new DataTable("Table1");
-            DataTable? toDispose = table;
-            try
-            {
-                Task task = table.LoadAsync(reader, cancellationToken);
-                toDispose = null;
-                if (task.IsCompletedSuccessfully())
-                {
-                    return Task.FromResult(table);
-                }
-                else
-                {
-                    return WaitAsync(task, table);
+            
+            Task task = table.LoadAsync(reader, cancellationToken);
 
-                    static async Task<DataTable> WaitAsync(Task task, DataTable table)
+            if (task.IsCompletedSuccessfully())
+            {
+                return Task.FromResult(table);
+            }
+            else
+            {
+                return WaitAsync(task, table);
+
+                static async Task<DataTable> WaitAsync(Task task, DataTable table)
+                {
+                    var tableCopy = table;
+                    try
                     {
-                        DataTable? toDispose = table;
-                        try
-                        {
-                            await task.ConfigureAwait(false);
-                            toDispose = null;
-                            return table;
-                        }
-                        finally
-                        {
-                            toDispose?.Dispose();
-                        }
+                        await task.ConfigureAwait(false);
+                        return NullableHelper.SetNull(ref tableCopy);
+                    }
+                    finally
+                    {
+                        tableCopy?.Dispose();
                     }
                 }
             }
-            finally
-            {
-                toDispose?.Dispose();
-            }
-        } 
+        }
 
 
         Task<object?> IAsyncSqlReader.Scalar()
@@ -715,8 +679,8 @@ namespace DanilovSoft.MicroORM
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
                 object sqlRawValue = reader.GetValue(0);
-                T convertedValue = SqlTypeConverter.ConvertRawSqlToClrType<T>(sqlRawValue, sqlColumnType: reader.GetFieldType(0), sqlColumnName: reader.GetName(0));
-                list.Add(convertedValue!);
+                var convertedValue = SqlTypeConverter.ConvertRawSqlToClrType<T>(sqlRawValue, sqlColumnType: reader.GetFieldType(0), sqlColumnName: reader.GetName(0));
+                list.Add(convertedValue);
             }
             return list;
         }

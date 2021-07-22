@@ -5,10 +5,9 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DanilovSoft.MicroORM.Helpers;
 
 namespace DanilovSoft.MicroORM
 {
@@ -27,10 +26,15 @@ namespace DanilovSoft.MicroORM
             _query = query;
         }
 
+        /// <exception cref="MicroOrmException"/>
         internal virtual DbConnection GetConnection()
         {
-            DbConnection? connection = _sqlOrm.Factory.CreateConnection();
-            Debug.Assert(connection != null);
+            var connection = _sqlOrm.Factory.CreateConnection();
+            if (connection == null)
+            {
+                throw new MicroOrmException("DbProviderFactory returns null instead of instance of connection");
+            }
+            
             connection.ConnectionString = _sqlOrm.ConnectionString;
 
             if (connection.State == ConnectionState.Open)
@@ -39,16 +43,14 @@ namespace DanilovSoft.MicroORM
             }
             else
             {
-                DbConnection? toDispose = connection;
                 try
                 {
                     connection.Open();
-                    toDispose = null;
-                    return connection;
+                    return NullableHelper.SetNull(ref connection);
                 }
                 finally
                 {
-                    toDispose?.Dispose();
+                    connection?.Dispose();
                 }
             }
         }
@@ -97,7 +99,7 @@ namespace DanilovSoft.MicroORM
             }
         }
 
-        //[SuppressMessage("Security", "CA2100:Проверка запросов SQL на уязвимости безопасности", Justification = "Нарушает основную цель микро-орм")]
+        [SuppressMessage("Security", "CA2100:Проверка запросов SQL на уязвимости безопасности", Justification = "Нарушает основную цель микро-орм")]
         protected virtual DbCommand GetCommand()
         {
             DbConnection connection = GetConnection();
@@ -128,7 +130,7 @@ namespace DanilovSoft.MicroORM
             }
         }
 
-        //[SuppressMessage("Security", "CA2100:Проверка запросов SQL на уязвимости безопасности", Justification = "Нарушает основную цель микро-орм")]
+        [SuppressMessage("Security", "CA2100:Проверка запросов SQL на уязвимости безопасности", Justification = "Нарушает основную цель микро-орм")]
         private DbCommand CreateCommand(DbConnection connection)
         {
             DbCommand command = connection.CreateCommand();
@@ -174,6 +176,7 @@ namespace DanilovSoft.MicroORM
             return new CommandReaderCloseConnection(command);
         }
 
+        [SuppressMessage("Reliability", "CA2000:Ликвидировать объекты перед потерей области", Justification = "Перекладываем ответственность")]
         internal override ValueTask<ICommandReader> GetCommandReaderAsync(CancellationToken cancellationToken)
         {
             ValueTask<DbCommand> task = GetCommandAsync(cancellationToken);
@@ -223,7 +226,9 @@ namespace DanilovSoft.MicroORM
                 return this;
             }
             else
+            {
                 throw new ArgumentNullException(nameof(anonymousParameters));
+            }
         }
 
         public SqlQuery Parameter(object? anonymousParameter)

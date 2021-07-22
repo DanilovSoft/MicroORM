@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DanilovSoft.MicroORM
+﻿namespace DanilovSoft.MicroORM
 {
     internal static class ExceptionMessages
     {

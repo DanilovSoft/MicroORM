@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
+﻿using System.Data.Common;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,15 +10,18 @@ namespace DanilovSoft.MicroORM
         private const string NoNextResultError = "There is no next result set.";
         private readonly DbDataReader _reader;
         private bool _firstTime = true;
-        public DbConnection Connection { get; private set; }
-        public DbCommand Command { get; private set; }
 
         internal MultiResultCommandReader(DbDataReader reader, DbCommand command)
         {
+            Debug.Assert(command.Connection != null);
+
             _reader = reader;
             Command = command;
             Connection = command.Connection;
         }
+
+        public DbConnection Connection { get; private set; }
+        public DbCommand Command { get; private set; }
 
         public DbDataReader GetReader()
         {

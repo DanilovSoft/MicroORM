@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using DanilovSoft.MicroORM;
 using NUnit.Framework;
 
 namespace InternalNUnitTest.Types
