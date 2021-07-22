@@ -3,6 +3,7 @@ using System.Data.Common;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
+using DanilovSoft.MicroORM.Helpers;
 
 namespace DanilovSoft.MicroORM
 {
@@ -15,17 +16,7 @@ namespace DanilovSoft.MicroORM
         /// </summary>
         /// <remarks>Default value is 30 seconds.</remarks>
         public static int CloseConnectionPenaltySec { get; set; } = 30;
-        public string ConnectionString { get; }
-        internal readonly DbProviderFactory Factory;
-        internal readonly bool UsePascalCaseNamingConvention;
 
-        //public SqlORM(string connectionString, DbConnection connection, bool usePascalCaseNamingConvention = false) 
-        //    : this(connectionString, new ConnectionFactoryWrapper(connection), usePascalCaseNamingConvention)
-        //{
-            
-        //}
-
-        // ctor.
         public SqlORM(string connectionString, DbProviderFactory factory, bool usePascalCaseNamingConvention = false)
         {
             if (!string.IsNullOrEmpty(connectionString))
@@ -37,11 +28,19 @@ namespace DanilovSoft.MicroORM
                     UsePascalCaseNamingConvention = usePascalCaseNamingConvention;
                 }
                 else
+                {
                     throw new ArgumentNullException(nameof(factory));
+                }
             }
             else
+            {
                 throw new ArgumentOutOfRangeException(nameof(connectionString));
+            }
         }
+
+        public string ConnectionString { get; }
+        internal bool UsePascalCaseNamingConvention { get; }
+        internal DbProviderFactory Factory { get; }
 
         public SqlQuery Sql(string query, params object?[] parameters)
         {
@@ -73,16 +72,14 @@ namespace DanilovSoft.MicroORM
         public SqlTransaction OpenTransaction()
         {
             var tsql = new SqlTransaction(this);
-            SqlTransaction? toDispose = tsql;
             try
             {
                 tsql.OpenTransaction();
-                toDispose = null;
-                return tsql;
+                return NullableHelper.SetNull(ref tsql);
             }
             finally
             {
-                toDispose?.Dispose();
+                tsql?.Dispose();
             }
         }
 
@@ -116,16 +113,15 @@ namespace DanilovSoft.MicroORM
                 return WaitAsync(task, tsql);
                 static async ValueTask<SqlTransaction> WaitAsync(ValueTask task, SqlTransaction tsql)
                 {
-                    SqlTransaction? toDispose = tsql;
+                    var copy = tsql;
                     try
                     {
                         await task.ConfigureAwait(false);
-                        toDispose = null;
-                        return tsql;
+                        return NullableHelper.SetNull(ref copy);
                     }
                     finally
                     {
-                        toDispose?.Dispose();
+                        copy?.Dispose();
                     }
                 }
             }

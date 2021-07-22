@@ -211,7 +211,9 @@ namespace DanilovSoft.MicroORM
             }
         }
 
+
         /// <exception cref="ArgumentNullException"/>
+        [SuppressMessage("Maintainability", "CA1508:Предотвращение появления неиспользуемого условного кода", Justification = "Анализатор ошибается")]
         public SqlQuery Parameters(params object?[] anonymousParameters)
         {
             if (anonymousParameters != null)

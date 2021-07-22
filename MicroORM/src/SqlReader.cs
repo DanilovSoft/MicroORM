@@ -85,7 +85,7 @@ namespace DanilovSoft.MicroORM
             return SqlTypeConverter.ConvertRawSqlToClrType(sqlRawValue, reader.GetFieldType(0), reader.GetName(0), toType: typeof(T));
         }
 
-        [return: MaybeNull]
+        //[return: MaybeNull]
         public T Scalar<T>()
         {
             return (T)Wrapper(Scalar<T>);
@@ -138,7 +138,6 @@ namespace DanilovSoft.MicroORM
             return list;
         }
 
-        //[return: MaybeNull]
         public T? ScalarOrDefault<T>()
         {
             return (T?)Wrapper(ScalarOrDefault<T>);
@@ -195,28 +194,13 @@ namespace DanilovSoft.MicroORM
             var toObject = new ObjectMapper<T>(reader, _sqlORM);
             return toObject.ReadAsAnonymousObject<T>();
         }
-        //private static T Single<T>(DbDataReader reader, Func<DbDataReader, T> selector)
-        //{
-        //    reader.Read();
-        //    T result = selector(reader);
-        //    return result;
-        //}
-        //private object Single<T>(DbDataReader reader, Action<T, DbDataReader> selector) where T : class
-        //{
-        //    T item = Single<T>(reader) as T;
-        //    Debug.Assert(item != null);
-
-        //    selector(item, reader);
-        //    return item;
-        //}
-
-        [return: MaybeNull]
-        public T SingleOrDefault<T>()
+        
+        public T? SingleOrDefault<T>()
         {
-            return (T)Wrapper(SingleOrDefault<T>);
+            return (T?)Wrapper(SingleOrDefault<T>);
         }
-        [return: MaybeNull]
-        public T SingleOrDefault<T>(T anonymousType) where T : class
+
+        public T? SingleOrDefault<T>(T anonymousType) where T : class
         {
             return Wrapper(AnonymousSingleOrDefault<T>);
         }
@@ -736,42 +720,6 @@ namespace DanilovSoft.MicroORM
         {
             return WrapperAsync(AnonymousListAsync<T>, cancellationToken);
         }
-        //Task<List<T>> IAsyncSqlReader.List<T>(Action<T, DbDataReader> selector)
-        //{
-        //    return AsAsync.List(selector, CancellationToken.None);
-        //}
-        //Task<List<T>> IAsyncSqlReader.List<T>(Action<T, DbDataReader> selector, CancellationToken cancellationToken)
-        //{
-        //    return WrapperAsync(Wrap, selector, cancellationToken);
-
-        //    static Task<List<T>> Wrap(DbDataReader reader, Action<T, DbDataReader> sel, CancellationToken token)
-        //    {
-        //        return ListAsync(reader, sel, token);
-        //    }
-        //}
-        //Task<List<T>> IAsyncSqlReader.List<T>(Func<DbDataReader, T> selector)
-        //{
-        //    return AsAsync.List(selector, CancellationToken.None);
-        //}
-        //Task<List<T>> IAsyncSqlReader.List<T>(Func<DbDataReader, T> selector, CancellationToken cancellationToken)
-        //{
-        //    return WrapperAsync(Wrap, selector, cancellationToken);
-
-        //    static Task<List<T>> Wrap(DbDataReader reader, Func<DbDataReader, T> sel, CancellationToken token)
-        //    {
-        //        return ListAsync(reader, sel, token);
-        //    }
-        //}
-        //private static async Task<List<T>> ListAsync<T>(DbDataReader reader, Func<DbDataReader, T> selector, CancellationToken cancellationToken)
-        //{
-        //    var list = new List<T>();
-        //    while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-        //    {
-        //        T result = selector(reader);
-        //        list.Add(result);
-        //    }
-        //    return list;
-        //}
         private async Task<List<T>> AnonymousListAsync<T>(DbDataReader reader, CancellationToken cancellationToken) where T : class
         {
             var list = new List<T>();

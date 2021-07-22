@@ -15,3 +15,6 @@ dotnet_diagnostic.CA1303.severity = none
 
 # CS1573: ѕараметр не имеет соответствующий тег параметра в комментарии XML (в отличие от остальных параметров)
 dotnet_diagnostic.CS1573.severity = none
+
+# CA1002: Ќе предоставл€йте универсальные списки
+dotnet_diagnostic.CA1002.severity = none

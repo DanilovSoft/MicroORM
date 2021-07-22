@@ -32,63 +32,36 @@ namespace DanilovSoft.MicroORM
         Task<T> Scalar<T>();
         /// <exception cref="OperationCanceledException"/>
         Task<T> Scalar<T>(CancellationToken cancellationToken);
-        Task<T> ScalarOrDefault<T>();
+        Task<T?> ScalarOrDefault<T>();
         /// <exception cref="OperationCanceledException"/>
-        Task<T> ScalarOrDefault<T>(CancellationToken cancellationToken);
+        Task<T?> ScalarOrDefault<T>(CancellationToken cancellationToken);
         Task<T> Single<T>();
         /// <exception cref="OperationCanceledException"/>
         Task<T> Single<T>(CancellationToken cancellationToken);
         Task<T> Single<T>(T anonymousType) where T : class;
         /// <exception cref="OperationCanceledException"/>
         Task<T> Single<T>(T anonymousType, CancellationToken cancellationToken) where T : class;
-        //Task<T> Single<T>(Action<T, DbDataReader> selector) where T : class;
-        ///// <exception cref="OperationCanceledException"/>
-        //Task<T> Single<T>(Action<T, DbDataReader> selector, CancellationToken cancellationToken) where T : class;
-        //Task<T> Single<T>(Func<DbDataReader, T> selector);
-        ///// <exception cref="OperationCanceledException"/>
-        //Task<T> Single<T>(Func<DbDataReader, T> selector, CancellationToken cancellationToken);
-        Task<T> SingleOrDefault<T>();
+        Task<T?> SingleOrDefault<T>();
         /// <exception cref="OperationCanceledException"/>
-        Task<T> SingleOrDefault<T>(CancellationToken cancellationToken);
-        Task<T> SingleOrDefault<T>(T anonymousType) where T : class;
+        Task<T?> SingleOrDefault<T>(CancellationToken cancellationToken);
+        Task<T?> SingleOrDefault<T>(T anonymousType) where T : class;
         /// <exception cref="OperationCanceledException"/>
-        Task<T> SingleOrDefault<T>(T anonymousType, CancellationToken cancellationToken) where T : class;
-        //Task<T> SingleOrDefault<T>(Action<T, DbDataReader> selector) where T : class;
-        ///// <exception cref="OperationCanceledException"/>
-        //Task<T> SingleOrDefault<T>(Action<T, DbDataReader> selector, CancellationToken cancellationToken) where T : class;
-        //Task<T> SingleOrDefault<T>(Func<DbDataReader, T> selector);
-        ///// <exception cref="OperationCanceledException"/>
-        //Task<T> SingleOrDefault<T>(Func<DbDataReader, T> selector, CancellationToken cancellationToken);
+        Task<T?> SingleOrDefault<T>(T anonymousType, CancellationToken cancellationToken) where T : class;
         Task<List<T>> List<T>();
         /// <exception cref="OperationCanceledException"/>
         Task<List<T>> List<T>(CancellationToken cancellationToken);
         Task<List<T>> List<T>(T anonymousType) where T : class;
         /// <exception cref="OperationCanceledException"/>
         Task<List<T>> List<T>(T anonymousType, CancellationToken cancellationToken) where T : class;
-        //Task<List<T>> List<T>(Func<DbDataReader, T> selector);
-        ///// <exception cref="OperationCanceledException"/>
-        //Task<List<T>> List<T>(Func<DbDataReader, T> selector, CancellationToken cancellationToken);
-        //Task<List<T>> List<T>(Action<T, DbDataReader> selector) where T : class;
-        ///// <exception cref="OperationCanceledException"/>
-        //Task<List<T>> List<T>(Action<T, DbDataReader> selector, CancellationToken cancellationToken) where T : class;
         Task<T[]> Array<T>();
         /// <exception cref="OperationCanceledException"/>
         Task<T[]> Array<T>(CancellationToken cancellationToken);
         Task<T[]> Array<T>(T anonymousType) where T : class;
         /// <exception cref="OperationCanceledException"/>
         Task<T[]> Array<T>(T anonymousType, CancellationToken cancellationToken) where T : class;
-        //Task<T[]> Array<T>(Func<DbDataReader, T> selector);
-        ///// <exception cref="OperationCanceledException"/>
-        //Task<T[]> Array<T>(Func<DbDataReader, T> selector, CancellationToken cancellationToken);
-        //Task<T[]> Array<T>(Action<T, DbDataReader> selector) where T : class;
-        ///// <exception cref="OperationCanceledException"/>
-        //Task<T[]> Array<T>(Action<T, DbDataReader> selector, CancellationToken cancellationToken) where T : class;
         Task<TCollection> Collection<TItem, TCollection>() where TCollection : ICollection<TItem>, new();
         /// <exception cref="OperationCanceledException"/>
         Task<TCollection> Collection<TItem, TCollection>(CancellationToken cancellationToken) where TCollection : ICollection<TItem>, new();
-        //Task<TCollection> Collection<TItem, TCollection>(Action<TItem, DbDataReader> selector) where TCollection : ICollection<TItem>, new() where TItem : class;
-        ///// <exception cref="OperationCanceledException"/>
-        //Task<TCollection> Collection<TItem, TCollection>(Action<TItem, DbDataReader> selector, CancellationToken cancellationToken) where TCollection : ICollection<TItem>, new() where TItem : class;
 
         IAsyncAnonymousReader<T> AsAnonymous<T>(T anonymousType) where T : class;
     }

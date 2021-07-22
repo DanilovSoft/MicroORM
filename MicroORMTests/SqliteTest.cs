@@ -114,6 +114,21 @@ namespace MicroORMTests
             }
             Assert.Fail();
         }
+
+        [Test]
+        public void TestNullParametersArray()
+        {
+            var query = Orm.Sql("");
+
+            try
+            {
+                query.Parameters(anonymousParameters: null!);
+            }
+            catch (ArgumentNullException)
+            {
+                Assert.Pass();
+            }
+        }
     }
 
     class LocationConverter : TypeConverter
@@ -145,7 +160,7 @@ namespace MicroORMTests
         public readonly string Col3 = "";
 
         [SqlIgnore]
-        public readonly int Col4;
+        public readonly int Col4 = 0;
 
         [OnDeserializing]
         private void OnDeserializing(StreamingContext _)
@@ -173,27 +188,27 @@ namespace MicroORMTests
         }
     }
 
-    public class BestPriceItem
-    {
-        [SqlProperty("item_id")]
-        public int ItemID { get; private set; }
+    //public class BestPriceItem
+    //{
+    //    [SqlProperty("item_id")]
+    //    public int ItemID { get; private set; }
 
-        [SqlProperty("supplier_id")]
-        public int SupplierID { get; private set; }
+    //    [SqlProperty("supplier_id")]
+    //    public int SupplierID { get; private set; }
 
-        [SqlProperty("selling_price")]
-        public double SellingPrice { get; private set; }
+    //    [SqlProperty("selling_price")]
+    //    public double SellingPrice { get; private set; }
 
-        [SqlProperty("buying_price")]
-        public double? BuyingPrice { get; private set; }
+    //    [SqlProperty("buying_price")]
+    //    public double? BuyingPrice { get; private set; }
 
-        [SqlProperty("stock_level")]
-        public string StockLevel { get; private set; }
+    //    [SqlProperty("stock_level")]
+    //    public string StockLevel { get; private set; }
 
-        [SqlProperty("price_added_date")]
-        public DateTime PriceAddedDate { get; private set; }
+    //    [SqlProperty("price_added_date")]
+    //    public DateTime PriceAddedDate { get; private set; }
 
-        [SqlProperty("is_valid_to_times")]
-        public DateTime IsValidToTimes { get; private set; }
-    }
+    //    [SqlProperty("is_valid_to_times")]
+    //    public DateTime IsValidToTimes { get; private set; }
+    //}
 }

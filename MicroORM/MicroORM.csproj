@@ -4,7 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>3.4.8</Version>
+    <Version>3.4.9</Version>
     <Authors>Vitalii Danilov</Authors>
     <Company>Vitalii Danilov</Company>
     <Product>DanilovSoft.MicroORM</Product>
