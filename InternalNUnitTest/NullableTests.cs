@@ -32,6 +32,7 @@ namespace InternalNUnitTest.Types
 
 namespace InternalNUnitTest
 {
+    using DanilovSoft.MicroORM;
     using InternalNUnitTest.Types;
 
     public class NullableTests

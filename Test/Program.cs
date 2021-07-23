@@ -5,6 +5,7 @@ using Npgsql;
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -66,10 +67,10 @@ class Program
     public const string PgConnectionString = "Server=10.0.0.99;Port=5432;User Id = test; Password=test;Database=test;Pooling=true;" +
         "MinPoolSize=10;MaxPoolSize=16;CommandTimeout=30;Timeout=30";
 
-    private readonly SqlORM _sqlite = new SqlORM("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
-    private static readonly SqlORM _pgOrm = new SqlORM(PgConnectionString, NpgsqlFactory.Instance, usePascalCaseNamingConvention: true);
+    private readonly SqlORM _sqlite = new("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
+    private static readonly SqlORM _pgOrm = new(PgConnectionString, NpgsqlFactory.Instance, usePascalCaseNamingConvention: true);
 
-    private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+    //private readonly CancellationTokenSource _cts = new();
 
     static void Main()
     {
@@ -133,9 +134,9 @@ class Program
     {
         try
         {
-            await _pgOrm.Sql("SELECT 1").ToAsync().Scalar();
+            await _pgOrm.Sql("SELECT 1").ScalarAsync();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             throw;
         }
@@ -143,13 +144,13 @@ class Program
 
         while (true)
         {
-            await _pgOrm.Sql("SELECT 1").ToAsync().Scalar();
+            await _pgOrm.Sql("SELECT 1").ScalarAsync();
         }
     }
 
     public static string GetSqlQuery()
     {
-        StringBuilder sb = new StringBuilder("SELECT * FROM (VALUES ");
+        var sb = new StringBuilder("SELECT * FROM (VALUES ");
         int n = 1;
         for (int i = 0; i < 1_0; i++)
         {

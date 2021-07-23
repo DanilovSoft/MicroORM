@@ -18,58 +18,58 @@
             <remarks>Дополнительно останавливает отладчик и проваливает тест с соответствующим сообщением.</remarks>
             <exception cref="T:System.ArgumentNullException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Execute(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ExecuteAsync(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Table(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.TableAsync(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Scalar(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarAsync(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.ScalarArray(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarArrayAsync(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.ScalarList(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarListAsync(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.ScalarArray``1(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarArrayAsync``1(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.ScalarList``1(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarListAsync``1(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Scalar``1(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarAsync``1(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.ScalarOrDefault``1(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarOrDefaultAsync``1(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Single``1(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.SingleAsync``1(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Single``1(``0,System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.SingleAsync``1(``0,System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.SingleOrDefault``1(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.SingleOrDefaultAsync``1(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.SingleOrDefault``1(``0,System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.SingleOrDefaultAsync``1(``0,System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.List``1(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ListAsync``1(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.List``1(``0,System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ListAsync``1(``0,System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Array``1(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ArrayAsync``1(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Array``1(``0,System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ArrayAsync``1(``0,System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.IAsyncSqlReader.Collection``2(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.CollectionAsync``2(System.Threading.CancellationToken)">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
         <member name="T:DanilovSoft.MicroORM.ObjectMapping.ConstructorArgument">
@@ -193,6 +193,26 @@
         <member name="M:DanilovSoft.MicroORM.CloseConnection.Dispose">
             <exception cref="T:System.OperationCanceledException"/>
         </member>
+        <member name="P:DanilovSoft.MicroORM.CommandReader.Connection">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="P:DanilovSoft.MicroORM.CommandReader.Command">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.CommandReader.GetReader">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.CommandReader.GetReaderAsync(System.Threading.CancellationToken)">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.CommandReader.DisposeConnection">
+            <summary>
+            Диспозит DbCommand и соединение.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.CommandReader.CheckDisposed">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
         <member name="T:DanilovSoft.MicroORM.CommandReaderCloseConnection">
             <summary>
             Закрывает соединение при Dispose.
@@ -213,6 +233,28 @@
             Не закрывает соединение.
             </summary>
         </member>
+        <member name="M:DanilovSoft.MicroORM.MultiSqlReader.ExecuteReader">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.MultiSqlReader.ExecuteReaderAsync(System.Threading.CancellationToken)">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.MultiSqlReader.CheckDisposed">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="T:DanilovSoft.MicroORM.NonNullableConvention">
+            <summary>
+                A base type for conventions that configure model aspects based on whether the member type
+                is a non-nullable reference type.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.NonNullableConvention.IsNonNullableReferenceType2(System.Reflection.MemberInfo)">
+            <summary>
+                Returns a value indicating whether the member type is a non-nullable reference type.
+            </summary>
+            <param name="memberInfo"> The member info. </param>
+            <returns> <see langword="true" /> if the member type is a non-nullable reference type. </returns>
+        </member>
         <member name="M:DanilovSoft.MicroORM.ReflectionUtils.IsIndexedProperty(System.Reflection.MemberInfo)">
             <summary>
             Determines whether the member is an indexed property.
@@ -231,19 +273,6 @@
             	<c>true</c> if the property is an indexed property; otherwise, <c>false</c>.
             </returns>
         </member>
-        <member name="T:DanilovSoft.MicroORM.NonNullableConvention">
-            <summary>
-                A base type for conventions that configure model aspects based on whether the member type
-                is a non-nullable reference type.
-            </summary>
-        </member>
-        <member name="M:DanilovSoft.MicroORM.NonNullableConvention.IsNonNullableReferenceType2(System.Reflection.MemberInfo)">
-            <summary>
-                Returns a value indicating whether the member type is a non-nullable reference type.
-            </summary>
-            <param name="memberInfo"> The member info. </param>
-            <returns> <see langword="true" /> if the member type is a non-nullable reference type. </returns>
-        </member>
         <member name="P:DanilovSoft.MicroORM.SqlORM.DefaultQueryTimeoutSec">
             <remarks>Default value is 30 seconds.</remarks>
         </member>
@@ -254,6 +283,9 @@
             <remarks>Default value is 30 seconds.</remarks>
         </member>
         <member name="M:DanilovSoft.MicroORM.SqlQuery.GetConnection">
+            <summary>
+            Запрашивает соединение через фабрику и делает Open.
+            </summary>
             <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.SqlQuery.Parameters(System.Object[])">
@@ -264,9 +296,22 @@
             Если <paramref name="sqlRawValue"/> является DBNull то заменяется на Null.
             </summary>
         </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTransaction.OpenTransaction">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTransaction.OpenTransactionAsync(System.Threading.CancellationToken)">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTransaction.OpenTransactionAsync">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
         <member name="M:DanilovSoft.MicroORM.SqlTransaction.Sql(System.String,System.Object[])">
             <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.ArgumentNullException"/>
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTransaction.SqlInterpolated(System.FormattableString,System.Char)">
+            <exception cref="T:System.ObjectDisposedException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.SqlTransaction.Commit">
             <summary>
@@ -279,6 +324,9 @@
             Rolls back a transaction from a pending state.
             Try/Catch exception handling should always be used when committing or rolling back a SqlTransaction.
             </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTransaction.CheckDisposed">
+            <exception cref="T:System.ObjectDisposedException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ConvertSqlToCtorValue(System.Object,System.Type,System.String,System.Boolean,System.String,System.Type)">
             <param name="sqlRawValue">Значение которое может быть <see cref="T:System.DBNull"/>.</param>
@@ -312,6 +360,18 @@
         </member>
         <member name="M:DanilovSoft.MicroORM.ThrowHelper.ThrowCantSetNull(System.String,System.String,System.String)">
             <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ThrowHelper.ThrowObjectDisposed(System.String)">
+            <exception cref="M:DanilovSoft.MicroORM.ThrowHelper.ThrowObjectDisposed(System.String)"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ThrowHelper.ThrowObjectDisposed``1">
+            <exception cref="M:DanilovSoft.MicroORM.ThrowHelper.ThrowObjectDisposed(System.String)"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ThrowHelper.AssertNotNull``1(``0,System.String)">
+            <exception cref="T:System.ArgumentNullException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ThrowHelper.ThrowArgumentNull(System.String)">
+            <exception cref="T:System.ArgumentNullException"/>
         </member>
         <member name="T:System.Threading.DelayedAction`1">
             <summary>

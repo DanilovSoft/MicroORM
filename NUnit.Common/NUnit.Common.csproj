@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>MicroORM.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
 </Project>

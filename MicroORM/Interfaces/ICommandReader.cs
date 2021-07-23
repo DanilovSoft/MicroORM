@@ -9,7 +9,6 @@ namespace DanilovSoft.MicroORM
     internal interface ICommandReader : IDisposable
     {
         DbDataReader GetReader();
-        bool TryGetReader([MaybeNullWhen(false)] out DbDataReader? reader);
         ValueTask<DbDataReader> GetReaderAsync(CancellationToken cancellationToken);
         DbConnection Connection { get; }
         DbCommand Command { get; }

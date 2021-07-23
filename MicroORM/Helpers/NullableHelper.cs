@@ -7,14 +7,6 @@ namespace DanilovSoft.MicroORM.Helpers
     public static class NullableHelper
     {
         [return: NotNullIfNotNull("value")]
-        public static T? SetDefault<T>(ref T? value)
-        {
-            var itemRefCopy = value;
-            value = default;
-            return itemRefCopy;
-        }
-
-        [return: NotNullIfNotNull("value")]
         public static T? SetNull<T>(ref T? value) where T : class
         {
             var itemRefCopy = value;

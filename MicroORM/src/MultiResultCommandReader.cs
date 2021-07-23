@@ -13,6 +13,8 @@ namespace DanilovSoft.MicroORM
 
         internal MultiResultCommandReader(DbDataReader reader, DbCommand command)
         {
+            Debug.Assert(reader != null);
+            Debug.Assert(command != null);
             Debug.Assert(command.Connection != null);
 
             _reader = reader;
@@ -33,7 +35,9 @@ namespace DanilovSoft.MicroORM
                     return _reader;
                 }
                 else
+                {
                     throw new MicroOrmException(NoNextResultError);
+                }
             }
             else
             {

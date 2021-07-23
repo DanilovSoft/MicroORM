@@ -57,10 +57,10 @@ namespace DanilovSoft.MicroORM
         public override ValueTask<MultiSqlReader> MultiResultAsync(CancellationToken cancellationToken)
         {
             ValueTask<DbCommand> task = GetCommandAsync(cancellationToken);
+
             if (task.IsCompletedSuccessfully)
             {
-                DbCommand command = task.Result;
-                return CreateReaderAsync(command, cancellationToken);
+                return CreateReaderAsync(task.Result, cancellationToken);
             }
             else
             {
@@ -70,36 +70,44 @@ namespace DanilovSoft.MicroORM
 
         private async ValueTask<MultiSqlReader> WaitMultiResultAsync(ValueTask<DbCommand> task, CancellationToken cancellationToken)
         {
-            DbCommand command = await task.ConfigureAwait(false);
+            var command = await task.ConfigureAwait(false);
             return await CreateReaderAsync(command, cancellationToken).ConfigureAwait(false);
         }
 
         private ValueTask<MultiSqlReader> CreateReaderAsync(DbCommand command, CancellationToken cancellationToken)
         {
             var sqlReader = new MultiSqlReader(command, _sqlOrm);
-            
-            ValueTask task = sqlReader.ExecuteReaderAsync(cancellationToken);
-            
-            if (task.IsCompletedSuccessfully)
+            try
             {
-                return new ValueTask<MultiSqlReader>(result: sqlReader);
-            }
-            else
-            {
-                return WaitAsync(task, sqlReader);
-                static async ValueTask<MultiSqlReader> WaitAsync(ValueTask task, MultiSqlReader sqlReader)
+                ValueTask task = sqlReader.ExecuteReaderAsync(cancellationToken);
+
+                if (task.IsCompletedSuccessfully)
                 {
-                    var copy = sqlReader;
-                    try
+                    task.GetAwaiter().GetResult();
+                    return ValueTask.FromResult(NullableHelper.SetNull(ref sqlReader));
+                }
+                else
+                {
+                    return WaitAsync(task, NullableHelper.SetNull(ref sqlReader));
+
+                    static async ValueTask<MultiSqlReader> WaitAsync(ValueTask task, MultiSqlReader sqlReader)
                     {
-                        await task.ConfigureAwait(false);
-                        return NullableHelper.SetNull(ref copy);
-                    }
-                    finally
-                    {
-                        copy?.Dispose();
+                        var copy = sqlReader;
+                        try
+                        {
+                            await task.ConfigureAwait(false);
+                            return NullableHelper.SetNull(ref copy);
+                        }
+                        finally
+                        {
+                            copy?.Dispose();
+                        }
                     }
                 }
+            }
+            finally
+            {
+                sqlReader?.Dispose();
             }
         }
 
@@ -113,15 +121,17 @@ namespace DanilovSoft.MicroORM
         protected override ValueTask<DbCommand> GetCommandAsync(CancellationToken cancellationToken)
         {
             ValueTask<DbCommand> task = base.GetCommandAsync(cancellationToken);
+
             if (task.IsCompletedSuccessfully)
             {
                 DbCommand command = task.Result;
                 command.Transaction = _transaction;
-                return new ValueTask<DbCommand>(result: command);
+                return ValueTask.FromResult(command);
             }
             else
             {
                 return WaitAsync(task, _transaction);
+
                 static async ValueTask<DbCommand> WaitAsync(ValueTask<DbCommand> task, DbTransaction transaction)
                 {
                     DbCommand command = await task.ConfigureAwait(false);

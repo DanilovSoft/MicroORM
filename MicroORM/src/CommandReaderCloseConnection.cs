@@ -15,7 +15,7 @@ namespace DanilovSoft.MicroORM
         public override void Dispose()
         {
             base.Dispose();
-            Connection.Dispose();
+            DisposeConnection();
         }
     }
 }

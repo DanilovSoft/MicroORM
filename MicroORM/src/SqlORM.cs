@@ -90,47 +90,44 @@ namespace DanilovSoft.MicroORM
 
         public ValueTask<SqlTransaction> OpenTransactionAsync(CancellationToken cancellationToken)
         {
-            var tsql = new SqlTransaction(this);
-            SqlTransaction? toDispose = tsql;
-
-            ValueTask task;
+            var transaction = new SqlTransaction(this);
             try
             {
-                task = tsql.OpenTransactionAsync(cancellationToken);
-                toDispose = null;
+                var task = transaction.OpenTransactionAsync(cancellationToken);
+                
+                if (task.IsCompletedSuccessfully)
+                {
+                    task.GetAwaiter().GetResult();
+                    return ValueTask.FromResult(NullableHelper.SetNull(ref transaction));
+                }
+                else
+                {
+                    return WaitAsync(task, NullableHelper.SetNull(ref transaction));
+
+                    static async ValueTask<SqlTransaction> WaitAsync(ValueTask task, SqlTransaction transaction)
+                    {
+                        var copy = transaction;
+                        try
+                        {
+                            await task.ConfigureAwait(false);
+                            return NullableHelper.SetNull(ref copy);
+                        }
+                        finally
+                        {
+                            copy?.Dispose();
+                        }
+                    }
+                }
             }
             finally
             {
-                toDispose?.Dispose();
-            }
-
-            if (task.IsCompletedSuccessfully)
-            {
-                return new ValueTask<SqlTransaction>(result: tsql);
-            }
-            else
-            {
-                return WaitAsync(task, tsql);
-                static async ValueTask<SqlTransaction> WaitAsync(ValueTask task, SqlTransaction tsql)
-                {
-                    var copy = tsql;
-                    try
-                    {
-                        await task.ConfigureAwait(false);
-                        return NullableHelper.SetNull(ref copy);
-                    }
-                    finally
-                    {
-                        copy?.Dispose();
-                    }
-                }
+                transaction?.Dispose();
             }
         }
 
         public SqlTransaction Transaction()
         {
-            var tsql = new SqlTransaction(this);
-            return tsql;
+            return new SqlTransaction(this);
         }
     }
 }

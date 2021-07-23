@@ -19,7 +19,7 @@ class Program
             var task = _orm.Sql("SELECT pg_sleep(60)")
                 .Timeout(timeoutSec: 20) // таймаут запроса
                 .ToAsync()
-                .Execute();
+                .ExecuteAsync();
 
             Console.WriteLine("Пора выдернуть Ethernet кабель. На это есть 20 секунд");
 

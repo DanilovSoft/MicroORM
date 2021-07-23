@@ -29,13 +29,23 @@ namespace MicroORMTests
         }
 
         [Test]
-        public void TestScalar()
+        public void ScalarNotNull()
         {
-            string? result = Orm.Sql("SELECT @0")
+            string result = Orm.Sql("SELECT @0")
                 .Parameter("OK")
                 .Scalar<string>();
 
             Assert.AreEqual("OK", result);
+        }
+
+        [Test]
+        public void ScalarNull()
+        {
+            string result = Orm.Sql("SELECT @0")
+                .Parameter(null)
+                .Scalar<string>();
+
+            Assert.AreEqual(null, result);
         }
 
         [Test]

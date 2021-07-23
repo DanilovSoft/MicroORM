@@ -1,8 +1,9 @@
-﻿namespace InternalNUnitTest
-{
-    using NUnit.Common;
-    using NUnit.Framework;
+﻿using DanilovSoft.MicroORM;
+using NUnit.Common;
+using NUnit.Framework;
 
+namespace InternalNUnitTest
+{
     public class NullableModuleTests
     {
         //[Test]

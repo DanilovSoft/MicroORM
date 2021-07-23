@@ -26,6 +26,17 @@ namespace UnitTests
         }
 
         [Test]
+        public void ScalarNullArray()
+        {
+            var result = Orm.Sql("SELECT unnest(array['1', NULL, '3'])")
+                .ScalarArray<decimal?>(); // + конвертация
+
+            Assert.AreEqual(1, result[0]);
+            Assert.AreEqual(null, result[1]);
+            Assert.AreEqual(3, result[2]);
+        }
+
+        [Test]
         public void TestConverter()
         {
             UserWithLocation result = Orm.Sql("SELECT point(@0, @1) AS location")
@@ -43,8 +54,7 @@ namespace UnitTests
             {
                 await Orm.Sql("SELECT pg_sleep(10)")
                     .Timeout(timeoutSec: 5) // таймаут запроса
-                    .ToAsync()
-                    .Execute();
+                    .ExecuteAsync();
             }
             catch (SqlQueryTimeoutException)
             {
@@ -78,8 +88,7 @@ namespace UnitTests
             {
                 var task = Orm.Sql("SELECT pg_sleep(10)")
                     .Timeout(5) // таймаут запроса
-                    .ToAsync()
-                    .Execute(cts.Token);
+                    .ExecuteAsync(cts.Token);
 
                 await Task.Delay(1000);
 

@@ -26,76 +26,83 @@ namespace DanilovSoft.MicroORM
             _query = query;
         }
 
+        /// <summary>
+        /// Запрашивает соединение через фабрику и делает Open.
+        /// </summary>
         /// <exception cref="MicroOrmException"/>
         internal virtual DbConnection GetConnection()
         {
             var connection = _sqlOrm.Factory.CreateConnection();
-            if (connection == null)
+            if (connection != null)
             {
-                throw new MicroOrmException("DbProviderFactory returns null instead of instance of connection");
-            }
-            
-            connection.ConnectionString = _sqlOrm.ConnectionString;
+                connection.ConnectionString = _sqlOrm.ConnectionString;
 
-            if (connection.State == ConnectionState.Open)
-            {
-                return connection;
+                if (connection.State == ConnectionState.Open)
+                {
+                    return connection;
+                }
+                else
+                {
+                    try
+                    {
+                        connection.Open();
+                        return NullableHelper.SetNull(ref connection);
+                    }
+                    finally
+                    {
+                        connection?.Dispose();
+                    }
+                }
             }
             else
             {
-                try
-                {
-                    connection.Open();
-                    return NullableHelper.SetNull(ref connection);
-                }
-                finally
-                {
-                    connection?.Dispose();
-                }
+                throw new MicroOrmException("DbProviderFactory returns null instead of instance of connection");
             }
         }
 
         internal virtual ValueTask<DbConnection> GetOpenConnectionAsync(CancellationToken cancellationToken)
         {
-            DbConnection? connection = _sqlOrm.Factory.CreateConnection();
+            var connection = _sqlOrm.Factory.CreateConnection();
             Debug.Assert(connection != null);
 
             connection.ConnectionString = _sqlOrm.ConnectionString;
 
             if (connection.State == ConnectionState.Open)
-                return new ValueTask<DbConnection>(result: connection);
-
-            DbConnection? toDispose = connection;
-            try
             {
-                Task task = connection.OpenAsync(cancellationToken);
-                toDispose = null;
-                if (task.IsCompletedSuccessfully)
+                return ValueTask.FromResult(connection);
+            }
+            else
+            {
+                try
                 {
-                    return new ValueTask<DbConnection>(result: connection);
-                }
-                else
-                {
-                    return WaitAsync(task, connection);
-                    static async ValueTask<DbConnection> WaitAsync(Task task, DbConnection connection)
+                    var task = connection.OpenAsync(cancellationToken);
+                    if (task.IsCompletedSuccessfully)
                     {
-                        DbConnection? toDispose = connection;
-                        try
+                        return ValueTask.FromResult(NullableHelper.SetNull(ref connection));
+                    }
+                    else
+                    {
+                        return WaitAsync(task, NullableHelper.SetNull(ref connection));
+
+                        static async ValueTask<DbConnection> WaitAsync(Task task, DbConnection connection)
                         {
-                            await task.ConfigureAwait(false);
-                            toDispose = null;
-                            return connection;
-                        }
-                        finally
-                        {
-                            toDispose?.Dispose();
+                            var copy = connection;
+                            try
+                            {
+                                await task.ConfigureAwait(false);
+                                return NullableHelper.SetNull(ref copy);
+                            }
+                            finally
+                            {
+                                copy?.Dispose();
+                            }
                         }
                     }
                 }
-            }
-            finally
-            {
-                toDispose?.Dispose();
+                finally
+                {
+                    connection?.Dispose();
+                }
             }
         }
 
@@ -113,19 +120,21 @@ namespace DanilovSoft.MicroORM
         protected virtual ValueTask<DbCommand> GetCommandAsync(CancellationToken cancellationToken)
         {
             ValueTask<DbConnection> task = GetOpenConnectionAsync(cancellationToken);
+
             if (task.IsCompletedSuccessfully)
             {
                 DbConnection connection = task.Result;
                 DbCommand command = CreateCommand(connection);
-                return new ValueTask<DbCommand>(result: command);
+                return ValueTask.FromResult(command);
             }
             else
             {
-                return WaitAsync(task);
-                async ValueTask<DbCommand> WaitAsync(ValueTask<DbConnection> task)
+                return WaitAsync(task, this);
+
+                static async ValueTask<DbCommand> WaitAsync(ValueTask<DbConnection> task, SqlQuery self)
                 {
                     DbConnection connection = await task.ConfigureAwait(false);
-                    return CreateCommand(connection);
+                    return self.CreateCommand(connection);
                 }
             }
         }
@@ -182,9 +191,9 @@ namespace DanilovSoft.MicroORM
             ValueTask<DbCommand> task = GetCommandAsync(cancellationToken);
             if (task.IsCompletedSuccessfully)
             {
-                var command = task.Result;
+                DbCommand command = task.Result;
                 var comReader = new CommandReaderCloseConnection(command);
-                return new ValueTask<ICommandReader>(result: comReader);
+                return ValueTask.FromResult<ICommandReader>(comReader);
             }
             else
             {
@@ -202,7 +211,7 @@ namespace DanilovSoft.MicroORM
 
         private void AddParameters(DbCommand command)
         {
-            foreach ((string pName, object? pValue) in LazyParameters)
+            foreach (var (pName, pValue) in LazyParameters)
             {
                 DbParameter p = command.CreateParameter();
                 p.ParameterName = pName;

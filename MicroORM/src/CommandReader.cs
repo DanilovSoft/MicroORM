@@ -1,5 +1,9 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,66 +12,86 @@ namespace DanilovSoft.MicroORM
     internal class CommandReader : ICommandReader
     {
         private DbDataReader? _reader;
-        
+        private DbCommand? _command;
+        private DbConnection? _connection;
+
         internal CommandReader(DbCommand command)
         {
-            Command = command;
-            Connection = command.Connection;
+            Debug.Assert(command.Connection != null, "Команда была создана на основе соединения");
+
+            _command = command;
+            _connection = command.Connection;
         }
 
-        public bool SkipNextResult { get; set; }
-        public DbConnection Connection { get; private set; }
-        public DbCommand Command { get; private set; }
+        /// <exception cref="ObjectDisposedException"/>
+        public DbConnection Connection
+        { 
+            get
+            {
+                CheckDisposed();
+                return _connection;
+            }
+        }
 
+        /// <exception cref="ObjectDisposedException"/>
+        public DbCommand Command
+        { 
+            get
+            {
+                CheckDisposed();
+                return _command;
+            }
+        }
+
+        /// <exception cref="ObjectDisposedException"/>
         public DbDataReader GetReader()
         {
+            CheckDisposed();
+
             if (_reader == null)
             {
-                _reader = Command.ExecuteReader(CommandBehavior.SequentialAccess);
+                _reader = _command.ExecuteReader(CommandBehavior.SequentialAccess);
                 return _reader;
             }
             else
                 return _reader;
         }
 
-        public bool TryGetReader(out DbDataReader? reader)
-        {
-            if (_reader == null)
-            {
-                reader = default;
-                return false;
-            }
-            else
-            {
-                reader = _reader;
-                return true;
-            }
-        }
-
+        /// <exception cref="ObjectDisposedException"/>
         public ValueTask<DbDataReader> GetReaderAsync(CancellationToken cancellationToken)
         {
+            CheckDisposed();
+
             if (_reader == null)
-                return new ValueTask<DbDataReader>(task: InnerGetReaderAsync(cancellationToken));
+            {
+                return new ValueTask<DbDataReader>(task: GetReaderCoreAsync(cancellationToken));
+            }
             else
-                return new ValueTask<DbDataReader>(result: _reader);
+            {
+                return ValueTask.FromResult(_reader);
+            }
         }
 
-        private Task<DbDataReader> InnerGetReaderAsync(CancellationToken cancellationToken)
+        private Task<DbDataReader> GetReaderCoreAsync(CancellationToken cancellationToken)
         {
-            // Только Sqlite может завершиться синхронно.
-            Task<DbDataReader> task = Command.ExecuteReaderAsync(cancellationToken);
-            if (task.IsCompletedSuccessfully())
+            Debug.Assert(_command != null);
+
+            // Только Sqlite может завершиться синхронно по этому лучше предпочтём Task чем ValueTask.
+            var task = _command.ExecuteReaderAsync(cancellationToken);
+
+            if (task.IsCompletedSuccessfully)
             {
                 _reader = task.Result;
                 return Task.FromResult(_reader);
             }
             else
             {
-                return WaitAsync(task);
-                async Task<DbDataReader> WaitAsync(Task<DbDataReader> task)
+                return WaitAsync(task, this);
+
+                static async Task<DbDataReader> WaitAsync(Task<DbDataReader> task, CommandReader commandReader)
                 {
                     DbDataReader reader = await task.ConfigureAwait(false);
-                    _reader = reader;
+                    commandReader._reader = reader;
                     return reader;
                 }
             }
@@ -76,7 +100,34 @@ namespace DanilovSoft.MicroORM
         public virtual void Dispose()
         {
             _reader?.Dispose();
-            Command.Dispose();
+            _command?.Dispose();
+
+            _command = null;
+            _reader = null;
+        }
+
+        /// <summary>
+        /// Диспозит DbCommand и соединение.
+        /// </summary>
+        private protected void DisposeConnection()
+        {
+            _connection?.Dispose();
+            _connection = null;
+        }
+
+        /// <exception cref="ObjectDisposedException"/>
+        [MemberNotNull(nameof(_command))]
+        [MemberNotNull(nameof(_connection))]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CheckDisposed()
+        {
+            if (_command != null)
+            {
+                Debug.Assert(_connection != null);
+
+                return;
+            }
+            ThrowHelper.ThrowObjectDisposed(GetType().Name);
         }
     }
 }

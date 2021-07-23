@@ -215,8 +215,7 @@ namespace FastExpressionCompiler
             var paramExprs = lambdaExpr.Parameters;
             var paramTypes = GetParamExprTypes(paramExprs);
             var body = lambdaExpr.Body;
-            var bodyExpr = body as Expression;
-            return bodyExpr != null
+            return body is Expression bodyExpr
                 ? TryCompile<TDelegate>(bodyExpr, paramExprs, paramTypes, bodyExpr.Type)
                 : TryCompile<TDelegate>((ExpressionInfo)body, paramExprs, paramTypes, body.GetResultType());
         }
@@ -911,8 +910,7 @@ namespace FastExpressionCompiler
             switch (exprNodeType)
             {
                 case ExpressionType.Constant:
-                    var constExprInfo = exprObj as ConstantExpressionInfo;
-                    var value = constExprInfo != null ? constExprInfo.Value : ((ConstantExpression)exprObj).Value;
+                    var value = exprObj is ConstantExpressionInfo constExprInfo ? constExprInfo.Value : ((ConstantExpression)exprObj).Value;
                     if (value is Delegate || IsBoundConstant(value))
                         (closure ?? (closure = new ClosureInfo())).AddConstant(exprObj, value, exprType);
                     return true;
@@ -930,8 +928,7 @@ namespace FastExpressionCompiler
                     return TryCollectCallExprConstants(ref closure, exprObj, paramExprs);
 
                 case ExpressionType.MemberAccess:
-                    var memberExprInfo = exprObj as MemberExpressionInfo;
-                    if (memberExprInfo != null)
+                    if (exprObj is MemberExpressionInfo memberExprInfo)
                     {
                         var maExpr = memberExprInfo.Expression;
                         return maExpr == null
@@ -943,8 +940,7 @@ namespace FastExpressionCompiler
                         || TryCollectBoundConstants(ref closure, memberExpr, memberExpr.NodeType, memberExpr.Type, paramExprs);
 
                 case ExpressionType.New:
-                    var newExprInfo = exprObj as NewExpressionInfo;
-                    return newExprInfo != null
+                    return exprObj is NewExpressionInfo newExprInfo
                         ? TryCollectBoundConstants(ref closure, newExprInfo.Arguments, paramExprs)
                         : TryCollectBoundConstants(ref closure, ((NewExpression)(Expression)exprObj).Arguments, paramExprs);
 
@@ -962,8 +958,7 @@ namespace FastExpressionCompiler
                     return TryCompileNestedLambda(ref closure, exprObj, paramExprs);
 
                 case ExpressionType.Invoke:
-                    var invokeExpr = exprObj as InvocationExpression;
-                    if (invokeExpr != null)
+                    if (exprObj is InvocationExpression invokeExpr)
                     {
                         var lambda = invokeExpr.Expression;
                         return TryCollectBoundConstants(ref closure, lambda, lambda.NodeType, lambda.Type, paramExprs)
