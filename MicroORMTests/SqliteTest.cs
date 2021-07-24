@@ -175,13 +175,13 @@ namespace MicroORMTests
         [OnDeserializing]
         private void OnDeserializing(StreamingContext _)
         {
-            //Debug.WriteLine("OnDeserializing");
+            var __ = Col1;
         }
 
         [OnDeserialized]
         private void OnDeserialized(StreamingContext _)
         {
-            //Debug.WriteLine("OnDeserialized");
+            var __ = Col1;
         }
     }
 

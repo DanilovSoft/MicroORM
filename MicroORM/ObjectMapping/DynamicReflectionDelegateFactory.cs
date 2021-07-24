@@ -8,7 +8,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 {
     internal static class DynamicReflectionDelegateFactory
     {
-        private static readonly Type[] _objectArrayTypes = new[] { typeof(object[]) };
+        private static readonly Type[] ObjectArrayTypes = new[] { typeof(object[]) };
 
         //internal static DynamicReflectionDelegateFactory Instance { get; } = new DynamicReflectionDelegateFactory();
 
@@ -54,7 +54,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         {
             DynamicMethod dynamicMethod = CreateDynamicMethod("",
                 returnType: typeof(object),
-                parameterTypes: _objectArrayTypes,
+                parameterTypes: ObjectArrayTypes,
                 owner: type);
 
             dynamicMethod.InitLocals = true;

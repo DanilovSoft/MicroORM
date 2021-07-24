@@ -27,6 +27,6 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             _lazy = new Lazy<OrmProperty>(Factory, LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
-        private OrmProperty Factory() => new OrmProperty(_memberInfo);
+        private OrmProperty Factory() => new(_memberInfo);
     }
 }

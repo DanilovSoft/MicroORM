@@ -35,6 +35,6 @@ namespace ConsoleTest
             _slug = slug;
         }
 
-        public static implicit operator SlugType(string slug) => new SlugType(slug);
+        public static implicit operator SlugType(string slug) => new(slug);
     }
 }

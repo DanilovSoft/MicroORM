@@ -54,21 +54,11 @@ class Program
         }
     }
 
-    //public class GalleryDb
-    //{
-    //    public string? OrigTitle { get; set; }
-    //    public int Gid { get; set; }
-    //    public string Title { get; set; }
-    //}
-
-    //public const string PgConnectionString = "Server=localhost; Port=5432; User Id=postgres; Password=test; Database=postgres; " +
-    //    "Pooling=true; MinPoolSize=1; MaxPoolSize=10";
-
     public const string PgConnectionString = "Server=10.0.0.99;Port=5432;User Id = test; Password=test;Database=test;Pooling=true;" +
         "MinPoolSize=10;MaxPoolSize=16;CommandTimeout=30;Timeout=30";
 
-    private readonly SqlORM _sqlite = new("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
-    private static readonly SqlORM _pgOrm = new(PgConnectionString, NpgsqlFactory.Instance, usePascalCaseNamingConvention: true);
+    //private readonly SqlORM _sqlite = new("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
+    private static readonly SqlORM PgOrm = new(PgConnectionString, NpgsqlFactory.Instance, usePascalCaseNamingConvention: true);
 
     //private readonly CancellationTokenSource _cts = new();
 
@@ -84,8 +74,8 @@ class Program
 
         var blog = ef.Blogs.First();
         
-        var listClass = _pgOrm.SqlInterpolated(Query).List(new { test = 0, posted_date = default(DateTime) });
-        var list = _pgOrm.SqlInterpolated(Query).List<GalleryDb>();
+        var listClass = PgOrm.SqlInterpolated(Query).List(new { test = 0, posted_date = default(DateTime) });
+        var list = PgOrm.SqlInterpolated(Query).List<GalleryDb>();
 
         //_pgOrm.Sql(Query).List<TestStruct>();
 
@@ -106,7 +96,7 @@ class Program
         for (int i = 0; i < 10; i++)
         {
             var sw = Stopwatch.StartNew();
-            list = _pgOrm.Sql(Query.ToString()).List<GalleryDb>();
+            list = PgOrm.Sql(Query.ToString()).List<GalleryDb>();
             sw.Stop();
 
             Console.WriteLine($"MicroORM: {sw.ElapsedMilliseconds:0} msec");
@@ -127,24 +117,6 @@ class Program
             N1 = n1;
             N2 = n2;
             //N3 = n3;
-        }
-    }
-
-    private async Task MainAsync()
-    {
-        try
-        {
-            await _pgOrm.Sql("SELECT 1").ScalarAsync();
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-
-
-        while (true)
-        {
-            await _pgOrm.Sql("SELECT 1").ScalarAsync();
         }
     }
 
