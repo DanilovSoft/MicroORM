@@ -2,11 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <LangVersion>Latest</LangVersion>
+    <Nullable>enable</Nullable>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>3.5.10</Version>
+    <Version>3.5.11</Version>
     <Authors>Vitalii Danilov</Authors>
-    <Company>Vitalii Danilov</Company>
     <Product>DanilovSoft.MicroORM</Product>
     <Description>Micro ORM for any DbProviderFactory.</Description>
     <AssemblyName>DanilovSoft.MicroORM</AssemblyName>
@@ -17,14 +18,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <LangVersion>Latest</LangVersion>
     <DocumentationFile>DanilovSoft.MicroORM.xml</DocumentationFile>
     <NoWarn>1701;1702;1591</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>MicroORM.pfx</AssemblyOriginatorKeyFile>
-    <Nullable>enable</Nullable>
-    <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
 
   <!-- Source debugging -->
@@ -34,9 +31,9 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
-  <!--<ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
-  </ItemGroup>-->
+  </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
