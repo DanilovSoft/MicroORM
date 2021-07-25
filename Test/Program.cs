@@ -74,8 +74,8 @@ class Program
 
         var blog = ef.Blogs.First();
         
-        var listClass = PgOrm.SqlInterpolated(Query).List(new { test = 0, posted_date = default(DateTime) });
-        var list = PgOrm.SqlInterpolated(Query).List<GalleryDb>();
+        var listClass = PgOrm.SqlInterpolated(Query).ToList(new { test = 0, posted_date = default(DateTime) });
+        var list = PgOrm.SqlInterpolated(Query).ToList<GalleryDb>();
 
         //_pgOrm.Sql(Query).List<TestStruct>();
 
@@ -96,7 +96,7 @@ class Program
         for (int i = 0; i < 10; i++)
         {
             var sw = Stopwatch.StartNew();
-            list = PgOrm.Sql(Query.ToString()).List<GalleryDb>();
+            list = PgOrm.Sql(Query.ToString()).ToList<GalleryDb>();
             sw.Stop();
 
             Console.WriteLine($"MicroORM: {sw.ElapsedMilliseconds:0} msec");

@@ -105,7 +105,7 @@ namespace MicroORMTests
         public void AnonimouseRowsCount()
         {
             var result = Orm.SqlInterpolated($"SELECT {"Alfred"} AS name, {30} AS age")
-                .List(new { name = "", age = 0 });
+                .ToList(new { name = "", age = 0 });
 
             Assert.AreEqual(1, result.Count);
         }

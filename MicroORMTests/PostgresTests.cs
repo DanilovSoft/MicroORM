@@ -121,7 +121,7 @@ namespace UnitTests
         {
             string query = GetSqlQuery();
             List<RowModel> list = Orm.Sql(query)
-                .List<RowModel>();
+                .ToList<RowModel>();
         }
     }
 }

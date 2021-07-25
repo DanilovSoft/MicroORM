@@ -18,58 +18,184 @@
             <remarks>Дополнительно останавливает отладчик и проваливает тест с соответствующим сообщением.</remarks>
             <exception cref="T:System.ArgumentNullException"/>
         </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.Execute">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.Table">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.Scalar">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.Scalar``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarArray">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarList">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarArray``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarList``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarOrDefault``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.Single``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.Single``1(``0)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.SingleOrDefault``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.SingleOrDefault``1(``0)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToList``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToList``1(``0)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToArray``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToArray``1(``0)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToCollection``2">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ExecuteAsync">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
         <member name="M:DanilovSoft.MicroORM.ISqlReader.ExecuteAsync(System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.TableAsync">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.ISqlReader.TableAsync(System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarAsync">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarAsync(System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarArrayAsync">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarArrayAsync(System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarListAsync">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarListAsync(System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarArrayAsync``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarArrayAsync``1(System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarListAsync``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarListAsync``1(System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarAsync``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarAsync``1(System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarOrDefaultAsync``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.ISqlReader.ScalarOrDefaultAsync``1(System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.SingleAsync``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.ISqlReader.SingleAsync``1(System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.SingleAsync``1(``0)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.ISqlReader.SingleAsync``1(``0,System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.SingleOrDefaultAsync``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.ISqlReader.SingleOrDefaultAsync``1(System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.SingleOrDefaultAsync``1(``0)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
         <member name="M:DanilovSoft.MicroORM.ISqlReader.SingleOrDefaultAsync``1(``0,System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.ISqlReader.ListAsync``1(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToListAsync``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToListAsync``1(System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.ISqlReader.ListAsync``1(``0,System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToListAsync``1(``0)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToListAsync``1(``0,System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.ISqlReader.ArrayAsync``1(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToArrayAsync``1">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToArrayAsync``1(System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.ISqlReader.ArrayAsync``1(``0,System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToArrayAsync``1(``0)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToArrayAsync``1(``0,System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.ISqlReader.CollectionAsync``2(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToCollectionAsync``2">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.ISqlReader.ToCollectionAsync``2(System.Threading.CancellationToken)">
+            <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <exception cref="T:System.OperationCanceledException"/>
         </member>
         <member name="T:DanilovSoft.MicroORM.ObjectMapping.ConstructorArgument">

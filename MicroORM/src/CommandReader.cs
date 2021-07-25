@@ -86,14 +86,7 @@ namespace DanilovSoft.MicroORM
             }
             else
             {
-                return WaitAsync(task, this);
-
-                static async Task<DbDataReader> WaitAsync(Task<DbDataReader> task, CommandReader commandReader)
-                {
-                    DbDataReader reader = await task.ConfigureAwait(false);
-                    commandReader._reader = reader;
-                    return reader;
-                }
+                return WaitGetReaderAsync(task);
             }
         }
 
@@ -104,6 +97,16 @@ namespace DanilovSoft.MicroORM
 
             _command = null;
             _reader = null;
+        }
+
+        private async Task<DbDataReader> WaitGetReaderAsync(Task<DbDataReader> task)
+        {
+            DbDataReader reader = await task.ConfigureAwait(false);
+
+            Debug.Assert(_reader == null);
+
+            _reader = reader;
+            return reader;
         }
 
         /// <summary>

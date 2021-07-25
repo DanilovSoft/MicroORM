@@ -289,11 +289,11 @@ namespace DanilovSoft.MicroORM
 
         #endregion
 
-        public List<T> List<T>()
+        public List<T> ToList<T>()
         {
             return Wrapper(List<T>);
         }
-        public List<T> List<T>(T anonymousType) where T : class
+        public List<T> ToList<T>(T anonymousType) where T : class
         {
             return Wrapper(AnonumouseList<T>);
         }
@@ -394,26 +394,26 @@ namespace DanilovSoft.MicroORM
         //}
 
 
-        public T[] Array<T>()
+        public T[] ToArray<T>()
         {
-            List<T> list = List<T>();
+            List<T> list = ToList<T>();
             if (list.Count > 0)
                 return list.ToArray();
             
             return SystemArray.Empty<T>();
         }
-        public T[] Array<T>(T anonymousType) where T : class
+        public T[] ToArray<T>(T anonymousType) where T : class
         {
-            List<T> list = List(anonymousType);
+            List<T> list = ToList(anonymousType);
             if (list.Count > 0)
                 return list.ToArray();
             
             return SystemArray.Empty<T>();
         }
         
-        public TCollection Collection<TItem, TCollection>() where TCollection : ICollection<TItem>, new()
+        public TCollection ToCollection<TItem, TCollection>() where TCollection : ICollection<TItem>, new()
         {
-            var items = List<TItem>();
+            var items = ToList<TItem>();
             var col = new TCollection();
             col.AddRange(items);
             return col;
@@ -421,11 +421,11 @@ namespace DanilovSoft.MicroORM
 
         // асинхронные
 
-        public Task<TCollection> CollectionAsync<TItem, TCollection>() where TCollection : ICollection<TItem>, new()
+        public Task<TCollection> ToCollectionAsync<TItem, TCollection>() where TCollection : ICollection<TItem>, new()
         {
-            return CollectionAsync<TItem, TCollection>(CancellationToken.None);
+            return ToCollectionAsync<TItem, TCollection>(CancellationToken.None);
         }
-        public Task<TCollection> CollectionAsync<TItem, TCollection>(CancellationToken cancellationToken) where TCollection : ICollection<TItem>, new()
+        public Task<TCollection> ToCollectionAsync<TItem, TCollection>(CancellationToken cancellationToken) where TCollection : ICollection<TItem>, new()
         {
             return WrapperAsync(CollectionAsync<TItem, TCollection>, cancellationToken);
         }
@@ -663,19 +663,19 @@ namespace DanilovSoft.MicroORM
         }
 
 
-        public Task<List<T>> ListAsync<T>()
+        public Task<List<T>> ToListAsync<T>()
         {
             return WrapperAsync(ListAsync<T>, CancellationToken.None);
         }
-        public Task<List<T>> ListAsync<T>(CancellationToken cancellationToken)
+        public Task<List<T>> ToListAsync<T>(CancellationToken cancellationToken)
         {
             return WrapperAsync(ListAsync<T>, cancellationToken);
         }
-        public Task<List<T>> ListAsync<T>(T anonymousType) where T : class
+        public Task<List<T>> ToListAsync<T>(T anonymousType) where T : class
         {
             return WrapperAsync(AnonymousListAsync<T>, CancellationToken.None);
         }
-        public Task<List<T>> ListAsync<T>(T anonymousType, CancellationToken cancellationToken) where T : class
+        public Task<List<T>> ToListAsync<T>(T anonymousType, CancellationToken cancellationToken) where T : class
         {
             return WrapperAsync(AnonymousListAsync<T>, cancellationToken);
         }
@@ -733,28 +733,28 @@ namespace DanilovSoft.MicroORM
             return list;
         }
         
-        public Task<T[]> ArrayAsync<T>()
+        public Task<T[]> ToArrayAsync<T>()
         {
-            return ArrayAsync<T>(CancellationToken.None);
+            return ToArrayAsync<T>(CancellationToken.None);
         }
         
-        public Task<T[]> ArrayAsync<T>(T anonymousType) where T : class
+        public Task<T[]> ToArrayAsync<T>(T anonymousType) where T : class
         {
-            return ArrayAsync(anonymousType, CancellationToken.None);
+            return ToArrayAsync(anonymousType, CancellationToken.None);
         }
         
-        public async Task<T[]> ArrayAsync<T>(CancellationToken cancellationToken)
+        public async Task<T[]> ToArrayAsync<T>(CancellationToken cancellationToken)
         {
-            List<T> list = await ListAsync<T>(cancellationToken).ConfigureAwait(false);
+            List<T> list = await ToListAsync<T>(cancellationToken).ConfigureAwait(false);
 
             return list.Count > 0 
                 ? list.ToArray() 
                 : SystemArray.Empty<T>();
         }
         
-        public Task<T[]> ArrayAsync<T>(T anonymousType, CancellationToken cancellationToken) where T : class
+        public Task<T[]> ToArrayAsync<T>(T anonymousType, CancellationToken cancellationToken) where T : class
         {
-            Task<List<T>> task = ListAsync(anonymousType, cancellationToken);
+            Task<List<T>> task = ToListAsync(anonymousType, cancellationToken);
             if (task.IsCompletedSuccessfully)
             {
                 var list = task.Result;
