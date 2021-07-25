@@ -4,20 +4,6 @@
         <name>DanilovSoft.MicroORM</name>
     </assembly>
     <members>
-        <member name="M:DanilovSoft.MicroORM.Helpers.NullableHelper.AssertNotNull``1(``0,System.String,System.String)">
-            <summary>
-            Бросает исключение если значение <paramref name="value"/> оказалось Null.
-            </summary>
-            <remarks>Дополнительно останавливает отладчик и проваливает тест с соответствующим сообщением.</remarks>
-            <exception cref="T:System.ArgumentNullException"/>
-        </member>
-        <member name="M:DanilovSoft.MicroORM.Helpers.NullableHelper.AssertNotNull``1(System.Nullable{``0},System.String,System.String)">
-            <summary>
-            Бросает исключение если значение <paramref name="value"/> оказалось Null.
-            </summary>
-            <remarks>Дополнительно останавливает отладчик и проваливает тест с соответствующим сообщением.</remarks>
-            <exception cref="T:System.ArgumentNullException"/>
-        </member>
         <member name="M:DanilovSoft.MicroORM.ISqlReader.Execute">
             <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
@@ -421,6 +407,175 @@
             <summary>
             Если <paramref name="sqlRawValue"/> является DBNull то заменяется на Null.
             </summary>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.Execute">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.Table">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.Scalar">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.Scalar``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarArray">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarList">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarArray``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarList``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarOrDefault``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.Single``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.Single``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.SingleOrDefault``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.SingleOrDefault``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.AsAnonymousAsync``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToList``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToList``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToArray``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToArray``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToCollection``2">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToCollectionAsync``2">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToCollectionAsync``2(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.TableAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.TableAsync(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarAsync(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarAsync``1(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarArrayAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarListAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarArrayAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarListAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarArrayAsync(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarArrayAsync``1(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarListAsync(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarListAsync``1(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarOrDefaultAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ScalarOrDefaultAsync``1(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToListAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToListAsync``1(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToListAsync``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToListAsync``1(``0,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToArrayAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToArrayAsync``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToArrayAsync``1(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ToArrayAsync``1(``0,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.SingleAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.SingleAsync``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.SingleAsync``1(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.SingleAsync``1(``0,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.SingleOrDefaultAsync``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.SingleOrDefaultAsync``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.SingleOrDefaultAsync``1(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.SingleOrDefaultAsync``1(``0,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ExecuteAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.ExecuteAsync(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlReader.WrapperAsync``2(System.Func{System.Data.Common.DbDataReader,``1,System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}},``1,System.Threading.CancellationToken)">
+            <param name="selector">Содержит перегруженный токен отмены для поддержания аварийной отмены.</param>
+            <param name="cancellationToken">Пользовательский токен отмены.</param>
         </member>
         <member name="M:DanilovSoft.MicroORM.SqlTransaction.OpenTransaction">
             <exception cref="T:System.ObjectDisposedException"/>

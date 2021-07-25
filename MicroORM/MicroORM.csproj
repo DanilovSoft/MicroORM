@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>3.6.12</Version>
+    <Version>3.6.13</Version>
     <Authors>Vitalii Danilov</Authors>
     <Product>DanilovSoft.MicroORM</Product>
     <Description>Micro ORM for any DbProviderFactory.</Description>
