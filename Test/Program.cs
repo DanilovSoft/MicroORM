@@ -5,7 +5,6 @@ using Npgsql;
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Data.Common;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -13,8 +12,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 class Program
 {
@@ -72,14 +69,14 @@ class Program
 
         //_pgOrm = new SqlORM(PgConnectionString, new DbFactoryWrapper(ef), usePascalCaseNamingConvention: true);
 
-        var blog = ef.Blogs.First();
+        var blogCat = ef.BlogCategories.OrderBy(x => x.Id).First();
         
         var listClass = PgOrm.SqlInterpolated(Query).ToList(new { test = 0, posted_date = default(DateTime) });
         var list = PgOrm.SqlInterpolated(Query).ToList<GalleryDb>();
 
         //_pgOrm.Sql(Query).List<TestStruct>();
 
-        TypeConverter conv = TypeDescriptor.GetConverter(typeof(Blog).GetProperty("Slug"));
+        TypeConverter conv = TypeDescriptor.GetConverter(typeof(BlogDb).GetProperty("Slug"));
 
 
         //Npgsql.NpgsqlDataReader reader;

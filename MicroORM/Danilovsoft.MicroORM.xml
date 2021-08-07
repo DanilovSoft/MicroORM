@@ -628,9 +628,6 @@
             <param name="sqlColumnName">Используется только для ошибок.</param>
             <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
         </member>
-        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ChangeType(System.Object,System.Type,System.String)">
-            <param name="sqlColumnName">Используется только для ошибок.</param>
-        </member>
         <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ConvertNullableRawSqlType(System.Object,System.String,System.Boolean,System.String,System.String)">
             <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <returns><paramref name="sqlRawValue"/> который может иметь Null вместо DBNull.</returns>
@@ -638,6 +635,15 @@
         <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ConvertNullableRawSqlType(System.Object)">
             <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>
             <returns><paramref name="sqlRawValue"/> который может иметь Null вместо DBNull.</returns>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.ThrowCantMapNullToNotNull(System.Type,System.String)">
+            <returns>Nothing, it's always throw.</returns>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.SqlValueToClr(System.Object,System.Type,System.String)">
+            <param name="sqlColumnName">Используется только для ошибок.</param>
+        </member>
+        <member name="M:DanilovSoft.MicroORM.SqlTypeConverter.SqlValueToNullableClr(System.Object,System.Type,System.String)">
+            <param name="sqlColumnName">Используется только для ошибок.</param>
         </member>
         <member name="M:DanilovSoft.MicroORM.ThrowHelper.ThrowCantSetNull(System.String,System.String,System.String)">
             <exception cref="T:DanilovSoft.MicroORM.MicroOrmException"/>

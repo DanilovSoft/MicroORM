@@ -4,15 +4,15 @@ namespace ConsoleTest
 {
     public partial class EfDbContext : DbContext
     {
-        public DbSet<Blog> Blogs => Set<Blog>();
-        public DbSet<Category> Categories => Set<Category>();
-        public DbSet<BlogCategory> BlogCategories => Set<BlogCategory>();
+        public DbSet<BlogDb> Blogs => Set<BlogDb>();
+        public DbSet<CategoryDb> Categories => Set<CategoryDb>();
+        public DbSet<BlogCategoryDb> BlogCategories => Set<BlogCategoryDb>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            Blog.OnModelCreating(builder);
-            BlogCategory.OnModelCreating(builder);
-            Category.OnModelCreating(builder);
+            BlogDb.OnModelCreating(builder);
+            BlogCategoryDb.OnModelCreating(builder);
+            CategoryDb.OnModelCreating(builder);
 
             builder.Entity<GalleryDb>().HasNoKey();
             builder.Entity<Program.GalleryRec>().HasNoKey();
@@ -21,7 +21,6 @@ namespace ConsoleTest
         protected override void OnConfiguring(DbContextOptionsBuilder builder)
         {
             builder.UseNpgsql(Program.PgConnectionString);
-                //.UseSnakeCaseNamingConvention();
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -50,9 +49,9 @@ namespace DanilovSoft.MicroORM
 
             if (!isAssignable || sqlValue == null)
             {
-                Type? nullableValueType = Nullable.GetUnderlyingType(toType);
+                Type? underlyingNullableValueType = Nullable.GetUnderlyingType(toType);
 
-                if (nullableValueType == null)
+                if (underlyingNullableValueType == null)
                 {
                     if (!toType.IsValueType || sqlValue != null)
                     {
@@ -62,30 +61,23 @@ namespace DanilovSoft.MicroORM
                         }
                         else
                         {
-                            try
-                            {
-                                return Convert.ChangeType(sqlValue, toType, CultureInfo.InvariantCulture);
-                            }
-                            catch (Exception ex)
-                            {
-                                throw CreateConvertException(sqlValue, toType, sqlColumnName, ex);
-                            }
+                            return SqlValueToClr(sqlValue, toType, sqlColumnName);
                         }
                     }
                     else
                     {
-                        throw new MicroOrmException($"Error converting value {{null}} to type '{toType.FullName}'. Column name '{sqlColumnName}'.");
+                        return ThrowCantMapNullToNotNull(toType, sqlColumnName);
                     }
                 }
                 else
                 {
-                    if (sqlValue == null || nullableValueType == sqlColumnType)
+                    if (sqlValue == null || underlyingNullableValueType == sqlColumnType)
                     {
                         return sqlValue;
                     }
                     else
                     {
-                        return ChangeType(sqlValue, nullableValueType, sqlColumnName);
+                        return SqlValueToNullableClr(sqlValue, underlyingNullableValueType, sqlColumnName);
                     }
                 }
             }
@@ -93,38 +85,6 @@ namespace DanilovSoft.MicroORM
             {
                 return sqlValue;
             }
-        }
-
-        /// <param name="sqlColumnName">Используется только для ошибок.</param>
-        private static object? ChangeType(object sqlValue, Type toType, string sqlColumnName)
-        {
-            try
-            {
-                if (!toType.IsEnum)
-                {
-                    return Convert.ChangeType(sqlValue, toType, CultureInfo.InvariantCulture);
-                }
-                else
-                {
-                    if (sqlValue is string sValue)
-                    {
-                        return Enum.Parse(toType, sValue);
-                    }
-                    else
-                    {
-                        return Enum.ToObject(toType, sqlValue);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                throw CreateConvertException(sqlValue, toType, sqlColumnName, ex);
-            }
-        }
-
-        private static MicroOrmException CreateConvertException(object? sqlValue, Type toType, string sqlColumnName, Exception innerException)
-        {
-            return new MicroOrmException($"Error converting value '{sqlValue}' to type '{toType.FullName}'. Column name '{sqlColumnName}'.", innerException);
         }
 
         /// <exception cref="MicroOrmException"/>
@@ -152,6 +112,76 @@ namespace DanilovSoft.MicroORM
                 return sqlRawValue;
             else
                 return null;
+        }
+
+        /// <returns>Nothing, it's always throw.</returns>
+        [DoesNotReturn]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static object? ThrowCantMapNullToNotNull(Type clrType, string sqlColumnName)
+        {
+            throw new MicroOrmException($"Error converting value {{null}} to type '{clrType.FullName}'. Column name '{sqlColumnName}'.");
+        }
+
+        /// <param name="sqlColumnName">Используется только для ошибок.</param>
+        private static object? SqlValueToClr(object? sqlValue, Type clrType, string sqlColumnName)
+        {
+            try
+            {
+                if (!clrType.IsEnum)
+                {
+                    return Convert.ChangeType(sqlValue, clrType, CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    if (sqlValue is string sValue)
+                    {
+                        return Enum.Parse(clrType, sValue);
+                    }
+                    else if (sqlValue != null)
+                    {
+                        return Enum.ToObject(clrType, sqlValue);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw CreateConvertException(sqlValue, clrType, sqlColumnName, ex);
+            }
+
+            // sqlValue оказался null.
+            return ThrowCantMapNullToNotNull(clrType, sqlColumnName);
+        }
+
+        /// <param name="sqlColumnName">Используется только для ошибок.</param>
+        private static object? SqlValueToNullableClr(object sqlValue, Type underlyingNullableValueType, string sqlColumnName)
+        {
+            try
+            {
+                if (!underlyingNullableValueType.IsEnum)
+                {
+                    return Convert.ChangeType(sqlValue, underlyingNullableValueType, CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    if (sqlValue is string sValue)
+                    {
+                        return Enum.Parse(underlyingNullableValueType, sValue);
+                    }
+                    else
+                    {
+                        return Enum.ToObject(underlyingNullableValueType, sqlValue);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw CreateConvertException(sqlValue, underlyingNullableValueType, sqlColumnName, ex);
+            }
+        }
+
+        private static MicroOrmException CreateConvertException(object? sqlValue, Type toType, string sqlColumnName, Exception innerException)
+        {
+            return new MicroOrmException($"Error converting value '{sqlValue}' to type '{toType.FullName}'. Column name '{sqlColumnName}'.", innerException);
         }
     }
 }

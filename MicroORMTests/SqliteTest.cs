@@ -1,12 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.Runtime.Serialization;
 using DanilovSoft.MicroORM;
 using NUnit.Framework;
+using UnitTests;
 
 namespace MicroORMTests
 {
@@ -138,6 +138,15 @@ namespace MicroORMTests
             {
                 Assert.Pass();
             }
+        }
+
+        [Test]
+        public void MapIntegerToEnumSuccess()
+        {
+            var result = Orm.Sql($"SELECT 10")
+                .Scalar<TestFlaggedEnum>();
+
+            Assert.AreEqual(TestFlaggedEnum.Two | TestFlaggedEnum.Four, result);
         }
     }
 
