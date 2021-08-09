@@ -135,7 +135,7 @@ namespace DanilovSoft.MicroORM
                 {
                     if (sqlValue is string sValue)
                     {
-                        return Enum.Parse(clrType, sValue);
+                        return Enum.Parse(clrType, sValue, ignoreCase: true);
                     }
                     else if (sqlValue != null)
                     {
@@ -165,7 +165,7 @@ namespace DanilovSoft.MicroORM
                 {
                     if (sqlValue is string sValue)
                     {
-                        return Enum.Parse(underlyingNullableValueType, sValue);
+                        return Enum.Parse(underlyingNullableValueType, sValue, ignoreCase: true);
                     }
                     else
                     {

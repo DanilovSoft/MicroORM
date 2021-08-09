@@ -17,7 +17,7 @@ namespace ConsoleTest
 
         public virtual CategoryDb Category { get; set; }
 
-        public TestNonFlaggedEnum? TestFlags { get; set; }
+        public TestFlaggedEnum? TestFlags { get; set; }
 
         public static void OnModelCreating(ModelBuilder modelBuilder)
         {

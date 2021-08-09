@@ -69,7 +69,7 @@ class Program
 
         //_pgOrm = new SqlORM(PgConnectionString, new DbFactoryWrapper(ef), usePascalCaseNamingConvention: true);
 
-        var blogCat = ef.BlogCategories.OrderBy(x => x.Id).First();
+        var blogCat = ef.BlogCategories.OrderBy(x => x.Id).Select(x => x.TestFlags).First();
         
         var listClass = PgOrm.SqlInterpolated(Query).ToList(new { test = 0, posted_date = default(DateTime) });
         var list = PgOrm.SqlInterpolated(Query).ToList<GalleryDb>();
