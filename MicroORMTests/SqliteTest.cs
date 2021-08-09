@@ -148,6 +148,15 @@ namespace MicroORMTests
 
             Assert.AreEqual(TestFlaggedEnum.Two | TestFlaggedEnum.Four, result);
         }
+
+        [Test]
+        public void MapStringToEnumSuccess()
+        {
+            var result = Orm.SqlInterpolated($"SELECT 'two'")
+                .Scalar<TestFlaggedEnum>();
+
+            Assert.AreEqual(TestFlaggedEnum.Two, result);
+        }
     }
 
     class LocationConverter : TypeConverter
