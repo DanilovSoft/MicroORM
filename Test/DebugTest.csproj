@@ -21,16 +21,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="EFCore.NamingConventions" Version="5.0.2" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.8" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="5.0.0" />
+		<PackageReference Include="EFCore.NamingConventions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-		<PackageReference Include="Npgsql" Version="5.0.7" />
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.7" />
+		<PackageReference Include="Npgsql" Version="6.0.1" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.1" />
 		<PackageReference Include="protobuf-net" Version="3.0.101" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.114.3" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
+		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.115.5" />
 	</ItemGroup>
 
 	<ItemGroup>
