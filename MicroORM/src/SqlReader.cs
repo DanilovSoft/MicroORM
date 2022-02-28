@@ -70,7 +70,7 @@ namespace DanilovSoft.MicroORM
         /// <inheritdoc/>
         public object?[] ScalarArray()
         {
-            List<object?> list = ScalarList();
+            var list = ScalarList();
 
             return list.Count > 0 
                 ? list.ToArray() 
@@ -159,7 +159,7 @@ namespace DanilovSoft.MicroORM
         /// <inheritdoc/>
         public T[] ToArray<T>()
         {
-            List<T> list = ToList<T>();
+            var list = ToList<T>();
             if (list.Count > 0)
                 return list.ToArray();
             
@@ -169,7 +169,7 @@ namespace DanilovSoft.MicroORM
         /// <inheritdoc/>
         public T[] ToArray<T>(T anonymousType) where T : class
         {
-            List<T> list = ToList(anonymousType);
+            var list = ToList(anonymousType);
             if (list.Count > 0)
                 return list.ToArray();
             
@@ -238,7 +238,7 @@ namespace DanilovSoft.MicroORM
         /// <inheritdoc/>
         public async Task<object?[]> ScalarArrayAsync()
         {
-            List<object?> list = await ScalarListAsync().ConfigureAwait(false);
+            var list = await ScalarListAsync().ConfigureAwait(false);
 
             return list.Count > 0 
                 ? list.ToArray() 
@@ -352,7 +352,7 @@ namespace DanilovSoft.MicroORM
         /// <inheritdoc/>
         public async Task<T[]> ToArrayAsync<T>(CancellationToken cancellationToken)
         {
-            List<T> list = await ToListAsync<T>(cancellationToken).ConfigureAwait(false);
+            var list = await ToListAsync<T>(cancellationToken).ConfigureAwait(false);
 
             return list.Count > 0 
                 ? list.ToArray() 
@@ -362,7 +362,7 @@ namespace DanilovSoft.MicroORM
         /// <inheritdoc/>
         public Task<T[]> ToArrayAsync<T>(T anonymousType, CancellationToken cancellationToken) where T : class
         {
-            Task<List<T>> task = ToListAsync(anonymousType, cancellationToken);
+            var task = ToListAsync(anonymousType, cancellationToken);
             if (task.IsCompletedSuccessfully)
             {
                 var list = task.Result;
@@ -374,7 +374,7 @@ namespace DanilovSoft.MicroORM
                 return WaitAsync(task);
                 static async Task<T[]> WaitAsync(Task<List<T>> task)
                 {
-                    List<T> list = await task.ConfigureAwait(false);
+                    var list = await task.ConfigureAwait(false);
                     return ToArray(list);
                 }
             }
@@ -465,7 +465,7 @@ namespace DanilovSoft.MicroORM
         {
             if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
-                object sqlRawValue = reader.GetValue(0);
+                var sqlRawValue = reader.GetValue(0);
                 return SqlTypeConverter.ConvertRawSqlToClrType<T>(sqlRawValue, reader.GetFieldType(0), reader.GetName(0))!;
             }
             else
@@ -479,7 +479,7 @@ namespace DanilovSoft.MicroORM
             var list = new List<T>();
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
-                object sqlRawValue = reader.GetValue(0);
+                var sqlRawValue = reader.GetValue(0);
                 var convertedValue = SqlTypeConverter.ConvertRawSqlToClrType<T>(sqlRawValue, sqlColumnType: reader.GetFieldType(0), sqlColumnName: reader.GetName(0));
                 list.Add(convertedValue);
             }
@@ -489,14 +489,14 @@ namespace DanilovSoft.MicroORM
         private static object? Scalar(DbDataReader reader)
         {
             reader.Read();
-            object sqlRawValue = reader.GetValue(0);
+            var sqlRawValue = reader.GetValue(0);
             return NullIfDBNull(sqlRawValue);
         }
 
         private static object? Scalar<T>(DbDataReader reader)
         {
             reader.Read();
-            object sqlRawValue = reader.GetValue(0);
+            var sqlRawValue = reader.GetValue(0);
             return SqlTypeConverter.ConvertRawSqlToClrType(sqlRawValue, reader.GetFieldType(0), reader.GetName(0), toType: typeof(T));
         }
 
@@ -505,7 +505,7 @@ namespace DanilovSoft.MicroORM
             var list = new List<T>();
             while (reader.Read())
             {
-                object sqlRawValue = reader.GetValue(0);
+                var sqlRawValue = reader.GetValue(0);
                 var convertedValue = SqlTypeConverter.ConvertRawSqlToClrType<T>(sqlRawValue, reader.GetFieldType(0), reader.GetName(0));
                 list.Add(convertedValue);
             }
@@ -517,8 +517,8 @@ namespace DanilovSoft.MicroORM
             var list = new List<object?>();
             while (reader.Read())
             {
-                object sqlRawValue = reader.GetValue(0);
-                object? sqlValue = NullIfDBNull(sqlRawValue);
+                var sqlRawValue = reader.GetValue(0);
+                var sqlValue = NullIfDBNull(sqlRawValue);
                 list.Add(sqlValue);
             }
             return list;
@@ -528,7 +528,7 @@ namespace DanilovSoft.MicroORM
         {
             if (reader.Read())
             {
-                object sqlRawValue = reader.GetValue(0);
+                var sqlRawValue = reader.GetValue(0);
                 return SqlTypeConverter.ConvertRawSqlToClrType(sqlRawValue, reader.GetFieldType(0), reader.GetName(0), toType: typeof(T));
             }
             else
@@ -540,7 +540,7 @@ namespace DanilovSoft.MicroORM
         private static async Task<T> ScalarAsync<T>(DbDataReader reader, CancellationToken cancellationToken)
         {
             await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-            object sqlRawValue = reader.GetValue(0);
+            var sqlRawValue = reader.GetValue(0);
             return (T)SqlTypeConverter.ConvertRawSqlToClrType(sqlRawValue, reader.GetFieldType(0), reader.GetName(0), typeof(T))!;
         }
 
@@ -549,7 +549,7 @@ namespace DanilovSoft.MicroORM
             var table = new DataTable("Table1");
             try
             {
-                Task task = table.LoadAsync(reader, cancellationToken);
+                var task = table.LoadAsync(reader, cancellationToken);
 
                 if (task.IsCompletedSuccessfully())
                 {
@@ -586,7 +586,7 @@ namespace DanilovSoft.MicroORM
 
             if (task.IsCompletedSuccessfully)
             {
-                object? value = Read(reader);
+                var value = Read(reader);
                 return Task.FromResult(value);
             }
             else
@@ -602,7 +602,7 @@ namespace DanilovSoft.MicroORM
 
             static object? Read(DbDataReader reader)
             {
-                object sqlRawValue = reader.GetValue(0);
+                var sqlRawValue = reader.GetValue(0);
                 return NullIfDBNull(sqlRawValue);
             }
         }
@@ -612,8 +612,8 @@ namespace DanilovSoft.MicroORM
             var list = new List<object?>();
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
-                object sqlRawValue = reader.GetValue(0);
-                object? sqlValue = NullIfDBNull(sqlRawValue);
+                var sqlRawValue = reader.GetValue(0);
+                var sqlValue = NullIfDBNull(sqlRawValue);
                 list.Add(sqlValue);
             }
             return list;
@@ -719,7 +719,7 @@ namespace DanilovSoft.MicroORM
                 var toObject = new ObjectMapper<TAnon>(reader, _sqlOrm);
                 do
                 {
-                    TAnon rowObj = toObject.ReadAsAnonymousObject<TAnon>();
+                    var rowObj = toObject.ReadAsAnonymousObject<TAnon>();
                     list.Add(rowObj);
 
                 } while (reader.Read());
@@ -735,7 +735,7 @@ namespace DanilovSoft.MicroORM
                 var toObject = new ObjectMapper<TAnon>(reader, _sqlOrm);
                 do
                 {
-                    TResult result = AnonToResult(toObject, selector);
+                    var result = AnonToResult(toObject, selector);
                     list.Add(result);
                 } while (reader.Read());
             }
@@ -743,8 +743,8 @@ namespace DanilovSoft.MicroORM
 
             static TResult AnonToResult(ObjectMapper<TAnon> toObject, Func<TAnon, TResult> selector)
             {
-                TAnon row = toObject.ReadAsAnonymousObject<TAnon>();
-                TResult result = selector(row);
+                var row = toObject.ReadAsAnonymousObject<TAnon>();
+                var result = selector(row);
                 return result;
             }
         }
@@ -773,7 +773,7 @@ namespace DanilovSoft.MicroORM
                 var toObject = new ObjectMapper<TItem>(reader, _sqlOrm);
                 do
                 {
-                    TItem item = (TItem)toObject.ReadObject();
+                    var item = (TItem)toObject.ReadObject();
                     list.Add(item);
 
                 } while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false));
@@ -789,7 +789,7 @@ namespace DanilovSoft.MicroORM
                 var toObject = new ObjectMapper<T>(reader, _sqlOrm);
                 do
                 {
-                    T result = toObject.ReadAsAnonymousObject<T>();
+                    var result = toObject.ReadAsAnonymousObject<T>();
                     list.Add(result);
 
                 } while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false));
@@ -807,7 +807,7 @@ namespace DanilovSoft.MicroORM
                 var toObject = new ObjectMapper<TAnon>(reader, _sqlOrm);
                 do
                 {
-                    TResult result = AnonToResult(toObject, selector);
+                    var result = AnonToResult(toObject, selector);
                     list.Add(result);
 
                 } while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false));
@@ -816,8 +816,8 @@ namespace DanilovSoft.MicroORM
 
             static TResult AnonToResult(ObjectMapper<TAnon> toObject, Func<TAnon, TResult> selector)
             {
-                TAnon anonObj = toObject.ReadAsAnonymousObject<TAnon>();
-                TResult result = selector(anonObj);
+                var anonObj = toObject.ReadAsAnonymousObject<TAnon>();
+                var result = selector(anonObj);
                 return result;
             }
         }
@@ -853,11 +853,11 @@ namespace DanilovSoft.MicroORM
 
         private Task<T> SingleAsync<T>(DbDataReader reader, CancellationToken cancellationToken)
         {
-            Task<bool> task = reader.ReadAsync(cancellationToken);
+            var task = reader.ReadAsync(cancellationToken);
             if (task.IsCompletedSuccessfully())
             {
                 var objectMapper = new ObjectMapper<T>(reader, _sqlOrm);
-                T value = Map(reader);
+                var value = Map(reader);
                 return Task.FromResult(value);
             }
             else
@@ -880,7 +880,7 @@ namespace DanilovSoft.MicroORM
 
         private Task<T> AnonymousSingleAsync<T>(DbDataReader reader, CancellationToken cancellationToken) where T : class
         {
-            Task<bool> task = reader.ReadAsync(cancellationToken);
+            var task = reader.ReadAsync(cancellationToken);
 
             if (task.IsCompletedSuccessfully)
             {
@@ -910,7 +910,7 @@ namespace DanilovSoft.MicroORM
 
             if (task.IsCompletedSuccessfully)
             {
-                bool hasRows = task.Result;
+                var hasRows = task.Result;
                 var value = MapAnonymousObject(hasRows, reader, _sqlOrm);
                 return Task.FromResult(value);
             }
@@ -920,7 +920,7 @@ namespace DanilovSoft.MicroORM
 
                 async Task<T?> WaitAsync(Task<bool> task, DbDataReader reader)
                 {
-                    bool hasRows = await task.ConfigureAwait(false);
+                    var hasRows = await task.ConfigureAwait(false);
                     return MapAnonymousObject(hasRows, reader, _sqlOrm);
                 }
             }
@@ -955,7 +955,7 @@ namespace DanilovSoft.MicroORM
                 linked.CancelAfter(millisecondsDelay: QueryTimeoutSec * 1000);
 
                 // The CommandTimeout property will be ignored during asynchronous method calls such as BeginExecuteReader.
-                ICommandReader comReader = await GetCommandReaderAsync(linked.Token).ConfigureAwait(false);
+                var comReader = await GetCommandReaderAsync(linked.Token).ConfigureAwait(false);
                 
                 // Аварийный контроль соединения. При не явном дисконнекте выполняет закрытие с дополнительной форой после QueryTimeoutSec.
                 var closeConnection = new CloseConnection(_closeConnectionPenaltySec, comReader.Connection, linked.Token);
@@ -966,7 +966,7 @@ namespace DanilovSoft.MicroORM
                     try
                     {
                         // Инициализация запроса и ожидание готовности данных.
-                        DbDataReader reader = await comReader.GetReaderAsync(linked.Token).ConfigureAwait(false);
+                        var reader = await comReader.GetReaderAsync(linked.Token).ConfigureAwait(false);
                         
                         // Получение данных сервера.
                         return await selector(reader, state, linked.Token).ConfigureAwait(false);

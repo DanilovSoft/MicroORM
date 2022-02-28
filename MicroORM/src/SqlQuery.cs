@@ -109,8 +109,8 @@ namespace DanilovSoft.MicroORM
         [SuppressMessage("Security", "CA2100:Проверка запросов SQL на уязвимости безопасности", Justification = "Нарушает основную цель микро-орм")]
         protected virtual DbCommand GetCommand()
         {
-            DbConnection connection = GetConnection();
-            DbCommand command = connection.CreateCommand();
+            var connection = GetConnection();
+            var command = connection.CreateCommand();
             AddParameters(command);
             command.CommandText = _query;
             command.CommandTimeout = base.QueryTimeoutSec;
@@ -119,12 +119,12 @@ namespace DanilovSoft.MicroORM
 
         protected virtual ValueTask<DbCommand> GetCommandAsync(CancellationToken cancellationToken)
         {
-            ValueTask<DbConnection> task = GetOpenConnectionAsync(cancellationToken);
+            var task = GetOpenConnectionAsync(cancellationToken);
 
             if (task.IsCompletedSuccessfully)
             {
-                DbConnection connection = task.Result;
-                DbCommand command = CreateCommand(connection);
+                var connection = task.Result;
+                var command = CreateCommand(connection);
                 return ValueTask.FromResult(command);
             }
             else
@@ -133,7 +133,7 @@ namespace DanilovSoft.MicroORM
 
                 static async ValueTask<DbCommand> WaitAsync(ValueTask<DbConnection> task, SqlQuery self)
                 {
-                    DbConnection connection = await task.ConfigureAwait(false);
+                    var connection = await task.ConfigureAwait(false);
                     return self.CreateCommand(connection);
                 }
             }
@@ -142,7 +142,7 @@ namespace DanilovSoft.MicroORM
         [SuppressMessage("Security", "CA2100:Проверка запросов SQL на уязвимости безопасности", Justification = "Нарушает основную цель микро-орм")]
         private DbCommand CreateCommand(DbConnection connection)
         {
-            DbCommand command = connection.CreateCommand();
+            var command = connection.CreateCommand();
             AddParameters(command);
             command.CommandText = _query;
 
@@ -160,7 +160,7 @@ namespace DanilovSoft.MicroORM
 
         public virtual MultiSqlReader MultiResult()
         {
-            DbCommand command = GetCommand();
+            var command = GetCommand();
             var sqlReader = new AutoCloseMultiSqlReader(command, _sqlOrm);
             sqlReader.ExecuteReader();
             return sqlReader;
@@ -173,7 +173,7 @@ namespace DanilovSoft.MicroORM
 
         public virtual async ValueTask<MultiSqlReader> MultiResultAsync(CancellationToken cancellationToken)
         {
-            DbCommand command = await GetCommandAsync(cancellationToken).ConfigureAwait(false);
+            var command = await GetCommandAsync(cancellationToken).ConfigureAwait(false);
             var sqlReader = new AutoCloseMultiSqlReader(command, _sqlOrm);
             await sqlReader.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
             return sqlReader;
@@ -181,17 +181,17 @@ namespace DanilovSoft.MicroORM
 
         internal override ICommandReader GetCommandReader()
         {
-            DbCommand command = GetCommand();
+            var command = GetCommand();
             return new CommandReaderCloseConnection(command);
         }
 
         [SuppressMessage("Reliability", "CA2000:Ликвидировать объекты перед потерей области", Justification = "Перекладываем ответственность")]
         internal override ValueTask<ICommandReader> GetCommandReaderAsync(CancellationToken cancellationToken)
         {
-            ValueTask<DbCommand> task = GetCommandAsync(cancellationToken);
+            var task = GetCommandAsync(cancellationToken);
             if (task.IsCompletedSuccessfully)
             {
-                DbCommand command = task.Result;
+                var command = task.Result;
                 var comReader = new CommandReaderCloseConnection(command);
                 return ValueTask.FromResult<ICommandReader>(comReader);
             }
@@ -201,7 +201,7 @@ namespace DanilovSoft.MicroORM
 
                 static async ValueTask<ICommandReader> WaitAsync(ValueTask<DbCommand> task)
                 {
-                    DbCommand command = await task.ConfigureAwait(false);
+                    var command = await task.ConfigureAwait(false);
                     return new CommandReaderCloseConnection(command);
                 }
             }
@@ -213,7 +213,7 @@ namespace DanilovSoft.MicroORM
         {
             foreach (var (pName, pValue) in LazyParameters)
             {
-                DbParameter p = command.CreateParameter();
+                var p = command.CreateParameter();
                 p.ParameterName = pName;
                 p.Value = pValue ?? DBNull.Value;
                 command.Parameters.Add(p);
@@ -227,9 +227,9 @@ namespace DanilovSoft.MicroORM
         {
             if (anonymousParameters != null)
             {
-                for (int i = 0; i < anonymousParameters.Length; i++)
+                for (var i = 0; i < anonymousParameters.Length; i++)
                 {
-                    string parameterName = _anonymParamCount.ToString(CultureInfo.InvariantCulture);
+                    var parameterName = _anonymParamCount.ToString(CultureInfo.InvariantCulture);
 
                     Parameter(parameterName, anonymousParameters[i]);
                     _anonymParamCount++;

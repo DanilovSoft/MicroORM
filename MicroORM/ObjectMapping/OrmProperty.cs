@@ -55,7 +55,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         /// <returns>CLR значение.</returns>
         public object? ConvertSqlToClrValue(object sqlRawValue, Type sqlColumnType, string sqlColumnName)
         {
-            object? sqlValue = SqlTypeConverter.ConvertNullableRawSqlType(sqlRawValue, sqlColumnName, IsNonNullable, PropertyName, "property");
+            var sqlValue = SqlTypeConverter.ConvertNullableRawSqlType(sqlRawValue, sqlColumnName, IsNonNullable, PropertyName, "property");
 
             if (TypeConverter != null)
             {
@@ -81,7 +81,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         {
             if (SetValueHandler != null)
             {
-                object? clrValue = ConvertSqlToClrValue(sqlRawValue, sqlColumnType, sqlColumnName);
+                var clrValue = ConvertSqlToClrValue(sqlRawValue, sqlColumnType, sqlColumnName);
 
                 SetValueHandler.Invoke(instance, clrValue);
             }

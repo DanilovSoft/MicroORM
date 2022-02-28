@@ -101,7 +101,7 @@ namespace DanilovSoft.MicroORM
 
         private async Task<DbDataReader> WaitGetReaderAsync(Task<DbDataReader> task)
         {
-            DbDataReader reader = await task.ConfigureAwait(false);
+            var reader = await task.ConfigureAwait(false);
 
             Debug.Assert(_reader == null);
 

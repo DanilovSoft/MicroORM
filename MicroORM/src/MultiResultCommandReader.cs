@@ -29,7 +29,7 @@ namespace DanilovSoft.MicroORM
         {
             if (!_firstTime)
             {
-                bool hasNextResult = _reader.NextResult();
+                var hasNextResult = _reader.NextResult();
                 if (hasNextResult)
                 {
                     return _reader;
@@ -65,10 +65,10 @@ namespace DanilovSoft.MicroORM
         {
             if (!_firstTime)
             {
-                Task<bool> task = _reader.NextResultAsync(cancellationToken);
+                var task = _reader.NextResultAsync(cancellationToken);
                 if (task.IsCompletedSuccessfully())
                 {
-                    bool hasNextResult = task.Result;
+                    var hasNextResult = task.Result;
                     if (hasNextResult)
                     {
                         return new ValueTask<DbDataReader>(result: _reader);
@@ -81,7 +81,7 @@ namespace DanilovSoft.MicroORM
                     return WaitAsync(task, _reader);
                     static async ValueTask<DbDataReader> WaitAsync(Task<bool> task, DbDataReader reader)
                     {
-                        bool hasNextResult = await task.ConfigureAwait(false);
+                        var hasNextResult = await task.ConfigureAwait(false);
                         if (hasNextResult)
                         {
                             return reader;

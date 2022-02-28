@@ -25,19 +25,19 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic 
                 | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
-            IEnumerable<MemberInfo> allMembers = ReflectionUtils
+            var allMembers = ReflectionUtils
                 .GetFieldsAndProperties(dboType, bindingFlags)
                 .Where(x => !ReflectionUtils.IsIndexedProperty(x));
 
             const BindingFlags DefaultMembersSearchFlags = BindingFlags.Instance | BindingFlags.Public;
 
-            HashSet<MemberInfo> defaultMembers = ReflectionUtils
+            var defaultMembers = ReflectionUtils
                 .GetFieldsAndProperties(dboType, DefaultMembersSearchFlags)
                 .Where(x => !ReflectionUtils.IsIndexedProperty(x))
                 .ToHashSet();
 
             // Свойства и поля.
-            foreach (MemberInfo memberInfo in allMembers)
+            foreach (var memberInfo in allMembers)
             {
                 if (memberInfo.IsDefined(typeof(CompilerGeneratedAttribute)) 
                     || memberInfo.IsDefined(typeof(SqlIgnoreAttribute))
@@ -48,8 +48,8 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
                 // Свои аттрибуты приоритетнее DataMember атрибутов.
 
-                bool canIgnoreMember = true;
-                string memberName = memberInfo.Name;
+                var canIgnoreMember = true;
+                var memberName = memberInfo.Name;
 
                 if (memberInfo.GetCustomAttribute<SqlPropertyAttribute>() is SqlPropertyAttribute sqlPropAttr)
                 // Есть атрибут SqlProperty — это свойство игнорировать нельзя.
@@ -117,7 +117,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         /// </summary>
         public bool TryGetOrmProperty(string memberName, [NotNullWhen(true)] out OrmProperty? ormProperty)
         {
-            if (StaticCache.TypesProperties.TryGetValue((ContractType, memberName), out OrmLazyProperty? lazyOrmProperty))
+            if (StaticCache.TypesProperties.TryGetValue((ContractType, memberName), out var lazyOrmProperty))
             {
                 ormProperty = lazyOrmProperty.Value;
                 return true;

@@ -18,7 +18,7 @@ namespace DanilovSoft.MicroORM
 
         internal override DbConnection GetConnection()
         {
-            DbConnection? connection = _transaction.Connection;
+            var connection = _transaction.Connection;
             Debug.Assert(connection != null);
 
             return connection;
@@ -26,7 +26,7 @@ namespace DanilovSoft.MicroORM
 
         internal override ValueTask<DbConnection> GetOpenConnectionAsync(CancellationToken cancellationToken)
         {
-            DbConnection? connection = _transaction.Connection;
+            var connection = _transaction.Connection;
             Debug.Assert(connection != null);
 
             return new ValueTask<DbConnection>(result: connection);
@@ -34,21 +34,21 @@ namespace DanilovSoft.MicroORM
 
         internal override ICommandReader GetCommandReader()
         {
-            DbCommand command = GetCommand();
+            var command = GetCommand();
             var commandReader = new CommandReader(command);
             return commandReader;
         }
 
         internal async override ValueTask<ICommandReader> GetCommandReaderAsync(CancellationToken cancellationToken)
         {
-            DbCommand command = await GetCommandAsync(cancellationToken).ConfigureAwait(false);
+            var command = await GetCommandAsync(cancellationToken).ConfigureAwait(false);
             var commandReader = new CommandReader(command);
             return commandReader;
         }
 
         public override MultiSqlReader MultiResult()
         {
-            DbCommand command = GetCommand();
+            var command = GetCommand();
             var sqlReader = new MultiSqlReader(command, _sqlOrm);
             sqlReader.ExecuteReader();
             return sqlReader;
@@ -56,7 +56,7 @@ namespace DanilovSoft.MicroORM
 
         public override ValueTask<MultiSqlReader> MultiResultAsync(CancellationToken cancellationToken)
         {
-            ValueTask<DbCommand> task = GetCommandAsync(cancellationToken);
+            var task = GetCommandAsync(cancellationToken);
 
             if (task.IsCompletedSuccessfully)
             {
@@ -79,7 +79,7 @@ namespace DanilovSoft.MicroORM
             var sqlReader = new MultiSqlReader(command, _sqlOrm);
             try
             {
-                ValueTask task = sqlReader.ExecuteReaderAsync(cancellationToken);
+                var task = sqlReader.ExecuteReaderAsync(cancellationToken);
 
                 if (task.IsCompletedSuccessfully)
                 {
@@ -113,18 +113,18 @@ namespace DanilovSoft.MicroORM
 
         protected override DbCommand GetCommand()
         {
-            DbCommand command = base.GetCommand();
+            var command = base.GetCommand();
             command.Transaction = _transaction;
             return command;
         }
 
         protected override ValueTask<DbCommand> GetCommandAsync(CancellationToken cancellationToken)
         {
-            ValueTask<DbCommand> task = base.GetCommandAsync(cancellationToken);
+            var task = base.GetCommandAsync(cancellationToken);
 
             if (task.IsCompletedSuccessfully)
             {
-                DbCommand command = task.Result;
+                var command = task.Result;
                 command.Transaction = _transaction;
                 return ValueTask.FromResult(command);
             }
@@ -134,7 +134,7 @@ namespace DanilovSoft.MicroORM
 
                 static async ValueTask<DbCommand> WaitAsync(ValueTask<DbCommand> task, DbTransaction transaction)
                 {
-                    DbCommand command = await task.ConfigureAwait(false);
+                    var command = await task.ConfigureAwait(false);
                     command.Transaction = transaction;
                     return command;
                 }

@@ -31,7 +31,7 @@ namespace MicroORMTests
         [Test]
         public void ScalarNotNull()
         {
-            string result = Orm.Sql("SELECT @0")
+            var result = Orm.Sql("SELECT @0")
                 .Parameter("OK")
                 .Scalar<string>();
 
@@ -41,7 +41,7 @@ namespace MicroORMTests
         [Test]
         public void ScalarNull()
         {
-            string result = Orm.Sql("SELECT @0")
+            var result = Orm.Sql("SELECT @0")
                 .Parameter(null)
                 .Scalar<string>();
 
@@ -53,7 +53,7 @@ namespace MicroORMTests
         {
             using (var t = Orm.OpenTransaction())
             {
-                byte result = t.Sql("SELECT @count")
+                var result = t.Sql("SELECT @count")
                     .Parameter("count", 128)
                     .Scalar<byte>(); // автоматическая конвертация.
 
@@ -67,7 +67,7 @@ namespace MicroORMTests
         {
             try
             {
-                UserDbo? result = Orm.Sql("SELECT @name AS name, @count AS count")
+                var result = Orm.Sql("SELECT @name AS name, @count AS count")
                     .ParametersFromObject(new { count = 128, name = default(string) })
                     .SingleOrDefault<UserDbo>();
             }
@@ -81,7 +81,7 @@ namespace MicroORMTests
         [Test]
         public void ParametersFromObject()
         {
-            UserDbo result = Orm.Sql("SELECT @name AS name, @count AS count, @age AS age")
+            var result = Orm.Sql("SELECT @name AS name, @count AS count, @age AS age")
                 .ParametersFromObject(new { count = 128, name = "Alfred", age = 25 })
                 .Single<UserDbo>();
 

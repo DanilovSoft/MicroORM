@@ -16,7 +16,7 @@ namespace DanilovSoft.MicroORM
         /// </summary>
         internal static async Task LoadAsync(this DataTable table, DbDataReader reader, CancellationToken cancellationToken)
         {
-            bool columnsCreated = false;
+            var columnsCreated = false;
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
                 if (columnsCreated)
@@ -37,7 +37,7 @@ namespace DanilovSoft.MicroORM
         /// </summary>
         internal static void LoadData(this DataTable table, DbDataReader reader)
         {
-            bool columnsCreated = false;
+            var columnsCreated = false;
             while (reader.Read())
             {
                 if (columnsCreated)
@@ -55,10 +55,10 @@ namespace DanilovSoft.MicroORM
 
         private static void CreateRows(DataTable table, DbDataReader reader)
         {
-            DataRow row = table.NewRow();
-            for (int i = 0; i < reader.FieldCount; i++)
+            var row = table.NewRow();
+            for (var i = 0; i < reader.FieldCount; i++)
             {
-                object value = reader[i];
+                var value = reader[i];
                 row[i] = value;
             }
             table.Rows.Add(row);
@@ -67,20 +67,20 @@ namespace DanilovSoft.MicroORM
         private static void CreateColumns(DataTable table, DbDataReader reader)
         {
             var names = new HashSet<string>();
-            for (int i = 0; i < reader.FieldCount; i++)
+            for (var i = 0; i < reader.FieldCount; i++)
             {
-                Type type = reader.GetFieldType(i);
-                string name = reader.GetName(i);
+                var type = reader.GetFieldType(i);
+                var name = reader.GetName(i);
 
-                int n = 0;
-                string origName = name;
+                var n = 0;
+                var origName = name;
                 while(!names.Add(name))
                 {
                     n++;
                     name = origName + n;
                 }
 
-                DataColumn column = table.Columns.Add(name, type);
+                var column = table.Columns.Add(name, type);
             }
         }
 
@@ -92,7 +92,7 @@ namespace DanilovSoft.MicroORM
 
         internal static void AddRange<TCollection, TItem>(this TCollection collection, IList<TItem> items) where TCollection : ICollection<TItem>
         {
-            for (int i = 0; i < items.Count; i++)
+            for (var i = 0; i < items.Count; i++)
             {
                 collection.Add(items[i]);
             }
@@ -105,11 +105,11 @@ namespace DanilovSoft.MicroORM
 
         public static string SnakeToPascalCase(this string str)
         {
-            int newLength = str.Length;
+            var newLength = str.Length;
 
-            for (int i = 0; i < str.Length; i++)
+            for (var i = 0; i < str.Length; i++)
             {
-                char ch = str[i];
+                var ch = str[i];
                 if (ch == '_' || ch == ' ')
                 {
                     --newLength;
@@ -118,11 +118,11 @@ namespace DanilovSoft.MicroORM
 
             return string.Create(newLength, str, (span, s) =>
             {
-                bool wordStart = true;
-                int spanIndex = 0;
-                for (int i = 0; i < s.Length; i++)
+                var wordStart = true;
+                var spanIndex = 0;
+                for (var i = 0; i < s.Length; i++)
                 {
-                    char ch = s[i];
+                    var ch = s[i];
                     if (ch == '_' || ch == ' ')
                     {
                         wordStart = true;

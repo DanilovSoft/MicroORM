@@ -82,7 +82,7 @@ namespace System.Threading
         public bool TryCancel()
         {
             // Атомарно отменяем таймер.
-            int state = Interlocked.Exchange(ref _state, 2);
+            var state = Interlocked.Exchange(ref _state, 2);
 
             if (state == -1 || state == 0)
             // Таймер не был запланирован или не успел сработать.

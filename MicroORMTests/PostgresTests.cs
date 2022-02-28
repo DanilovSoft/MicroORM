@@ -17,7 +17,7 @@ namespace UnitTests
         [Test]
         public void ScalarArray()
         {
-            decimal[] result = Orm.Sql("SELECT unnest(array['1', '2', '3'])")
+            var result = Orm.Sql("SELECT unnest(array['1', '2', '3'])")
                 .ScalarArray<decimal>(); // + конвертация
 
             Assert.AreEqual(1, result[0]);
@@ -39,7 +39,7 @@ namespace UnitTests
         [Test]
         public void TestConverter()
         {
-            UserWithLocation result = Orm.Sql("SELECT point(@0, @1) AS location")
+            var result = Orm.Sql("SELECT point(@0, @1) AS location")
                 .Parameters(1, 2)
                 .Single<UserWithLocation>();
 
@@ -70,8 +70,8 @@ namespace UnitTests
                 .MultiResult())
             {
 
-                int row1 = multiResult.Scalar<int>();
-                string[] row2 = multiResult.ScalarArray<string>();
+                var row1 = multiResult.Scalar<int>();
+                var row2 = multiResult.ScalarArray<string>();
 
                 Assert.AreEqual(1, row1);
                 Assert.AreEqual("1", row2[0]);
@@ -104,8 +104,8 @@ namespace UnitTests
         private static string GetSqlQuery()
         {
             var sb = new StringBuilder("SELECT * FROM (VALUES ");
-            int n = 1;
-            for (int i = 0; i < 1_0; i++)
+            var n = 1;
+            for (var i = 0; i < 1_0; i++)
             {
                 sb.Append($"({n++},{n++},{n++}),");
             }
@@ -119,8 +119,8 @@ namespace UnitTests
         [Test]
         public void TestList()
         {
-            string query = GetSqlQuery();
-            List<RowModel> list = Orm.Sql(query)
+            var query = GetSqlQuery();
+            var list = Orm.Sql(query)
                 .ToList<RowModel>();
         }
     }

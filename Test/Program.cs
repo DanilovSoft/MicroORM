@@ -3,6 +3,7 @@ using DanilovSoft.MicroORM;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
@@ -17,8 +18,18 @@ class Program
 {
     public sealed record GalleryRec(string OrigTitle, int Gid, DateTime PostedDate, string Title);
 
-    public const string ConnectionString =
-            "Database=postgres;Uid=postgres;Pwd=test;Host=localhost;Pooling=true;MinPoolSize=10;MaxPoolSize=100;CommandTimeout=200;Timeout=300; ReadBufferSize=819200";
+    public const string ConnectionString = "Server=10.0.0.99;Port=5432;User Id=hh;Password=doDRC1vJRGybvCW6;Database=hh;Pooling=true;MinPoolSize=10;MaxPoolSize=16;CommandTimeout=30;Timeout=30";
+
+    static void Main()
+    {
+        var orm = new SqlORM(ConnectionString, NpgsqlFactory.Instance);
+
+        ReadOnlyMemory<int> arr = new int[] { 1, 2, 3 };
+
+        var l = orm.Sql("SELECT @1")
+            .Parameter(arr)
+            .ScalarList();
+    }
 
     public sealed class GalleryDb
     {
@@ -59,49 +70,6 @@ class Program
 
     //private readonly CancellationTokenSource _cts = new();
 
-    static void Main()
-    {
-        string uri = "http://test.com";
-
-        FormattableString Query = @$"SELECT {uri} AS uri, {DateTime.Now} AS posted_date, 123 as gid, 'Title Example' AS title, 'test' AS orig_title";
-
-        var ef = new EfDbContext();
-
-        //_pgOrm = new SqlORM(PgConnectionString, new DbFactoryWrapper(ef), usePascalCaseNamingConvention: true);
-
-        var blogCat = ef.BlogCategories.OrderBy(x => x.Id).Select(x => x.TestFlags).First();
-        
-        var listClass = PgOrm.SqlInterpolated(Query).ToList(new { test = 0, posted_date = default(DateTime) });
-        var list = PgOrm.SqlInterpolated(Query).ToList<GalleryDb>();
-
-        //_pgOrm.Sql(Query).List<TestStruct>();
-
-        TypeConverter conv = TypeDescriptor.GetConverter(typeof(BlogDb).GetProperty("Slug"));
-
-
-        //Npgsql.NpgsqlDataReader reader;
-        //reader.GetInt32(0);
-
-        for (int i = 0; i < 10; i++)
-        {
-            var sw = Stopwatch.StartNew();
-            var list2 = ef.Set<GalleryDb>().FromSqlRaw(Query.ToString()).ToList();
-            sw.Stop();
-            Console.WriteLine($"EF: {sw.ElapsedMilliseconds:0} msec");
-        }
-
-        for (int i = 0; i < 10; i++)
-        {
-            var sw = Stopwatch.StartNew();
-            list = PgOrm.Sql(Query.ToString()).ToList<GalleryDb>();
-            sw.Stop();
-
-            Console.WriteLine($"MicroORM: {sw.ElapsedMilliseconds:0} msec");
-        }
-
-        Console.ReadKey();
-    }
-
     [StructLayout(LayoutKind.Auto)]
     internal readonly struct TestStruct
     {
@@ -120,8 +88,8 @@ class Program
     public static string GetSqlQuery()
     {
         var sb = new StringBuilder("SELECT * FROM (VALUES ");
-        int n = 1;
-        for (int i = 0; i < 1_0; i++)
+        var n = 1;
+        for (var i = 0; i < 1_0; i++)
         {
             sb.Append($"({n++},{n++},{n++}),");
         }

@@ -5,43 +5,33 @@
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>3.8.14</Version>
-		<Authors>Vitalii Danilov</Authors>
+		<Version>3.9.14</Version>
 		<Product>DanilovSoft.MicroORM</Product>
 		<Description>Micro ORM for any DbProviderFactory.</Description>
 		<AssemblyName>DanilovSoft.MicroORM</AssemblyName>
 		<RootNamespace>DanilovSoft.MicroORM</RootNamespace>
 		<PackageId>DanilovSoft.MicroORM</PackageId>
-		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-		<PackageProjectUrl>https://github.com/DanilovSoft/MicroORM</PackageProjectUrl>
-	</PropertyGroup>
-
-	<PropertyGroup>
-		<DocumentationFile>DanilovSoft.MicroORM.xml</DocumentationFile>
 		<NoWarn>1701;1702;1591</NoWarn>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>..\MicroORM.pfx</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 
-	<!-- Source debugging -->
+	<!--Для NuGet-->
 	<PropertyGroup>
+		<PackageProjectUrl>https://github.com/DanilovSoft/MicroORM</PackageProjectUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Authors>Vitalii Danilov</Authors>
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<GenerateDocumentationFile Condition="'$(Configuration)'=='Release'">true</GenerateDocumentationFile>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 	</ItemGroup>
-
-	<!--<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
-    <PackageReference Include="Nullable" Version="1.3.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>-->
+	<!--/Для NuGet-->
 
 </Project>

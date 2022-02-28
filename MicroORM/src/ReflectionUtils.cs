@@ -43,12 +43,12 @@ namespace DanilovSoft.MicroORM
 
         public static IEnumerable<MemberInfo> GetFieldsAndProperties(Type type, BindingFlags bindingFlags)
         {
-            foreach (PropertyInfo propertyInfo in type.GetProperties(bindingFlags))
+            foreach (var propertyInfo in type.GetProperties(bindingFlags))
             {
                 yield return propertyInfo;
             }
 
-            foreach (FieldInfo fieldInfo in type.GetFields(bindingFlags))
+            foreach (var fieldInfo in type.GetFields(bindingFlags))
             {
                 yield return fieldInfo;
             }

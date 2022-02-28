@@ -60,7 +60,7 @@ namespace DanilovSoft.MicroORM
             if (Attribute.GetCustomAttributes(memberInfo).FirstOrDefault(a => a.GetType().FullName == NullableAttributeFullName) 
                 is Attribute attribute)
             {
-                Type attributeType = attribute.GetType();
+                var attributeType = attribute.GetType();
 
                 if (attributeType != state.NullableAttrType)
                 {
@@ -75,7 +75,7 @@ namespace DanilovSoft.MicroORM
             }
 
             // No attribute on the member, try to find a NullableContextAttribute on the declaring type
-            Type? type = memberInfo.DeclaringType;
+            var type = memberInfo.DeclaringType;
             if (type != null)
             {
                 //if (state.TypeCache.TryGetValue(type, out var cachedTypeNonNullable))
@@ -86,7 +86,7 @@ namespace DanilovSoft.MicroORM
                 if (Attribute.GetCustomAttributes(type).FirstOrDefault(a => a.GetType().FullName == NullableContextAttributeFullName) 
                     is Attribute contextAttr)
                 {
-                    Type attributeType = contextAttr.GetType();
+                    var attributeType = contextAttr.GetType();
 
                     //if (attributeType != state.NullableContextAttrType)
                     {
@@ -196,7 +196,7 @@ namespace DanilovSoft.MicroORM
 
             // First check for [MaybeNull] on the return value. If it exists, the member is nullable.
             // Note: avoid using GetCustomAttribute<> below because of https://github.com/mono/mono/issues/17477
-            bool isMaybeNull = memberInfo switch
+            var isMaybeNull = memberInfo switch
             {
                 FieldInfo f
                     => f.CustomAttributes.Any(a => a.AttributeType == typeof(MaybeNullAttribute)),
@@ -219,7 +219,7 @@ namespace DanilovSoft.MicroORM
 
             // First look for NullableAttribute on the member itself.
             // The [Nullable] and [NullableContext] attributes are not inherited.
-            if (TryIsNonNullableMember(memberInfo, out bool isNonNullable))
+            if (TryIsNonNullableMember(memberInfo, out var isNonNullable))
             {
                 return isNonNullable;
             }
@@ -270,8 +270,8 @@ namespace DanilovSoft.MicroORM
 
                 do
                 {
-                    Attribute[] attributes = Attribute.GetCustomAttributes(declaringType, inherit: false);
-                    if (TryFindNullableContext(attributes, out bool isNonNullable))
+                    var attributes = Attribute.GetCustomAttributes(declaringType, inherit: false);
+                    if (TryFindNullableContext(attributes, out var isNonNullable))
                     {
                         return isNonNullable;
                     }
@@ -291,7 +291,7 @@ namespace DanilovSoft.MicroORM
         private static bool IsNonNullableBasedOnModule(Module module)
         {
             var attributes = Attribute.GetCustomAttributes(module, inherit: false);
-            return TryFindNullableContext(attributes, out bool isNonNullable) && isNonNullable;
+            return TryFindNullableContext(attributes, out var isNonNullable) && isNonNullable;
         }
 
         private static bool TryFindNullableContext(Attribute[] attributes, out bool isNonNullable)

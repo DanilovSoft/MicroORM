@@ -64,7 +64,7 @@ namespace DanilovSoft.MicroORM
         public void Dispose()
         {
             // Отменить запланированное закрытие соединения.
-            bool canceled = _delayedAction.TryCancel();
+            var canceled = _delayedAction.TryCancel();
 
             // Отписаться от токена отмены.
             _tokenRegistration.Dispose();

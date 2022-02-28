@@ -53,13 +53,13 @@ namespace DanilovSoft.MicroORM
         {
             if (query != null)
             {
-                object[] argNames = new object[query.ArgumentCount];
-                for (int i = 0; i < query.ArgumentCount; i++)
+                var argNames = new object[query.ArgumentCount];
+                for (var i = 0; i < query.ArgumentCount; i++)
                 {
                     argNames[i] = FormattableString.Invariant($"{parameterPrefix}{i}");
                 }
 
-                string formattedQuery = string.Format(CultureInfo.InvariantCulture, query.Format, argNames);
+                var formattedQuery = string.Format(CultureInfo.InvariantCulture, query.Format, argNames);
 
                 var sqlQuery = new SqlQuery(this, formattedQuery);
                 sqlQuery.Parameters(query.GetArguments());

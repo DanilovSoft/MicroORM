@@ -35,7 +35,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         // Мы защищены от одновременного создания с помощью Lazy.ExecutionAndPublication.
         public ContractActivator(Type dboType)
         {
-            if (SingleNonEmptyCtor(dboType, out ConstructorInfo? singleCtor))
+            if (SingleNonEmptyCtor(dboType, out var singleCtor))
             {
                 IsEmptyCtor = false;
                 _ctorActivator = DynamicReflectionDelegateFactory.CreateConstructor(dboType, singleCtor);
@@ -126,10 +126,10 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             onDeserializingHandle = null;
             onDeserializedHandle = null;
 
-            MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-            for (int i = 0; i < methods.Length; i++)
+            var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            for (var i = 0; i < methods.Length; i++)
             {
-                MethodInfo method = methods[i];
+                var method = methods[i];
                 if (method.IsDefined(typeof(OnDeserializingAttribute), false))
                 {
                     onDeserializingHandle = DynamicReflectionDelegateFactory.CreateOnDeserializingMethodCall(method, type);
@@ -144,7 +144,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
         private static bool SingleNonEmptyCtor(Type type, [NotNullWhen(true)] out ConstructorInfo? ctor)
         {
-            ConstructorInfo[] ctors = type.GetConstructors();
+            var ctors = type.GetConstructors();
             if (ctors.Length == 1 && ctors[0].GetParameters().Length > 0)
             {
                 ctor = ctors[0];

@@ -14,7 +14,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
         private static DynamicMethod CreateDynamicMethod(string name, Type? returnType, Type[] parameterTypes, Type owner)
         {
-            DynamicMethod dynamicMethod = !owner.IsInterface
+            var dynamicMethod = !owner.IsInterface
                 ? new DynamicMethod(name, returnType, parameterTypes, owner, true)
                 : new DynamicMethod(name, returnType, parameterTypes, owner.Module, true);
 
@@ -26,13 +26,13 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         /// </summary>
         public static Func<T> CreateDefaultConstructor<T>(Type type)
         {
-            DynamicMethod dynamicMethod = CreateDynamicMethod("", 
+            var dynamicMethod = CreateDynamicMethod("", 
                 returnType: typeof(T), 
                 parameterTypes: Type.EmptyTypes, 
                 owner: type);
 
             dynamicMethod.InitLocals = true;
-            ILGenerator generator = dynamicMethod.GetILGenerator();
+            var generator = dynamicMethod.GetILGenerator();
 
             GenerateCreateDefaultConstructorIL(type, generator, typeof(T));
 
@@ -45,20 +45,20 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             // у анонимных типов всегда есть 1 конструктор, принимающий параметры.
             var ctors = type.GetConstructors();
             Debug.Assert(ctors.Length == 1);
-            ConstructorInfo ctor = ctors[0];
+            var ctor = ctors[0];
 
             return CreateConstructor(type, ctor);
         }
 
         public static Func<object?[], object> CreateConstructor(Type type, ConstructorInfo ctor)
         {
-            DynamicMethod dynamicMethod = CreateDynamicMethod("",
+            var dynamicMethod = CreateDynamicMethod("",
                 returnType: typeof(object),
                 parameterTypes: ObjectArrayTypes,
                 owner: type);
 
             dynamicMethod.InitLocals = true;
-            ILGenerator generator = dynamicMethod.GetILGenerator();
+            var generator = dynamicMethod.GetILGenerator();
 
             GenerateCreateMethodCallIL(ctor, generator, 0);
 
@@ -67,9 +67,9 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
         private static void GenerateCreateMethodCallIL(MethodBase method, ILGenerator generator, int argsIndex)
         {
-            ParameterInfo[] args = method.GetParameters();
+            var args = method.GetParameters();
 
-            Label argsOk = generator.DefineLabel();
+            var argsOk = generator.DefineLabel();
 
             var exceptionCtor = typeof(TargetParameterCountException).GetConstructor(Type.EmptyTypes);
             Debug.Assert(exceptionCtor != null);
@@ -91,20 +91,20 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                 generator.PushInstance(method.DeclaringType);
             }
 
-            LocalBuilder localConvertible = generator.DeclareLocal(typeof(IConvertible));
-            LocalBuilder localObject = generator.DeclareLocal(typeof(object));
+            var localConvertible = generator.DeclareLocal(typeof(IConvertible));
+            var localObject = generator.DeclareLocal(typeof(object));
 
-            for (int i = 0; i < args.Length; i++)
+            for (var i = 0; i < args.Length; i++)
             {
-                ParameterInfo parameter = args[i];
-                Type? parameterType = parameter.ParameterType;
+                var parameter = args[i];
+                var parameterType = parameter.ParameterType;
 
                 if (parameterType.IsByRef)
                 {
                     parameterType = parameterType.GetElementType();
                     Debug.Assert(parameterType != null);
 
-                    LocalBuilder localVariable = generator.DeclareLocal(parameterType);
+                    var localVariable = generator.DeclareLocal(parameterType);
 
                     // don't need to set variable for 'out' parameter
                     if (!parameter.IsOut)
@@ -113,8 +113,8 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
                         if (parameterType.IsValueType)
                         {
-                            Label skipSettingDefault = generator.DefineLabel();
-                            Label finishedProcessingParameter = generator.DefineLabel();
+                            var skipSettingDefault = generator.DefineLabel();
+                            var finishedProcessingParameter = generator.DefineLabel();
 
                             // check if parameter is not null
                             generator.Emit(OpCodes.Brtrue_S, skipSettingDefault);
@@ -149,15 +149,15 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
                     // have to check that value type parameters aren't null
                     // otherwise they will error when unboxed
-                    Label skipSettingDefault = generator.DefineLabel();
-                    Label finishedProcessingParameter = generator.DefineLabel();
+                    var skipSettingDefault = generator.DefineLabel();
+                    var finishedProcessingParameter = generator.DefineLabel();
 
                     // check if parameter is not null
                     generator.Emit(OpCodes.Ldloc_S, localObject);
                     generator.Emit(OpCodes.Brtrue_S, skipSettingDefault);
 
                     // parameter has no value, initialize to default
-                    LocalBuilder localVariable = generator.DeclareLocal(parameterType);
+                    var localVariable = generator.DeclareLocal(parameterType);
                     generator.Emit(OpCodes.Ldloca_S, localVariable);
                     generator.Emit(OpCodes.Initobj, parameterType);
                     generator.Emit(OpCodes.Ldloc_S, localVariable);
@@ -169,12 +169,12 @@ namespace DanilovSoft.MicroORM.ObjectMapping
                     if (parameterType.IsPrimitive)
                     {
                         // for primitive types we need to handle type widening (e.g. short -> int)
-                        MethodInfo? toParameterTypeMethod = typeof(IConvertible)
+                        var toParameterTypeMethod = typeof(IConvertible)
                             .GetMethod("To" + parameterType.Name, new[] { typeof(IFormatProvider) });
 
                         if (toParameterTypeMethod != null)
                         {
-                            Label skipConvertible = generator.DefineLabel();
+                            var skipConvertible = generator.DefineLabel();
 
                             // check if argument type is an exact match for parameter type
                             // in this case we may use cheap unboxing instead
@@ -227,7 +227,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
             Debug.Assert(method.DeclaringType != null);
 
-            Type returnType = method.IsConstructor
+            var returnType = method.IsConstructor
                 ? method.DeclaringType
                 : ((MethodInfo)method).ReturnType;
 
@@ -258,7 +258,7 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             }
             else
             {
-                ConstructorInfo? constructorInfo =
+                var constructorInfo =
                     type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, 
                     binder: null, 
                     types: Type.EmptyTypes, 
@@ -279,10 +279,10 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         {
             Debug.Assert(method.DeclaringType != null);
 
-            DynamicMethod dynamicMethod = CreateDynamicMethod("", returnType: typeof(void), 
+            var dynamicMethod = CreateDynamicMethod("", returnType: typeof(void), 
                 parameterTypes: new[] { typeof(object), typeof(StreamingContext) }, owner: method.DeclaringType);
 
-            ILGenerator generator = dynamicMethod.GetILGenerator();
+            var generator = dynamicMethod.GetILGenerator();
 
             GenerateCreateMethodCallIL(method, generator, type);
 
@@ -291,10 +291,10 @@ namespace DanilovSoft.MicroORM.ObjectMapping
 
         public static OnDeserializedDelegate CreateOnDeserializedMethodCall(MethodInfo method, Type instanceType)
         {
-            DynamicMethod dynamicMethod = CreateDynamicMethod("", returnType: typeof(void), 
+            var dynamicMethod = CreateDynamicMethod("", returnType: typeof(void), 
                 parameterTypes: new[] { typeof(object), typeof(StreamingContext) }, owner: instanceType);
 
-            ILGenerator generator = dynamicMethod.GetILGenerator();
+            var generator = dynamicMethod.GetILGenerator();
 
             GenerateCreateMethodCallIL(method, generator, instanceType);
 
@@ -333,8 +333,8 @@ namespace DanilovSoft.MicroORM.ObjectMapping
             {
                 Debug.Assert(propertyInfo.DeclaringType != null);
 
-                DynamicMethod dynamicMethod = CreateDynamicMethod("Set" + propertyInfo.Name, null, new[] { typeof(T), typeof(object) }, propertyInfo.DeclaringType);
-                ILGenerator generator = dynamicMethod.GetILGenerator();
+                var dynamicMethod = CreateDynamicMethod("Set" + propertyInfo.Name, null, new[] { typeof(T), typeof(object) }, propertyInfo.DeclaringType);
+                var generator = dynamicMethod.GetILGenerator();
 
                 GenerateCreateSetPropertyIL(setMethod, propertyInfo, generator);
 
@@ -351,8 +351,8 @@ namespace DanilovSoft.MicroORM.ObjectMapping
         {
             Debug.Assert(fieldInfo.DeclaringType != null);
 
-            DynamicMethod dynamicMethod = CreateDynamicMethod("Set" + fieldInfo.Name, null, new[] { typeof(T), typeof(object) }, fieldInfo.DeclaringType);
-            ILGenerator generator = dynamicMethod.GetILGenerator();
+            var dynamicMethod = CreateDynamicMethod("Set" + fieldInfo.Name, null, new[] { typeof(T), typeof(object) }, fieldInfo.DeclaringType);
+            var generator = dynamicMethod.GetILGenerator();
 
             GenerateCreateSetFieldIL(fieldInfo, generator);
 

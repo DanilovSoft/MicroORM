@@ -11,6 +11,8 @@ namespace DanilovSoft.MicroORM
 {
     public sealed class SqlTransaction : ISqlORM, IDisposable
     {
+        private const string NoTransaction = "Transaction is not open";
+
         private readonly SqlORM _sqlOrm;
         private DbConnection? _connection;
         private DbTransaction? _transaction;
@@ -24,17 +26,35 @@ namespace DanilovSoft.MicroORM
             _connection.ConnectionString = sqlOrm.ConnectionString;
         }
 
+        /// <exception cref="MicroOrmException"/>
+        /// <exception cref="ObjectDisposedException"/>
+        public DbTransaction GetDbTransaction()
+        {
+            CheckDisposed();
+
+            var transaction = _transaction;
+            if (transaction != null)
+            {
+                return transaction;
+            }
+            else
+            {
+                return ThrowNotOpen<DbTransaction>();
+            }
+        }
+
         /// <exception cref="ObjectDisposedException"/>
         public void OpenTransaction()
         {
             CheckDisposed();
 
-            if (_connection.State != System.Data.ConnectionState.Open)
+            var connection = _connection;
+            if (connection.State != System.Data.ConnectionState.Open)
             {
-                _connection.Open();
+                connection.Open();
             }
 
-            _transaction = _connection.BeginTransaction();
+            _transaction = connection.BeginTransaction();
         }
 
         /// <exception cref="ObjectDisposedException"/>
@@ -43,7 +63,6 @@ namespace DanilovSoft.MicroORM
             CheckDisposed();
 
             var connection = _connection;
-
             if (connection.State == System.Data.ConnectionState.Open)
             {
                 _transaction = connection.BeginTransaction();
@@ -51,7 +70,7 @@ namespace DanilovSoft.MicroORM
             }
             else
             {
-                Task task = connection.OpenAsync(cancellationToken);
+                var task = connection.OpenAsync(cancellationToken);
 
                 if (task.IsCompletedSuccessfully)
                 {
@@ -92,7 +111,7 @@ namespace DanilovSoft.MicroORM
             }
             else
             {
-                throw new MicroOrmException("Transaction is not open.");
+                return ThrowNotOpen<SqlQuery>();
             }
         }
 
@@ -106,20 +125,22 @@ namespace DanilovSoft.MicroORM
 
             if (_transaction != null)
             {
-                object[] argNames = new object[query.ArgumentCount];
-                for (int i = 0; i < query.ArgumentCount; i++)
+                var argNames = new object[query.ArgumentCount];
+                for (var i = 0; i < query.ArgumentCount; i++)
                 {
                     argNames[i] = FormattableString.Invariant($"{parameterPrefix}{i}");
                 }
 
-                string formattedQuery = string.Format(CultureInfo.InvariantCulture, query.Format, argNames);
+                var formattedQuery = string.Format(CultureInfo.InvariantCulture, query.Format, argNames);
 
                 SqlQuery sql = new SqlQueryTransaction(_sqlOrm, _transaction, formattedQuery);
                 sql.Parameters(query.GetArguments());
                 return sql;
             }
             else
-                throw new MicroOrmException("Transaction is not open.");
+            {
+                return ThrowNotOpen<SqlQuery>();
+            }
         }
 
         /// <summary>
@@ -133,7 +154,9 @@ namespace DanilovSoft.MicroORM
                 _transaction.Commit();
             }
             else
-                throw new MicroOrmException("Transaction is not open");
+            {
+                ThrowNotOpen();
+            }
         }
 
         /// <summary>
@@ -147,7 +170,9 @@ namespace DanilovSoft.MicroORM
                 _transaction.Rollback();
             }
             else
-                throw new MicroOrmException("Transaction is not open");
+            {
+                ThrowNotOpen();
+            }
         }
 
         public void Dispose()
@@ -156,7 +181,6 @@ namespace DanilovSoft.MicroORM
             {
                 _transaction?.Dispose();
                 _connection.Dispose();
-
                 _transaction = null;
                 _connection = null;
             }
@@ -172,6 +196,18 @@ namespace DanilovSoft.MicroORM
                 return;
             }
             ThrowHelper.ThrowObjectDisposed<SqlTransaction>();
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowNotOpen()
+        {
+            throw new MicroOrmException(NoTransaction);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static TReturn ThrowNotOpen<TReturn>()
+        {
+            throw new MicroOrmException(NoTransaction);
         }
     }
 }

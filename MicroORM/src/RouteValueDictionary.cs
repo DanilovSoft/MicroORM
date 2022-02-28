@@ -12,11 +12,11 @@ namespace DanilovSoft.MicroORM
         public RouteValueDictionary(object values)
         {
             _dict = new();
-            PropertyInfo[] prop = values.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            for (int i = 0; i < prop.Length; i++)
+            var prop = values.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            for (var i = 0; i < prop.Length; i++)
             {
-                string name = prop[i].Name;
-                object? value = prop[i].GetValue(values);
+                var name = prop[i].Name;
+                var value = prop[i].GetValue(values);
                 _dict.Add(name, value);
             }
         }

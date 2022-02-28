@@ -13,7 +13,7 @@ namespace DanilovSoft.MicroORM
         public static object? ConvertSqlToCtorValue(object sqlRawValue, Type sqlColumnType, string sqlColumnName, 
             bool isNonNullable, string parameterName, Type toType)
         {
-            object? sqlValue = ConvertNullableRawSqlType(sqlRawValue, sqlColumnName, isNonNullable, parameterName, "parameter");
+            var sqlValue = ConvertNullableRawSqlType(sqlRawValue, sqlColumnName, isNonNullable, parameterName, "parameter");
 
             return ConvertSqlToClrType(sqlValue, sqlColumnType, sqlColumnName, toType);
         }
@@ -33,7 +33,7 @@ namespace DanilovSoft.MicroORM
         public static object? ConvertRawSqlToClrType(object sqlRawValue, Type sqlColumnType, string sqlColumnName, Type toType)
         {
             // Здесь не проверяется NonNullable (!)
-            object? sqlValue = ConvertNullableRawSqlType(sqlRawValue);
+            var sqlValue = ConvertNullableRawSqlType(sqlRawValue);
 
             return ConvertSqlToClrType(sqlValue, sqlColumnType, sqlColumnName, toType);
         }
@@ -45,11 +45,11 @@ namespace DanilovSoft.MicroORM
         {
             Debug.Assert(sqlValue != DBNull.Value);
 
-            bool isAssignable = toType.IsAssignableFrom(sqlColumnType);
+            var isAssignable = toType.IsAssignableFrom(sqlColumnType);
 
             if (!isAssignable || sqlValue == null)
             {
-                Type? underlyingNullableValueType = Nullable.GetUnderlyingType(toType);
+                var underlyingNullableValueType = Nullable.GetUnderlyingType(toType);
 
                 if (underlyingNullableValueType == null)
                 {
