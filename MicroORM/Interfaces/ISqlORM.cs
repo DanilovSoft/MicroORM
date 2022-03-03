@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace DanilovSoft.MicroORM
+namespace DanilovSoft.MicroORM;
+
+public interface ISqlORM
 {
-    public interface ISqlORM
-    {
-        SqlQuery Sql(string query, params object[] parameters);
-        SqlQuery SqlInterpolated(FormattableString query, char parameterPrefix = '@');
-    }
+    SqlQuery Sql(string query, params object[] parameters);
+    SqlQuery SqlInterpolated(FormattableString query, char parameterPrefix = '@');
 }

@@ -1,20 +1,19 @@
 ﻿using System;
 
-namespace DanilovSoft.MicroORM
+namespace DanilovSoft.MicroORM;
+
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
+public sealed class SqlPropertyAttribute : Attribute
 {
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
-    public sealed class SqlPropertyAttribute : Attribute
+    public SqlPropertyAttribute()
     {
-        public SqlPropertyAttribute()
-        {
-            Name = null;
-        }
-
-        public SqlPropertyAttribute(string name)
-        {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-        }
-
-        public string? Name { get; }
+        Name = null;
     }
+
+    public SqlPropertyAttribute(string name)
+    {
+        Name = name ?? throw new ArgumentNullException(nameof(name));
+    }
+
+    public string? Name { get; }
 }

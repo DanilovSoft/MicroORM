@@ -3,13 +3,12 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DanilovSoft.MicroORM
+namespace DanilovSoft.MicroORM;
+
+internal interface ICommandReader : IDisposable
 {
-    internal interface ICommandReader : IDisposable
-    {
-        DbDataReader GetReader();
-        ValueTask<DbDataReader> GetReaderAsync(CancellationToken cancellationToken);
-        DbConnection Connection { get; }
-        DbCommand Command { get; }
-    }
+    DbDataReader GetReader();
+    ValueTask<DbDataReader> GetReaderAsync(CancellationToken cancellationToken);
+    DbConnection Connection { get; }
+    DbCommand Command { get; }
 }

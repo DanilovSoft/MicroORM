@@ -2,117 +2,116 @@
 using NUnit.Common;
 using NUnit.Framework;
 
-namespace InternalNUnitTest
+namespace InternalNUnitTest;
+
+public class NullableModuleTests
 {
-    public class NullableModuleTests
+    //[Test]
+    //public void NotNull_Type()
+    //{
+    //    bool isNonNull = NonNullableConvention.IsNonNullableReferenceType(memberType: typeof(string));
+
+    //    Assert.IsTrue(isNonNull, "Ссылочное свойство не допускает Null на основе контекста");
+    //}
+
+    [Test]
+    public void NotNull_Property()
     {
-        //[Test]
-        //public void NotNull_Type()
-        //{
-        //    bool isNonNull = NonNullableConvention.IsNonNullableReferenceType(memberType: typeof(string));
+        var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
+            memberInfo: typeof(UserModel).GetProperty(nameof(UserModel.Name))!);
 
-        //    Assert.IsTrue(isNonNull, "Ссылочное свойство не допускает Null на основе контекста");
-        //}
+        Assert.IsTrue(isNonNull, "Ссылочное свойство не допускает Null на основе контекста");
+    }
 
-        [Test]
-        public void NotNull_Property()
-        {
-            var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
-                memberInfo: typeof(UserModel).GetProperty(nameof(UserModel.Name))!);
+    [Test]
+    public void CanBeNull_ByDefault()
+    {
+        var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
+            memberInfo: typeof(DefaultClassModel).GetProperty(nameof(DefaultClassModel.Name))!);
 
-            Assert.IsTrue(isNonNull, "Ссылочное свойство не допускает Null на основе контекста");
-        }
+        Assert.IsFalse(isNonNull, "Ссылочное свойство допускает Null по умолчанию");
+    }
 
-        [Test]
-        public void CanBeNull_ByDefault()
-        {
-            var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
-                memberInfo: typeof(DefaultClassModel).GetProperty(nameof(DefaultClassModel.Name))!);
+    [Test]
+    public void CanBeNull_Property()
+    {
+        var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
+            memberInfo: typeof(UserModel).GetProperty(nameof(UserModel.Surname))!);
 
-            Assert.IsFalse(isNonNull, "Ссылочное свойство допускает Null по умолчанию");
-        }
+        Assert.IsFalse(isNonNull, "Ссылочное свойство явно допускает Null (знак '?')");
+    }
 
-        [Test]
-        public void CanBeNull_Property()
-        {
-            var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
-                memberInfo: typeof(UserModel).GetProperty(nameof(UserModel.Surname))!);
+    [Test]
+    public void NotNull_Generic()
+    {
+        var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
+           memberInfo: typeof(UserModel<string>).GetProperty(nameof(UserModel<string>.Surname))!);
 
-            Assert.IsFalse(isNonNull, "Ссылочное свойство явно допускает Null (знак '?')");
-        }
+        Assert.IsFalse(isNonNull, "Ссылочное свойство допускает Null по умолчанию для Generic свойств.");
+    }
 
-        [Test]
-        public void NotNull_Generic()
-        {
-            var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
-               memberInfo: typeof(UserModel<string>).GetProperty(nameof(UserModel<string>.Surname))!);
+    [Test]
+    public void CanBeNull_Generic()
+    {
+        var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
+            memberInfo: typeof(UserModel<string?>).GetProperty(nameof(UserModel<string?>.Surname))!);
 
-            Assert.IsFalse(isNonNull, "Ссылочное свойство допускает Null по умолчанию для Generic свойств.");
-        }
+        Assert.IsFalse(isNonNull, "Ссылочное свойство допускает Null по умолчанию для Generic свойств.");
+    }
 
-        [Test]
-        public void CanBeNull_Generic()
-        {
-            var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
-                memberInfo: typeof(UserModel<string?>).GetProperty(nameof(UserModel<string?>.Surname))!);
+    [Test]
+    public void MaybeNull_Attribute_OnProperty()
+    {
+        var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
+            memberInfo: typeof(TestMe).GetProperty(nameof(TestMe.Name1))!);
 
-            Assert.IsFalse(isNonNull, "Ссылочное свойство допускает Null по умолчанию для Generic свойств.");
-        }
+        Assert.IsFalse(isNonNull, "Ссылочное свойство не допускает Null на основе контекста, но есть разрешающий атрибут");
+    }
 
-        [Test]
-        public void MaybeNull_Attribute_OnProperty()
-        {
-            var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
-                memberInfo: typeof(TestMe).GetProperty(nameof(TestMe.Name1))!);
+    [Test]
+    public void AllowNull_Attribute_OnProperty()
+    {
+        var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
+            memberInfo: typeof(TestMe).GetProperty(nameof(TestMe.Name2))!);
 
-            Assert.IsFalse(isNonNull, "Ссылочное свойство не допускает Null на основе контекста, но есть разрешающий атрибут");
-        }
+        // TODO убедиться что AllowNull не должен допускать установку Null.
+        Assert.IsTrue(isNonNull, "Ссылочное свойство не допускает Null на основе контекста, не смотря на атрибут AllowNull");
+    }
 
-        [Test]
-        public void AllowNull_Attribute_OnProperty()
-        {
-            var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
-                memberInfo: typeof(TestMe).GetProperty(nameof(TestMe.Name2))!);
+    [Test]
+    public void Nullable_Field()
+    {
+        var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
+            memberInfo: typeof(TestMe).GetField(nameof(TestMe.Name3))!);
 
-            // TODO убедиться что AllowNull не должен допускать установку Null.
-            Assert.IsTrue(isNonNull, "Ссылочное свойство не допускает Null на основе контекста, не смотря на атрибут AllowNull");
-        }
+        Assert.IsFalse(isNonNull, "Ссылочное поле явно допускает Null (знак '?')");
+    }
 
-        [Test]
-        public void Nullable_Field()
-        {
-            var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
-                memberInfo: typeof(TestMe).GetField(nameof(TestMe.Name3))!);
+    [Test]
+    public void NotNull_Field()
+    {
+        var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
+            memberInfo: typeof(TestMe).GetField(nameof(TestMe.Name4))!);
 
-            Assert.IsFalse(isNonNull, "Ссылочное поле явно допускает Null (знак '?')");
-        }
+        Assert.IsTrue(isNonNull, "Ссылочное поле не допускает Null на основе контекста");
+    }
 
-        [Test]
-        public void NotNull_Field()
-        {
-            var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
-                memberInfo: typeof(TestMe).GetField(nameof(TestMe.Name4))!);
+    [Test]
+    public void MaybeNull_Attribute_OnField()
+    {
+        var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
+            memberInfo: typeof(TestMe).GetField(nameof(TestMe.Name5))!);
 
-            Assert.IsTrue(isNonNull, "Ссылочное поле не допускает Null на основе контекста");
-        }
+        Assert.IsFalse(isNonNull, "Ссылочное поле не допускает Null на основе контекста, но есть разрешающий атрибут");
+    }
 
-        [Test]
-        public void MaybeNull_Attribute_OnField()
-        {
-            var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
-                memberInfo: typeof(TestMe).GetField(nameof(TestMe.Name5))!);
+    [Test]
+    public void AllowNull_Attribute_OnField()
+    {
+        var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
+            memberInfo: typeof(TestMe).GetField(nameof(TestMe.Name6))!);
 
-            Assert.IsFalse(isNonNull, "Ссылочное поле не допускает Null на основе контекста, но есть разрешающий атрибут");
-        }
-
-        [Test]
-        public void AllowNull_Attribute_OnField()
-        {
-            var isNonNull = NonNullableConvention.IsNonNullableReferenceType(
-                memberInfo: typeof(TestMe).GetField(nameof(TestMe.Name6))!);
-
-            // TODO убедиться что AllowNull не должен допускать установку Null.
-            Assert.IsTrue(isNonNull, "Ссылочное поле не допускает Null на основе контекста, не смотря на атрибут AllowNull");
-        }
+        // TODO убедиться что AllowNull не должен допускать установку Null.
+        Assert.IsTrue(isNonNull, "Ссылочное поле не допускает Null на основе контекста, не смотря на атрибут AllowNull");
     }
 }

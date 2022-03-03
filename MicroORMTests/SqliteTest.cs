@@ -8,235 +8,210 @@ using DanilovSoft.MicroORM;
 using NUnit.Framework;
 using UnitTests;
 
-namespace MicroORMTests
+namespace MicroORMTests;
+
+//class TestClass
+//{
+//    public string Name { get; set; }
+//}
+
+public class SqliteTest
 {
-    //class TestClass
-    //{
-    //    public string Name { get; set; }
-    //}
+    private static readonly SqlORM Orm = new("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
 
-    public class SqliteTest
+    [Test]
+    public void Interpolated()
     {
-        private static readonly SqlORM Orm = new("Data Source=:memory:;Version=3;New=True;", System.Data.SQLite.SQLiteFactory.Instance);
+        var result = Orm.SqlInterpolated($"SELECT {123}")
+            .Scalar<int>();
 
-        [Test]
-        public void Interpolated()
+        Assert.AreEqual(123, result);
+    }
+
+    [Test]
+    public void ScalarNotNull()
+    {
+        var result = Orm.Sql("SELECT @0")
+            .Parameter("OK")
+            .Scalar<string>();
+
+        Assert.AreEqual("OK", result);
+    }
+
+    [Test]
+    public void ScalarNull()
+    {
+        var result = Orm.Sql("SELECT @0")
+            .Parameter(null)
+            .Scalar<string>();
+
+        Assert.AreEqual(null, result);
+    }
+
+    [Test]
+    public void TestNamedParameterAndScalar()
+    {
+        using (var t = Orm.OpenTransaction())
         {
-            var result = Orm.SqlInterpolated($"SELECT {123}")
-                .Scalar<int>();
+            var result = t.Sql("SELECT @count")
+                .Parameter("count", 128)
+                .Scalar<byte>(); // автоматическая конвертация.
 
-            Assert.AreEqual(123, result);
+            t.Commit();
+            Assert.AreEqual(128, result);
         }
+    }
 
-        [Test]
-        public void ScalarNotNull()
+    [Test]
+    public void NonNullableProperty()
+    {
+        try
         {
-            var result = Orm.Sql("SELECT @0")
-                .Parameter("OK")
-                .Scalar<string>();
-
-            Assert.AreEqual("OK", result);
+            var result = Orm.Sql("SELECT @name AS name, @count AS count")
+                .ParametersFromObject(new { count = 128, name = default(string) })
+                .SingleOrDefault<UserDbo>();
         }
-
-        [Test]
-        public void ScalarNull()
+        catch (MicroOrmException)
         {
-            var result = Orm.Sql("SELECT @0")
-                .Parameter(null)
-                .Scalar<string>();
-
-            Assert.AreEqual(null, result);
+            Assert.Pass();
         }
+        Assert.Fail();
+    }
 
-        [Test]
-        public void TestNamedParameterAndScalar()
+    [Test]
+    public void ParametersFromObject()
+    {
+        var result = Orm.Sql("SELECT @name AS name, @count AS count, @age AS age")
+            .ParametersFromObject(new { count = 128, name = "Alfred", age = 25 })
+            .Single<UserDbo>();
+
+        Assert.AreEqual("Alfred", result.Name);
+        Assert.AreEqual(25, result.Age);
+    }
+
+    [Test]
+    public void TestAnonimouseType()
+    {
+        var result = Orm.Sql("SELECT @name AS name, @age AS age")
+            .Parameter("name", "Alfred")
+            .Parameter("age", 30)
+            .Single(new { name = "", age = 0 });
+
+        Assert.AreEqual("Alfred", result.name);
+        Assert.AreEqual(30, result.age);
+    }
+
+    [Test]
+    public void AnonimouseRowsCount()
+    {
+        var result = Orm.SqlInterpolated($"SELECT {"Alfred"} AS name, {30} AS age")
+            .ToList(new { name = "", age = 0 });
+
+        Assert.AreEqual(1, result.Count);
+    }
+
+    [Test]
+    public void NotMappedAnonimouseProperty()
+    {
+        try
         {
-            using (var t = Orm.OpenTransaction())
-            {
-                var result = t.Sql("SELECT @count")
-                    .Parameter("count", 128)
-                    .Scalar<byte>(); // автоматическая конвертация.
-
-                t.Commit();
-                Assert.AreEqual(128, result);
-            }
-        }
-
-        [Test]
-        public void NonNullableProperty()
-        {
-            try
-            {
-                var result = Orm.Sql("SELECT @name AS name, @count AS count")
-                    .ParametersFromObject(new { count = 128, name = default(string) })
-                    .SingleOrDefault<UserDbo>();
-            }
-            catch (MicroOrmException)
-            {
-                Assert.Pass();
-            }
-            Assert.Fail();
-        }
-
-        [Test]
-        public void ParametersFromObject()
-        {
-            var result = Orm.Sql("SELECT @name AS name, @count AS count, @age AS age")
-                .ParametersFromObject(new { count = 128, name = "Alfred", age = 25 })
-                .Single<UserDbo>();
-
-            Assert.AreEqual("Alfred", result.Name);
-            Assert.AreEqual(25, result.Age);
-        }
-
-        [Test]
-        public void TestAnonimouseType()
-        {
-            var result = Orm.Sql("SELECT @name AS name, @age AS age")
-                .Parameter("name", "Alfred")
-                .Parameter("age", 30)
+            Orm.SqlInterpolated($"SELECT {"Alfred"} AS name, {30} AS aaaaaa")
                 .Single(new { name = "", age = 0 });
-
-            Assert.AreEqual("Alfred", result.name);
-            Assert.AreEqual(30, result.age);
         }
-
-        [Test]
-        public void AnonimouseRowsCount()
+        catch (MicroOrmException)
         {
-            var result = Orm.SqlInterpolated($"SELECT {"Alfred"} AS name, {30} AS age")
-                .ToList(new { name = "", age = 0 });
-
-            Assert.AreEqual(1, result.Count);
+            Assert.Pass();
         }
-
-        [Test]
-        public void NotMappedAnonimouseProperty()
-        {
-            try
-            {
-                Orm.SqlInterpolated($"SELECT {"Alfred"} AS name, {30} AS aaaaaa")
-                    .Single(new { name = "", age = 0 });
-            }
-            catch (MicroOrmException)
-            {
-                Assert.Pass();
-            }
-            Assert.Fail();
-        }
-
-        [Test]
-        public void TestNullParametersArray()
-        {
-            var query = Orm.Sql("");
-
-            try
-            {
-                query.Parameters(anonymousParameters: null!);
-            }
-            catch (ArgumentNullException)
-            {
-                Assert.Pass();
-            }
-        }
-
-        [Test]
-        public void MapIntegerToEnumSuccess()
-        {
-            var result = Orm.Sql($"SELECT 10")
-                .Scalar<TestFlaggedEnum>();
-
-            Assert.AreEqual(TestFlaggedEnum.Two | TestFlaggedEnum.Four, result);
-        }
-
-        [Test]
-        public void MapStringToEnumSuccess()
-        {
-            var result = Orm.SqlInterpolated($"SELECT 'two'")
-                .Scalar<TestFlaggedEnum>();
-
-            Assert.AreEqual(TestFlaggedEnum.Two, result);
-        }
+        Assert.Fail();
     }
 
-    class LocationConverter : TypeConverter
+    [Test]
+    public void TestNullParametersArray()
     {
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-        {
-            return true;
-        }
+        var query = Orm.Sql("");
 
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        try
         {
-            var point = (NpgsqlTypes.NpgsqlPoint)value;
-            return new Point((int)point.X, (int)point.Y);
+            query.Parameters(anonymousParameters: null!);
+        }
+        catch (ArgumentNullException)
+        {
+            Assert.Pass();
         }
     }
 
-    [DebuggerDisplay("{DebugDisplay,nq}")]
-    class RowModel
+    [Test]
+    public void MapIntegerToEnumSuccess()
     {
-        private string DebugDisplay => "{" + $"Col1 = {Col1}, col2 = {col2}, Col3 = {Col3}" + "}";
+        var result = Orm.Sql($"SELECT 10")
+            .Scalar<TestFlaggedEnum>();
 
-        [DataMember(Name = "col1")]
-        public string Col1 { get; private set; }
-
-        [TypeConverter(typeof(IntConverter))]
-        public string col2 { get; private set; }
-
-        [SqlProperty("col3")]
-        public readonly string Col3 = "";
-
-        [SqlIgnore]
-        public readonly int Col4 = 0;
-
-        [OnDeserializing]
-        private void OnDeserializing(StreamingContext _)
-        {
-            var __ = Col1;
-        }
-
-        [OnDeserialized]
-        private void OnDeserialized(StreamingContext _)
-        {
-            var __ = Col1;
-        }
+        Assert.AreEqual(TestFlaggedEnum.Two | TestFlaggedEnum.Four, result);
     }
 
-    class IntConverter : TypeConverter
+    [Test]
+    public void MapStringToEnumSuccess()
     {
-        //public object Convert(object value, Type destinationType)
-        //{
-        //    return value.ToString();
-        //}
+        var result = Orm.SqlInterpolated($"SELECT 'two'")
+            .Scalar<TestFlaggedEnum>();
 
-        public override object? ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-        {
-            return value.ToString();
-        }
+        Assert.AreEqual(TestFlaggedEnum.Two, result);
+    }
+}
+
+class LocationConverter : TypeConverter
+{
+    public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
+    {
+        return true;
     }
 
-    //public class BestPriceItem
+    public override object ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
+    {
+        var point = (NpgsqlTypes.NpgsqlPoint)value;
+        return new Point((int)point.X, (int)point.Y);
+    }
+}
+
+[DebuggerDisplay("{DebugDisplay,nq}")]
+class RowModel
+{
+    private string DebugDisplay => "{" + $"Col1 = {Col1}, col2 = {col2}, Col3 = {Col3}" + "}";
+
+    [DataMember(Name = "col1")]
+    public string Col1 { get; private set; } = null!;
+
+    [TypeConverter(typeof(IntConverter))]
+    public string col2 { get; private set; } = null!;
+
+    [SqlProperty("col3")]
+    public readonly string Col3 = "";
+
+    [SqlIgnore]
+    public readonly int Col4 = 0;
+
+    [OnDeserializing]
+    private void OnDeserializing(StreamingContext __)
+    {
+        _ = Col1;
+    }
+
+    [OnDeserialized]
+    private void OnDeserialized(StreamingContext __)
+    {
+        _ = Col1;
+    }
+}
+
+class IntConverter : TypeConverter
+{
+    //public object Convert(object value, Type destinationType)
     //{
-    //    [SqlProperty("item_id")]
-    //    public int ItemID { get; private set; }
-
-    //    [SqlProperty("supplier_id")]
-    //    public int SupplierID { get; private set; }
-
-    //    [SqlProperty("selling_price")]
-    //    public double SellingPrice { get; private set; }
-
-    //    [SqlProperty("buying_price")]
-    //    public double? BuyingPrice { get; private set; }
-
-    //    [SqlProperty("stock_level")]
-    //    public string StockLevel { get; private set; }
-
-    //    [SqlProperty("price_added_date")]
-    //    public DateTime PriceAddedDate { get; private set; }
-
-    //    [SqlProperty("is_valid_to_times")]
-    //    public DateTime IsValidToTimes { get; private set; }
+    //    return value.ToString();
     //}
+
+    public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
+    {
+        return value.ToString();
+    }
 }

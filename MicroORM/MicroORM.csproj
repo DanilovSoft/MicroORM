@@ -5,7 +5,7 @@
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
-		<Version>3.9.14</Version>
+		<Version>3.10.14</Version>
 		<Product>DanilovSoft.MicroORM</Product>
 		<Description>Micro ORM for any DbProviderFactory.</Description>
 		<AssemblyName>DanilovSoft.MicroORM</AssemblyName>

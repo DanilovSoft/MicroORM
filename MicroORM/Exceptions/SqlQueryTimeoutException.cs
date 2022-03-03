@@ -1,34 +1,33 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace DanilovSoft.MicroORM
+namespace DanilovSoft.MicroORM;
+
+[Serializable]
+public class SqlQueryTimeoutException : TimeoutException
 {
-    [Serializable]
-    public class SqlQueryTimeoutException : TimeoutException
+    public SqlQueryTimeoutException()
     {
-        public SqlQueryTimeoutException()
-        {
 
-        }
+    }
 
-        public SqlQueryTimeoutException(string message) : base(message)
-        {
+    public SqlQueryTimeoutException(string message) : base(message)
+    {
 
-        }
+    }
 
-        internal SqlQueryTimeoutException(Exception innerException, int timeoutSec) : this($"Timeout expired after {timeoutSec} seconds", innerException)
-        {
+    internal SqlQueryTimeoutException(Exception innerException, int timeoutSec) : this($"Timeout expired after {timeoutSec} seconds", innerException)
+    {
 
-        }
+    }
 
-        public SqlQueryTimeoutException(string message, Exception innerException) : base(message, innerException)
-        {
-            
-        }
+    public SqlQueryTimeoutException(string message, Exception innerException) : base(message, innerException)
+    {
 
-        protected SqlQueryTimeoutException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-        {
-            
-        }
+    }
+
+    protected SqlQueryTimeoutException(SerializationInfo serializationInfo, StreamingContext streamingContext)
+    {
+
     }
 }

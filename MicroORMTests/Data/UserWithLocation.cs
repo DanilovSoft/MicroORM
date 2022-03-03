@@ -2,12 +2,11 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Drawing;
 
-namespace MicroORMTests
+namespace MicroORMTests;
+
+class UserWithLocation
 {
-    class UserWithLocation
-    {
-        [Column("location")]
-        [TypeConverter(typeof(LocationConverter))]
-        public Point Location { get; private set; }
-    }
+    [Column("location")]
+    [TypeConverter(typeof(LocationConverter))]
+    public Point Location { get; private set; }
 }

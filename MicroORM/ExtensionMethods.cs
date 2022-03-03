@@ -147,7 +147,9 @@ namespace DanilovSoft.MicroORM
                 });
             }
             else
+            {
                 throw new ArgumentOutOfRangeException(nameof(str));
+            }
         }
     }
 }

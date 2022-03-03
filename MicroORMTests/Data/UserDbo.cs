@@ -4,23 +4,22 @@ using System.Drawing;
 using System.Runtime.Serialization;
 using DanilovSoft.MicroORM;
 
-namespace MicroORMTests
+namespace MicroORMTests;
+
+class UserDbo
 {
-    class UserDbo
+    [DataMember(Name = "name")]
+    public string Name { get; private set; }
+
+    [SqlProperty("age")]
+    public int Age { get; private set; }
+
+    [Column("location")]
+    [TypeConverter(typeof(LocationConverter))]
+    public Point Location { get; private set; }
+
+    public UserDbo(string name)
     {
-        [DataMember(Name = "name")]
-        public string Name { get; private set; }
-
-        [SqlProperty("age")]
-        public int Age { get; private set; }
-
-        [Column("location")]
-        [TypeConverter(typeof(LocationConverter))]
-        public Point Location { get; private set; }
-
-        public UserDbo(string name)
-        {
-            Name = name;
-        }
+        Name = name;
     }
 }

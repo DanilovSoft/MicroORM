@@ -1,29 +1,28 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace DanilovSoft.MicroORM
+namespace DanilovSoft.MicroORM;
+
+[Serializable]
+public class MicroOrmSerializationException : MicroOrmException
 {
-    [Serializable]
-    public class MicroOrmSerializationException : MicroOrmException
+    public MicroOrmSerializationException()
     {
-        public MicroOrmSerializationException()
-        {
 
-        }
+    }
 
-        public MicroOrmSerializationException(string message) : base(message)
-        {
+    public MicroOrmSerializationException(string message) : base(message)
+    {
 
-        }
+    }
 
-        public MicroOrmSerializationException(string message, Exception innerException) : base(message, innerException)
-        {
+    public MicroOrmSerializationException(string message, Exception innerException) : base(message, innerException)
+    {
 
-        }
+    }
 
-        protected MicroOrmSerializationException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-        {
-            
-        }
+    protected MicroOrmSerializationException(SerializationInfo serializationInfo, StreamingContext streamingContext)
+    {
+
     }
 }
