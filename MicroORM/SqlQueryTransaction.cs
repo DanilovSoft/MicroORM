@@ -3,7 +3,8 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
-using DanilovSoft.MicroORM.Helpers;
+
+using static DanilovSoft.MicroORM.Helpers.NullableHelper;
 
 namespace DanilovSoft.MicroORM;
 
@@ -85,23 +86,20 @@ internal sealed class SqlQueryTransaction : SqlQuery
             if (task.IsCompletedSuccessfully)
             {
                 task.GetAwaiter().GetResult();
-                return ValueTask.FromResult(NullableHelper.SetNull(ref sqlReader));
+                return ValueTask.FromResult(SetNull(ref sqlReader));
             }
-            else
-            {
-                return WaitAsync(task, NullableHelper.SetNull(ref sqlReader));
 
-                static async ValueTask<MultiSqlReader> WaitAsync(ValueTask task, [DisallowNull] MultiSqlReader? sqlReader)
+            return Wait(task, SetNull(ref sqlReader));
+            static async ValueTask<MultiSqlReader> Wait(ValueTask task, [DisallowNull] MultiSqlReader? sqlReader)
+            {
+                try
                 {
-                    try
-                    {
-                        await task.ConfigureAwait(false);
-                        return NullableHelper.SetNull(ref sqlReader);
-                    }
-                    finally
-                    {
-                        sqlReader?.Dispose();
-                    }
+                    await task.ConfigureAwait(false);
+                    return SetNull(ref sqlReader);
+                }
+                finally
+                {
+                    sqlReader?.Dispose();
                 }
             }
         }
@@ -130,12 +128,11 @@ internal sealed class SqlQueryTransaction : SqlQuery
         }
         else
         {
-            return WaitAsync(task, _transaction);
-
-            static async ValueTask<DbCommand> WaitAsync(ValueTask<DbCommand> task, DbTransaction transaction)
+            return Wait(task);
+            async ValueTask<DbCommand> Wait(ValueTask<DbCommand> task)
             {
                 var command = await task.ConfigureAwait(false);
-                command.Transaction = transaction;
+                command.Transaction = _transaction;
                 return command;
             }
         }

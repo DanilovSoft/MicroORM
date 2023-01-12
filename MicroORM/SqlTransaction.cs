@@ -79,25 +79,19 @@ public sealed class SqlTransaction : ISqlORM, IDisposable
             _transaction = connection.BeginTransaction();
             return default;
         }
-        else
+
+        var task = connection.OpenAsync(cancellationToken);
+        if (task.IsCompletedSuccessfully)
         {
-            var task = connection.OpenAsync(cancellationToken);
+            _transaction = connection.BeginTransaction();
+            return default;
+        }
 
-            if (task.IsCompletedSuccessfully)
-            {
-                _transaction = connection.BeginTransaction();
-                return default;
-            }
-            else
-            {
-                return WaitAsync(task, connection, this);
-
-                static async ValueTask WaitAsync(Task task, DbConnection connection, SqlTransaction self)
-                {
-                    await task.ConfigureAwait(false);
-                    self._transaction = connection.BeginTransaction();
-                }
-            }
+        return Wait(task, connection);
+        async ValueTask Wait(Task task, DbConnection connection)
+        {
+            await task.ConfigureAwait(false);
+            _transaction = connection.BeginTransaction();
         }
     }
 
@@ -112,6 +106,7 @@ public sealed class SqlTransaction : ISqlORM, IDisposable
     /// <exception cref="ObjectDisposedException"/>
     public SqlQuery Sql(string query, params object?[] parameters)
     {
+        Guard.ThrowIfNull(query);
         CheckDisposed();
 
         if (_transaction != null)
@@ -129,8 +124,7 @@ public sealed class SqlTransaction : ISqlORM, IDisposable
     /// <exception cref="ObjectDisposedException"/>
     public SqlQuery SqlInterpolated(FormattableString query, char parameterPrefix = '@')
     {
-        Debug.Assert(query != null);
-        ThrowHelper.AssertNotNull(query, nameof(query));
+        Guard.ThrowIfNull(query);
 
         CheckDisposed();
 
@@ -144,7 +138,7 @@ public sealed class SqlTransaction : ISqlORM, IDisposable
 
             var formattedQuery = string.Format(CultureInfo.InvariantCulture, query.Format, argNames);
 
-            SqlQuery sql = new SqlQueryTransaction(_sqlOrm, _transaction, formattedQuery);
+            var sql = new SqlQueryTransaction(_sqlOrm, _transaction, formattedQuery);
             sql.Parameters(query.GetArguments());
             return sql;
         }
@@ -200,12 +194,14 @@ public sealed class SqlTransaction : ISqlORM, IDisposable
         ThrowHelper.ThrowObjectDisposed<SqlTransaction>();
     }
 
+    [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowNotOpen()
     {
         throw new MicroOrmException(NoTransaction);
     }
 
+    [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static TReturn ThrowNotOpen<TReturn>()
     {

@@ -80,13 +80,13 @@ internal sealed class MultiResultCommandReader : ICommandReader
             }
             else
             {
-                return WaitAsync(task, _reader);
-                static async ValueTask<DbDataReader> WaitAsync(Task<bool> task, DbDataReader reader)
+                return Wait(task);
+                async ValueTask<DbDataReader> Wait(Task<bool> task)
                 {
                     var hasNextResult = await task.ConfigureAwait(false);
                     if (hasNextResult)
                     {
-                        return reader;
+                        return _reader;
                     }
                     else
                     {

@@ -39,16 +39,16 @@ internal static class ThrowHelper
         throw new ObjectDisposedException(typeof(T).Name);
     }
 
-    /// <exception cref="ArgumentNullException"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void AssertNotNull<T>([NotNull] T? value, string? paramName)
-    {
-        if (value != null)
-        {
-            return;
-        }
-        ThrowArgumentNull(paramName);
-    }
+    ///// <exception cref="ArgumentNullException"/>
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //public static void AssertNotNull<T>([NotNull] T? value, string? paramName)
+    //{
+    //    if (value != null)
+    //    {
+    //        return;
+    //    }
+    //    ThrowArgumentNull(paramName);
+    //}
 
     /// <exception cref="ArgumentNullException"/>
     [DoesNotReturn]

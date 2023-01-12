@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using DanilovSoft.MicroORM.Helpers;
 
+using static DanilovSoft.MicroORM.Helpers.NullableHelper;
+
 namespace DanilovSoft.MicroORM;
 
 public sealed class SqlORM : ISqlORM
@@ -79,7 +81,7 @@ public sealed class SqlORM : ISqlORM
         try
         {
             t.OpenTransaction();
-            return NullableHelper.SetNull(ref t);
+            return SetNull(ref t);
         }
         finally
         {
@@ -94,37 +96,34 @@ public sealed class SqlORM : ISqlORM
 
     public ValueTask<SqlTransaction> OpenTransactionAsync(CancellationToken cancellationToken)
     {
-        var t = new SqlTransaction(this);
+        var transaction = new SqlTransaction(this);
         try
         {
-            var task = t.OpenTransactionAsync(cancellationToken);
+            var task = transaction.OpenTransactionAsync(cancellationToken);
 
             if (task.IsCompletedSuccessfully)
             {
                 task.GetAwaiter().GetResult(); // У Value-тасков нужно обазательно забирать результат.
-                return ValueTask.FromResult(NullableHelper.SetNull(ref t));
+                return ValueTask.FromResult(SetNull(ref transaction));
             }
-            else
-            {
-                return WaitAsync(task, NullableHelper.SetNull(ref t));
 
-                static async ValueTask<SqlTransaction> WaitAsync(ValueTask task, [DisallowNull] SqlTransaction? transaction)
+            return Wait(task, SetNull(ref transaction));
+            static async ValueTask<SqlTransaction> Wait(ValueTask task, [DisallowNull] SqlTransaction? transaction)
+            {
+                try
                 {
-                    try
-                    {
-                        await task.ConfigureAwait(false);
-                        return NullableHelper.SetNull(ref transaction);
-                    }
-                    finally
-                    {
-                        transaction?.Dispose();
-                    }
+                    await task.ConfigureAwait(false);
+                    return SetNull(ref transaction);
+                }
+                finally
+                {
+                    transaction?.Dispose();
                 }
             }
         }
         finally
         {
-            t?.Dispose();
+            transaction?.Dispose();
         }
     }
 

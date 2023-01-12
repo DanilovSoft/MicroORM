@@ -6,11 +6,11 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
-using DanilovSoft.MicroORM.Helpers;
 using DanilovSoft.MicroORM.ObjectMapping;
 using static DanilovSoft.MicroORM.ExceptionMessages;
 using SystemArray = System.Array;
 
+using static DanilovSoft.MicroORM.Helpers.NullableHelper;
 
 namespace DanilovSoft.MicroORM;
 
@@ -376,14 +376,12 @@ public abstract class SqlReader : ISqlReader
             var array = ToArray(list);
             return Task.FromResult(array);
         }
-        else
+        
+        return Wait(task);
+        static async Task<T[]> Wait(Task<List<T>> task)
         {
-            return WaitAsync(task);
-            static async Task<T[]> WaitAsync(Task<List<T>> task)
-            {
-                var list = await task.ConfigureAwait(false);
-                return ToArray(list);
-            }
+            var list = await task.ConfigureAwait(false);
+            return ToArray(list);
         }
 
         static T[] ToArray(List<T> list)
@@ -460,7 +458,7 @@ public abstract class SqlReader : ISqlReader
         try
         {
             table.LoadData(reader);
-            return NullableHelper.SetNull(ref table);
+            return SetNull(ref table);
         }
         finally
         {
@@ -560,23 +558,20 @@ public abstract class SqlReader : ISqlReader
 
             if (task.IsCompletedSuccessfully())
             {
-                return Task.FromResult(NullableHelper.SetNull(ref table));
+                return Task.FromResult(SetNull(ref table));
             }
-            else
+            
+            return Wait(task, SetNull(ref table));
+            static async Task<DataTable> Wait(Task task, [DisallowNull] DataTable? table)
             {
-                return WaitAsync(task, NullableHelper.SetNull(ref table));
-
-                static async Task<DataTable> WaitAsync(Task task, [DisallowNull] DataTable? table)
+                try
                 {
-                    try
-                    {
-                        await task.ConfigureAwait(false);
-                        return NullableHelper.SetNull(ref table);
-                    }
-                    finally
-                    {
-                        table?.Dispose();
-                    }
+                    await task.ConfigureAwait(false);
+                    return SetNull(ref table);
+                }
+                finally
+                {
+                    table?.Dispose();
                 }
             }
         }
@@ -595,15 +590,12 @@ public abstract class SqlReader : ISqlReader
             var value = Read(reader);
             return Task.FromResult(value);
         }
-        else
-        {
-            return WaitAsync(task, reader);
 
-            static async Task<object?> WaitAsync(Task<bool> task, DbDataReader reader)
-            {
-                await task.ConfigureAwait(false);
-                return Read(reader);
-            }
+        return Wait(task, reader);
+        static async Task<object?> Wait(Task<bool> task, DbDataReader reader)
+        {
+            await task.ConfigureAwait(false);
+            return Read(reader);
         }
 
         static object? Read(DbDataReader reader)

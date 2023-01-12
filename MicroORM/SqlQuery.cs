@@ -8,6 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using DanilovSoft.MicroORM.Helpers;
 
+using static DanilovSoft.MicroORM.Helpers.NullableHelper;
+
 namespace DanilovSoft.MicroORM;
 
 public class SqlQuery : SqlReader
@@ -42,7 +44,7 @@ public class SqlQuery : SqlReader
             try
             {
                 connection.Open();
-                return NullableHelper.SetNull(ref connection);
+                return SetNull(ref connection);
             }
             finally
             {
@@ -54,7 +56,7 @@ public class SqlQuery : SqlReader
     internal virtual ValueTask<DbConnection> GetOpenConnectionAsync(CancellationToken cancellationToken)
     {
         var connection = _sqlOrm.GetConnection();
-        
+
         if (connection.State == ConnectionState.Open)
         {
             return ValueTask.FromResult(connection);
@@ -66,23 +68,20 @@ public class SqlQuery : SqlReader
                 var task = connection.OpenAsync(cancellationToken);
                 if (task.IsCompletedSuccessfully)
                 {
-                    return ValueTask.FromResult(NullableHelper.SetNull(ref connection));
+                    return ValueTask.FromResult(SetNull(ref connection));
                 }
-                else
-                {
-                    return WaitAsync(task, NullableHelper.SetNull(ref connection));
 
-                    static async ValueTask<DbConnection> WaitAsync(Task task, [DisallowNull] DbConnection? connection)
+                return Wait(task, SetNull(ref connection));
+                static async ValueTask<DbConnection> Wait(Task task, [DisallowNull] DbConnection? connection)
+                {
+                    try
                     {
-                        try
-                        {
-                            await task.ConfigureAwait(false);
-                            return NullableHelper.SetNull(ref connection);
-                        }
-                        finally
-                        {
-                            connection?.Dispose();
-                        }
+                        await task.ConfigureAwait(false);
+                        return SetNull(ref connection);
+                    }
+                    finally
+                    {
+                        connection?.Dispose();
                     }
                 }
             }
@@ -100,7 +99,7 @@ public class SqlQuery : SqlReader
         var command = connection.CreateCommand();
         AddParameters(command);
         command.CommandText = _query;
-        command.CommandTimeout = base.QueryTimeoutSec;
+        command.CommandTimeout = QueryTimeoutSec;
         return command;
     }
 
@@ -114,15 +113,12 @@ public class SqlQuery : SqlReader
             var command = CreateCommand(connection);
             return ValueTask.FromResult(command);
         }
-        else
-        {
-            return WaitAsync(task, this);
 
-            static async ValueTask<DbCommand> WaitAsync(ValueTask<DbConnection> task, SqlQuery self)
-            {
-                var connection = await task.ConfigureAwait(false);
-                return self.CreateCommand(connection);
-            }
+        return Wait(task);
+        async ValueTask<DbCommand> Wait(ValueTask<DbConnection> task)
+        {
+            var connection = await task.ConfigureAwait(false);
+            return CreateCommand(connection);
         }
     }
 
@@ -182,15 +178,12 @@ public class SqlQuery : SqlReader
             var comReader = new CommandReaderCloseConnection(command);
             return ValueTask.FromResult<ICommandReader>(comReader);
         }
-        else
-        {
-            return WaitAsync(task);
 
-            static async ValueTask<ICommandReader> WaitAsync(ValueTask<DbCommand> task)
-            {
-                var command = await task.ConfigureAwait(false);
-                return new CommandReaderCloseConnection(command);
-            }
+        return Wait(task);
+        static async ValueTask<ICommandReader> Wait(ValueTask<DbCommand> task)
+        {
+            var command = await task.ConfigureAwait(false);
+            return new CommandReaderCloseConnection(command);
         }
     }
 

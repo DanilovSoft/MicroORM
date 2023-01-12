@@ -53,15 +53,12 @@ public class MultiSqlReader : SqlReader, IDisposable
             SetReader(reader);
             return default;
         }
-        else
-        {
-            return WaitAsync(task, this);
 
-            static async ValueTask WaitAsync(Task<DbDataReader> task, MultiSqlReader self)
-            {
-                var reader = await task.ConfigureAwait(false);
-                self.SetReader(reader);
-            }
+        return Wait(task);
+        async ValueTask Wait(Task<DbDataReader> task)
+        {
+            var reader = await task.ConfigureAwait(false);
+            SetReader(reader);
         }
     }
 
