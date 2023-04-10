@@ -15,15 +15,14 @@ namespace DanilovSoft.MicroORM;
 public class SqlQuery : SqlReader
 {
     private readonly string _query;
-    private protected readonly SqlORM _sqlOrm;
+    private protected readonly SqlORM _parent;
     private Dictionary<string, object?>? _parameters;
     private Dictionary<string, object?> LazyParameters => LazyInitializer.EnsureInitialized(ref _parameters, static () => new());
     private int _anonymParamCount;
 
-    // ctor
-    internal SqlQuery(SqlORM sqlOrm, string query) : base(sqlOrm)
+    internal SqlQuery(SqlORM parent, string query) : base(parent)
     {
-        _sqlOrm = sqlOrm;
+        _parent = parent;
         _query = query;
     }
 
@@ -33,62 +32,58 @@ public class SqlQuery : SqlReader
     /// <exception cref="MicroOrmException"/>
     internal virtual DbConnection GetConnection()
     {
-        var connection = _sqlOrm.GetConnection();
+        var connection = _parent.GetConnection();
 
         if (connection.State == ConnectionState.Open)
         {
             return connection;
         }
-        else
+
+        try
         {
-            try
-            {
-                connection.Open();
-                return SetNull(ref connection);
-            }
-            finally
-            {
-                connection?.Dispose();
-            }
+            connection.Open();
+            return SetNull(ref connection);
+        }
+        finally
+        {
+            connection?.Dispose();
         }
     }
 
     internal virtual ValueTask<DbConnection> GetOpenConnectionAsync(CancellationToken cancellationToken)
     {
-        var connection = _sqlOrm.GetConnection();
+        var connection = _parent.GetConnection();
 
         if (connection.State == ConnectionState.Open)
         {
             return ValueTask.FromResult(connection);
         }
-        else
-        {
-            try
-            {
-                var task = connection.OpenAsync(cancellationToken);
-                if (task.IsCompletedSuccessfully)
-                {
-                    return ValueTask.FromResult(SetNull(ref connection));
-                }
 
-                return Wait(task, SetNull(ref connection));
-                static async ValueTask<DbConnection> Wait(Task task, [DisallowNull] DbConnection? connection)
+        try
+        {
+            var task = connection.OpenAsync(cancellationToken);
+            if (task.IsCompletedSuccessfully)
+            {
+                return ValueTask.FromResult(SetNull(ref connection));
+            }
+
+            return Wait(task, SetNull(ref connection));
+            static async ValueTask<DbConnection> Wait(Task task, [DisallowNull] DbConnection? connection)
+            {
+                try
                 {
-                    try
-                    {
-                        await task.ConfigureAwait(false);
-                        return SetNull(ref connection);
-                    }
-                    finally
-                    {
-                        connection?.Dispose();
-                    }
+                    await task.ConfigureAwait(false);
+                    return SetNull(ref connection);
+                }
+                finally
+                {
+                    connection?.Dispose();
                 }
             }
-            finally
-            {
-                connection?.Dispose();
-            }
+        }
+        finally
+        {
+            connection?.Dispose();
         }
     }
 
@@ -144,7 +139,7 @@ public class SqlQuery : SqlReader
     public virtual MultiSqlReader MultiResult()
     {
         var command = GetCommand();
-        var sqlReader = new AutoCloseMultiSqlReader(command, _sqlOrm);
+        var sqlReader = new AutoCloseMultiSqlReader(command, _parent);
         sqlReader.ExecuteReader();
         return sqlReader;
     }
@@ -157,7 +152,7 @@ public class SqlQuery : SqlReader
     public virtual async ValueTask<MultiSqlReader> MultiResultAsync(CancellationToken cancellationToken)
     {
         var command = await GetCommandAsync(cancellationToken).ConfigureAwait(false);
-        var sqlReader = new AutoCloseMultiSqlReader(command, _sqlOrm);
+        var sqlReader = new AutoCloseMultiSqlReader(command, _parent);
         await sqlReader.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         return sqlReader;
     }
@@ -204,19 +199,14 @@ public class SqlQuery : SqlReader
     /// <exception cref="ArgumentNullException"/>
     public SqlQuery Parameters(params object?[] anonymousParameters)
     {
-        if (anonymousParameters != null)
+        Guard.ThrowIfNull(anonymousParameters);
+        
+        for (var i = 0; i < anonymousParameters.Length; i++)
         {
-            for (var i = 0; i < anonymousParameters.Length; i++)
-            {
-                var parameterName = _anonymParamCount.ToString(CultureInfo.InvariantCulture);
+            var parameterName = _anonymParamCount.ToString(CultureInfo.InvariantCulture);
 
-                Parameter(parameterName, anonymousParameters[i]);
-                _anonymParamCount++;
-            }
-        }
-        else
-        {
-            ThrowHelper.ThrowArgumentNull(nameof(anonymousParameters));
+            Parameter(parameterName, anonymousParameters[i]);
+            _anonymParamCount++;
         }
         return this;
     }

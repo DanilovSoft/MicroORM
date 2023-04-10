@@ -13,13 +13,13 @@ internal readonly struct ObjectMapper<T>
     private static readonly StreamingContext DefaultStreamingContext;
     private readonly ContractActivator _activator;
     private readonly DbDataReader _reader;
-    private readonly SqlORM _sqlOrm;
+    private readonly SqlORM _parent;
 
     // ctor.
-    public ObjectMapper(DbDataReader reader, SqlORM sqlOrm)
+    public ObjectMapper(DbDataReader reader, SqlORM parent)
     {
         _reader = reader;
-        _sqlOrm = sqlOrm;
+        _parent = parent;
 
         // Инициализирует из ленивого хранилища.
         _activator = StaticCache.FromLazyActivator(typeof(T));
@@ -59,7 +59,7 @@ internal readonly struct ObjectMapper<T>
                 {
                     SetDboProperty(reader, dbo, i, sqlColumnName, ormProperty);
                 }
-                else if (_sqlOrm.UsePascalCaseNamingConvention)
+                else if (_parent.UsePascalCaseNamingConvention)
                 {
                     if (_activator.Contract.TryGetOrmProperty(sqlColumnName.SnakeToPascalCase(), out ormProperty))
                     {
@@ -131,7 +131,7 @@ internal readonly struct ObjectMapper<T>
                 ctorParamClrValues[ctorArg.ParameterIndex] = AccumulateCtorParameter(reader, i, sqlColumnName, ctorArg);
                 mapped[ctorArg.ParameterIndex] = true;  // Запомним что этот параметр мы замапили.
             }
-            else if (_sqlOrm.UsePascalCaseNamingConvention)
+            else if (_parent.UsePascalCaseNamingConvention)
             {
                 var pascalSqlColumn = sqlColumnName.SnakeToPascalCase();
 
@@ -154,7 +154,7 @@ internal readonly struct ObjectMapper<T>
                     {
                         if (!_activator.Contract.TryGetOrmProperty(sqlColumnName, out var ormProperty))
                         {
-                            if (_sqlOrm.UsePascalCaseNamingConvention)
+                            if (_parent.UsePascalCaseNamingConvention)
                             {
                                 _activator.Contract.TryGetOrmProperty(sqlColumnName.SnakeToPascalCase(), out ormProperty);
                             }

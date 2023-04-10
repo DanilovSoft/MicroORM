@@ -27,9 +27,8 @@ public sealed class SqlORM : ISqlORM
 
     public SqlORM(string connectionString, DbProviderFactory factory, bool usePascalCaseNamingConvention = false)
     {
-        Guard.ThrowIfNull(connectionString);
-        Guard.ThrowIfEmpty(connectionString);
-        Guard.ThrowIfNull(factory);
+        ArgumentException.ThrowIfNullOrEmpty(connectionString);
+        ArgumentNullException.ThrowIfNull(factory);
 
         _factory = factory;
         _connectionString = connectionString;
@@ -48,6 +47,9 @@ public sealed class SqlORM : ISqlORM
 
     public SqlQuery Sql(string query, params object?[] parameters)
     {
+        Guard.ThrowIfNull(query);
+        Guard.ThrowIfNull(parameters);
+
         var sqlQuery = new SqlQuery(this, query);
         sqlQuery.Parameters(parameters);
         return sqlQuery;
@@ -55,29 +57,23 @@ public sealed class SqlORM : ISqlORM
 
     public SqlQuery SqlInterpolated(FormattableString query, char parameterPrefix = '@')
     {
-        if (query != null)
-        {
-            var argNames = new object[query.ArgumentCount];
-            for (var i = 0; i < query.ArgumentCount; i++)
-            {
-                argNames[i] = FormattableString.Invariant($"{parameterPrefix}{i}");
-            }
+        Guard.ThrowIfNull(query);
 
-            var formattedQuery = string.Format(CultureInfo.InvariantCulture, query.Format, argNames);
-
-            var sqlQuery = new SqlQuery(this, formattedQuery);
-            sqlQuery.Parameters(query.GetArguments());
-            return sqlQuery;
-        }
-        else
+        var argNames = new object[query.ArgumentCount];
+        for (var i = 0; i < query.ArgumentCount; i++)
         {
-            throw new ArgumentNullException(nameof(query));
+            argNames[i] = FormattableString.Invariant($"{parameterPrefix}{i}");
         }
+
+        var formattedQuery = string.Format(CultureInfo.InvariantCulture, query.Format, argNames);
+        var sqlQuery = new SqlQuery(this, formattedQuery);
+        sqlQuery.Parameters(query.GetArguments());
+        return sqlQuery;
     }
 
-    public SqlTransaction OpenTransaction()
+    public MicroORMTransaction OpenTransaction()
     {
-        var t = new SqlTransaction(this);
+        var t = new MicroORMTransaction(this);
         try
         {
             t.OpenTransaction();
@@ -89,14 +85,11 @@ public sealed class SqlORM : ISqlORM
         }
     }
 
-    public ValueTask<SqlTransaction> OpenTransactionAsync()
-    {
-        return OpenTransactionAsync(CancellationToken.None);
-    }
+    public ValueTask<MicroORMTransaction> OpenTransactionAsync() => OpenTransactionAsync(CancellationToken.None);
 
-    public ValueTask<SqlTransaction> OpenTransactionAsync(CancellationToken cancellationToken)
+    public ValueTask<MicroORMTransaction> OpenTransactionAsync(CancellationToken cancellationToken)
     {
-        var transaction = new SqlTransaction(this);
+        var transaction = new MicroORMTransaction(this);
         try
         {
             var task = transaction.OpenTransactionAsync(cancellationToken);
@@ -108,7 +101,7 @@ public sealed class SqlORM : ISqlORM
             }
 
             return Wait(task, SetNull(ref transaction));
-            static async ValueTask<SqlTransaction> Wait(ValueTask task, [DisallowNull] SqlTransaction? transaction)
+            static async ValueTask<MicroORMTransaction> Wait(ValueTask task, [DisallowNull] MicroORMTransaction? transaction)
             {
                 try
                 {
@@ -127,29 +120,23 @@ public sealed class SqlORM : ISqlORM
         }
     }
 
-    public SqlTransaction Transaction()
-    {
-        return new SqlTransaction(this);
-    }
+    public MicroORMTransaction Transaction() => new(this);
 
+    /// <exception cref="MicroOrmException"/>
     internal DbConnection GetConnection()
     {
-        if (_dbConnection is null)
-        {
-            var connection = _factory!.CreateConnection();
-            if (connection is not null)
-            {
-                connection.ConnectionString = _connectionString;
-            }
-            else
-            {
-                ThrowHelper.ThrowCantGetConnection();
-            }
-            return connection;
-        }
-        else
+        if (_dbConnection is not null)
         {
             return _dbConnection;
         }
+
+        var connection = _factory!.CreateConnection();
+        if (connection is null)
+        {
+            ThrowHelper.ThrowCantGetConnection();
+        }
+
+        connection.ConnectionString = _connectionString;
+        return connection;
     }
 }

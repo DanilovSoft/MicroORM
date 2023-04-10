@@ -18,11 +18,11 @@ public class MultiSqlReader : SqlReader, IDisposable
     private DbDataReader? _reader;
     private MultiResultCommandReader? _commandReader;
 
-    internal MultiSqlReader(DbCommand command, SqlORM sqlOrm) : base(sqlOrm)
+    internal MultiSqlReader(DbCommand dbCommand, SqlORM parent) : base(parent)
     {
-        Debug.Assert(command != null);
+        Debug.Assert(dbCommand != null);
 
-        _dbCommand = command;
+        _dbCommand = dbCommand;
     }
 
     public void Dispose()

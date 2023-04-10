@@ -3,24 +3,26 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
-
+using DanilovSoft.MicroORM.Helpers;
 using static DanilovSoft.MicroORM.Helpers.NullableHelper;
 
 namespace DanilovSoft.MicroORM;
 
-internal sealed class SqlQueryTransaction : SqlQuery
+internal sealed class MicroORMQueryTransaction : SqlQuery
 {
-    private readonly DbTransaction _transaction;
+    private readonly DbTransaction _dbTransaction;
 
-    internal SqlQueryTransaction(SqlORM sqlOrm, DbTransaction transaction, string commandText)
-        : base(sqlOrm, commandText)
+    internal MicroORMQueryTransaction(SqlORM parent, DbTransaction dbTransaction, string commandText)
+        : base(parent, commandText)
     {
-        _transaction = transaction;
+        Guard.ThrowIfNull(dbTransaction);
+
+        _dbTransaction = dbTransaction;
     }
 
     internal override DbConnection GetConnection()
     {
-        var connection = _transaction.Connection;
+        var connection = _dbTransaction.Connection;
         Debug.Assert(connection != null);
 
         return connection;
@@ -28,7 +30,7 @@ internal sealed class SqlQueryTransaction : SqlQuery
 
     internal override ValueTask<DbConnection> GetOpenConnectionAsync(CancellationToken cancellationToken)
     {
-        var connection = _transaction.Connection;
+        var connection = _dbTransaction.Connection;
         Debug.Assert(connection != null);
 
         return new ValueTask<DbConnection>(result: connection);
@@ -50,8 +52,8 @@ internal sealed class SqlQueryTransaction : SqlQuery
 
     public override MultiSqlReader MultiResult()
     {
-        var command = GetCommand();
-        var sqlReader = new MultiSqlReader(command, _sqlOrm);
+        var dbCommand = GetCommand();
+        var sqlReader = new MultiSqlReader(dbCommand, _parent);
         sqlReader.ExecuteReader();
         return sqlReader;
     }
@@ -78,7 +80,7 @@ internal sealed class SqlQueryTransaction : SqlQuery
 
     private ValueTask<MultiSqlReader> CreateReaderAsync(DbCommand command, CancellationToken cancellationToken)
     {
-        var sqlReader = new MultiSqlReader(command, _sqlOrm);
+        var sqlReader = new MultiSqlReader(command, _parent);
         try
         {
             var task = sqlReader.ExecuteReaderAsync(cancellationToken);
@@ -112,7 +114,7 @@ internal sealed class SqlQueryTransaction : SqlQuery
     protected override DbCommand GetCommand()
     {
         var command = base.GetCommand();
-        command.Transaction = _transaction;
+        command.Transaction = _dbTransaction;
         return command;
     }
 
@@ -123,7 +125,7 @@ internal sealed class SqlQueryTransaction : SqlQuery
         if (task.IsCompletedSuccessfully)
         {
             var command = task.Result;
-            command.Transaction = _transaction;
+            command.Transaction = _dbTransaction;
             return ValueTask.FromResult(command);
         }
         else
@@ -132,7 +134,7 @@ internal sealed class SqlQueryTransaction : SqlQuery
             async ValueTask<DbCommand> Wait(ValueTask<DbCommand> task)
             {
                 var command = await task.ConfigureAwait(false);
-                command.Transaction = _transaction;
+                command.Transaction = _dbTransaction;
                 return command;
             }
         }

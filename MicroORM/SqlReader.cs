@@ -17,13 +17,13 @@ namespace DanilovSoft.MicroORM;
 public abstract class SqlReader : ISqlReader
 {
     private readonly int _closeConnectionPenaltySec = SqlORM.CloseConnectionPenaltySec;
-    private readonly SqlORM _sqlOrm;
+    private readonly SqlORM _parent;
 
-    internal SqlReader(SqlORM sqlOrm)
+    internal SqlReader(SqlORM parent)
     {
-        Debug.Assert(sqlOrm != null);
+        Debug.Assert(parent != null);
 
-        _sqlOrm = sqlOrm;
+        _parent = parent;
     }
 
     protected int QueryTimeoutSec { get; set; } = SqlORM.DefaultQueryTimeoutSec;
@@ -41,33 +41,28 @@ public abstract class SqlReader : ISqlReader
             : sqlRawValue;
     }
 
-    /// <inheritdoc/>
     public int Execute()
     {
-        return Wrapper(static reader => reader.RecordsAffected);
+        return Wrapper(reader => reader.RecordsAffected);
     }
 
-    /// <inheritdoc/>
     public DataTable Table()
     {
-        return Wrapper(static r => Table(r));
+        return Wrapper(Table);
     }
 
-    /// <inheritdoc/>
     public object? Scalar()
     {
-        return Wrapper(static r => Scalar(r));
+        return Wrapper(Scalar);
     }
 
-    /// <inheritdoc/>
     public T Scalar<T>()
     {
         // Имея только T невозможно определить null-ref конвенцию поэтому разрешаем возврат null.
 
-        return (T)Wrapper(static r => Scalar<T>(r))!;
+        return (T)Wrapper(Scalar<T>)!;
     }
 
-    /// <inheritdoc/>
     public object?[] ScalarArray()
     {
         var list = ScalarList();
@@ -77,13 +72,11 @@ public abstract class SqlReader : ISqlReader
             : SystemArray.Empty<object>();
     }
 
-    /// <inheritdoc/>
     public List<object?> ScalarList()
     {
-        return Wrapper(static r => ScalarList(r));
+        return Wrapper(ScalarList);
     }
 
-    /// <inheritdoc/>
     public T[] ScalarArray<T>()
     {
         var list = ScalarList<T>();
@@ -96,43 +89,36 @@ public abstract class SqlReader : ISqlReader
         return SystemArray.Empty<T>();
     }
 
-    /// <inheritdoc/>
     public List<T> ScalarList<T>()
     {
-        return Wrapper(static r => ScalarList<T>(r));
+        return Wrapper(ScalarList<T>);
     }
 
-    /// <inheritdoc/>
     public T? ScalarOrDefault<T>()
     {
-        return (T?)Wrapper(static r => ScalarOrDefault<T>(r));
+        return (T?)Wrapper(ScalarOrDefault<T>);
     }
 
-    /// <inheritdoc/>
     public T Single<T>()
     {
-        return (T)Wrapper(static (r, s) => s.Single<T>(r), this);
+        return (T)Wrapper(Single<T>);
     }
 
-    /// <inheritdoc/>
     public T Single<T>(T anonymousType) where T : class
     {
-        return Wrapper(static (r, state) => state.AnonymousSingle<T>(r), this);
+        return Wrapper(AnonymousSingle<T>);
     }
 
-    /// <inheritdoc/>
     public T? SingleOrDefault<T>()
     {
-        return (T?)Wrapper(static (r, state) => state.SingleOrDefault<T>(r), this);
+        return (T?)Wrapper(SingleOrDefault<T>);
     }
 
-    /// <inheritdoc/>
     public T? SingleOrDefault<T>(T anonymousType) where T : class
     {
-        return Wrapper(static (r, state) => state.AnonymousSingleOrDefault<T>(r), this);
+        return Wrapper(AnonymousSingleOrDefault<T>);
     }
 
-    /// <inheritdoc/>
     public IAsyncAnonymousReader<T> AsAnonymousAsync<T>(T anonymousType) where T : class
     {
         return new Anonimous<T>(this);
@@ -142,20 +128,17 @@ public abstract class SqlReader : ISqlReader
     {
         return new Anonimous<T>(this);
     }
-
-    /// <inheritdoc/>
+    
     public List<T> ToList<T>()
     {
         return Wrapper(List<T>);
     }
 
-    /// <inheritdoc/>
     public List<T> ToList<T>(T anonymousType) where T : class
     {
         return Wrapper(AnonumouseList<T>);
     }
 
-    /// <inheritdoc/>
     public T[] ToArray<T>()
     {
         var list = ToList<T>();
@@ -167,7 +150,6 @@ public abstract class SqlReader : ISqlReader
         return SystemArray.Empty<T>();
     }
 
-    /// <inheritdoc/>
     public T[] ToArray<T>(T anonymousType) where T : class
     {
         var list = ToList(anonymousType);
@@ -179,7 +161,6 @@ public abstract class SqlReader : ISqlReader
         return SystemArray.Empty<T>();
     }
 
-    /// <inheritdoc/>
     public TCollection ToCollection<TItem, TCollection>() where TCollection : ICollection<TItem>, new()
     {
         var items = ToList<TItem>();
@@ -190,55 +171,46 @@ public abstract class SqlReader : ISqlReader
 
     // асинхронные
 
-    /// <inheritdoc/>
     public Task<TCollection> ToCollectionAsync<TItem, TCollection>() where TCollection : ICollection<TItem>, new()
     {
         return ToCollectionAsync<TItem, TCollection>(CancellationToken.None);
     }
 
-    /// <inheritdoc/>
     public Task<TCollection> ToCollectionAsync<TItem, TCollection>(CancellationToken cancellationToken) where TCollection : ICollection<TItem>, new()
     {
         return WrapperAsync(static (r, state, canc) => state.CollectionAsync<TItem, TCollection>(r, canc), this, cancellationToken);
     }
 
-    /// <inheritdoc/>
     public Task<DataTable> TableAsync()
     {
         return WrapperAsync(static (r, state, canc) => TableAsync(r, canc), this, CancellationToken.None);
     }
 
-    /// <inheritdoc/>
     public Task<DataTable> TableAsync(CancellationToken cancellationToken)
     {
         return WrapperAsync(static (r, canc) => TableAsync(r, canc), cancellationToken);
     }
 
-    /// <inheritdoc/>
     public Task<object?> ScalarAsync()
     {
         return WrapperAsync(static (r, canc) => ScalarAsync(r, canc), CancellationToken.None);
     }
 
-    /// <inheritdoc/>
     public Task<object?> ScalarAsync(CancellationToken cancellationToken)
     {
         return WrapperAsync(static (r, canc) => ScalarAsync(r, canc), cancellationToken);
     }
 
-    /// <inheritdoc/>
     public Task<T> ScalarAsync<T>()
     {
         return WrapperAsync(static (r, canc) => ScalarAsync<T>(r, canc), CancellationToken.None);
     }
 
-    /// <inheritdoc/>
     public Task<T> ScalarAsync<T>(CancellationToken cancellationToken)
     {
         return WrapperAsync(static (r, canc) => ScalarAsync<T>(r, canc), cancellationToken);
     }
 
-    /// <inheritdoc/>
     public async Task<object?[]> ScalarArrayAsync()
     {
         var list = await ScalarListAsync().ConfigureAwait(false);
@@ -248,13 +220,11 @@ public abstract class SqlReader : ISqlReader
             : SystemArray.Empty<object>();
     }
 
-    /// <inheritdoc/>
     public Task<List<object?>> ScalarListAsync()
     {
         return ScalarListAsync(CancellationToken.None);
     }
 
-    /// <inheritdoc/>
     public async Task<T[]> ScalarArrayAsync<T>()
     {
         var list = await ScalarListAsync<T>().ConfigureAwait(false);
@@ -267,13 +237,12 @@ public abstract class SqlReader : ISqlReader
         return SystemArray.Empty<T>();
     }
 
-    /// <inheritdoc/>
     public Task<List<T>> ScalarListAsync<T>()
     {
         return ScalarListAsync<T>(CancellationToken.None);
     }
 
-    /// <inheritdoc/>
+    
     public async Task<object?[]> ScalarArrayAsync(CancellationToken cancellationToken)
     {
         var list = await ScalarListAsync(cancellationToken).ConfigureAwait(false);
@@ -286,7 +255,7 @@ public abstract class SqlReader : ISqlReader
         return SystemArray.Empty<object>();
     }
 
-    /// <inheritdoc/>
+    
     public async Task<T[]> ScalarArrayAsync<T>(CancellationToken cancellationToken)
     {
         var list = await ScalarListAsync<T>(cancellationToken).ConfigureAwait(false);
@@ -296,67 +265,67 @@ public abstract class SqlReader : ISqlReader
             : SystemArray.Empty<T>();
     }
 
-    /// <inheritdoc/>
+    
     public Task<List<object?>> ScalarListAsync(CancellationToken cancellationToken)
     {
         return WrapperAsync(static (r, canc) => ScalarListAsync(r, canc), cancellationToken);
     }
 
-    /// <inheritdoc/>
+    
     public Task<List<T>> ScalarListAsync<T>(CancellationToken cancellationToken)
     {
         return WrapperAsync(static (r, canc) => ScalarListAsync<T>(r, canc), cancellationToken);
     }
 
-    /// <inheritdoc/>
+    
     public Task<T?> ScalarOrDefaultAsync<T>()
     {
         return WrapperAsync(static (r, canc) => ScalarOrDefaultCoreAsync<T>(r, canc), CancellationToken.None);
     }
 
-    /// <inheritdoc/>
+    
     public Task<T?> ScalarOrDefaultAsync<T>(CancellationToken cancellationToken)
     {
         return WrapperAsync(static (r, canc) => ScalarOrDefaultCoreAsync<T>(r, canc), cancellationToken);
     }
 
-    /// <inheritdoc/>
+    
     public Task<List<T>> ToListAsync<T>()
     {
         return WrapperAsync(static (r, state, canc) => state.ListAsync<T>(r, canc), this, CancellationToken.None);
     }
 
-    /// <inheritdoc/>
+    
     public Task<List<T>> ToListAsync<T>(CancellationToken cancellationToken)
     {
         return WrapperAsync(static (r, state, canc) => state.ListAsync<T>(r, canc), this, cancellationToken);
     }
 
-    /// <inheritdoc/>
+    
     public Task<List<T>> ToListAsync<T>(T anonymousType) where T : class
     {
         return WrapperAsync(static (r, state, canc) => state.AnonymousListAsync<T>(r, canc), this, CancellationToken.None);
     }
 
-    /// <inheritdoc/>
+    
     public Task<List<T>> ToListAsync<T>(T anonymousType, CancellationToken cancellationToken) where T : class
     {
         return WrapperAsync(static (r, state, canc) => state.AnonymousListAsync<T>(r, canc), this, cancellationToken);
     }
 
-    /// <inheritdoc/>
+    
     public Task<T[]> ToArrayAsync<T>()
     {
         return ToArrayAsync<T>(CancellationToken.None);
     }
 
-    /// <inheritdoc/>
+    
     public Task<T[]> ToArrayAsync<T>(T anonymousType) where T : class
     {
         return ToArrayAsync(anonymousType, CancellationToken.None);
     }
 
-    /// <inheritdoc/>
+    
     public async Task<T[]> ToArrayAsync<T>(CancellationToken cancellationToken)
     {
         var list = await ToListAsync<T>(cancellationToken).ConfigureAwait(false);
@@ -366,7 +335,7 @@ public abstract class SqlReader : ISqlReader
             : SystemArray.Empty<T>();
     }
 
-    /// <inheritdoc/>
+    
     public Task<T[]> ToArrayAsync<T>(T anonymousType, CancellationToken cancellationToken) where T : class
     {
         var task = ToListAsync(anonymousType, cancellationToken);
@@ -392,61 +361,61 @@ public abstract class SqlReader : ISqlReader
         }
     }
 
-    /// <inheritdoc/>
+    
     public Task<T> SingleAsync<T>()
     {
         return SingleAsync<T>(CancellationToken.None);
     }
 
-    /// <inheritdoc/>
+    
     public Task<T> SingleAsync<T>(T anonymousType) where T : class
     {
         return SingleAsync(anonymousType, CancellationToken.None);
     }
 
-    /// <inheritdoc/>
+    
     public Task<T> SingleAsync<T>(CancellationToken cancellationToken)
     {
         return WrapperAsync(static (r, state, canc) => state.SingleAsync<T>(r, canc), this, cancellationToken);
     }
 
-    /// <inheritdoc/>
+    
     public Task<T> SingleAsync<T>(T anonymousType, CancellationToken cancellationToken) where T : class
     {
         return WrapperAsync(static (r, state, canc) => state.AnonymousSingleAsync<T>(r, canc), this, cancellationToken);
     }
 
-    /// <inheritdoc/>
+    
     public Task<T?> SingleOrDefaultAsync<T>()
     {
         return SingleOrDefaultAsync<T>(CancellationToken.None);
     }
 
-    /// <inheritdoc/>
+    
     public Task<T?> SingleOrDefaultAsync<T>(T anonymousType) where T : class
     {
         return SingleOrDefaultAsync(anonymousType, CancellationToken.None);
     }
 
-    /// <inheritdoc/>
+    
     public Task<T?> SingleOrDefaultAsync<T>(CancellationToken cancellationToken)
     {
         return WrapperAsync(static (r, state, canc) => state.SingleOrDefaultAsync<T>(r, canc), this, cancellationToken);
     }
 
-    /// <inheritdoc/>
+    
     public Task<T?> SingleOrDefaultAsync<T>(T anonymousType, CancellationToken cancellationToken) where T : class
     {
         return WrapperAsync(static (r, state, canc) => state.AnonymousSingleOrDefaultAsync<T>(r, canc), this, cancellationToken)!;
     }
 
-    /// <inheritdoc/>
+    
     public Task<int> ExecuteAsync()
     {
         return WrapperAsync(static (r, canc) => ExecuteAsync(r), CancellationToken.None);
     }
 
-    /// <inheritdoc/>
+    
     public Task<int> ExecuteAsync(CancellationToken cancellationToken)
     {
         return WrapperAsync(static (r, canc) => ExecuteAsync(r), cancellationToken);
@@ -625,14 +594,14 @@ public abstract class SqlReader : ISqlReader
     private object Single<T>(DbDataReader reader) // T - сложный тип и не может быть Null.
     {
         reader.Read();
-        var toObject = new ObjectMapper<T>(reader, _sqlOrm);
+        var toObject = new ObjectMapper<T>(reader, _parent);
         return toObject.ReadObject();
     }
 
     private T AnonymousSingle<T>(DbDataReader reader) where T : class
     {
         reader.Read();
-        var toObject = new ObjectMapper<T>(reader, _sqlOrm);
+        var toObject = new ObjectMapper<T>(reader, _parent);
         return toObject.ReadAsAnonymousObject<T>();
     }
 
@@ -640,7 +609,7 @@ public abstract class SqlReader : ISqlReader
     {
         if (reader.Read())
         {
-            var toObject = new ObjectMapper<T>(reader, _sqlOrm);
+            var toObject = new ObjectMapper<T>(reader, _parent);
             return toObject.ReadObject();
         }
         else
@@ -653,7 +622,7 @@ public abstract class SqlReader : ISqlReader
     {
         if (reader.Read())
         {
-            var toObject = new ObjectMapper<T>(reader, _sqlOrm);
+            var toObject = new ObjectMapper<T>(reader, _parent);
             return toObject.ReadAsAnonymousObject<T>();
         }
         else
@@ -664,8 +633,7 @@ public abstract class SqlReader : ISqlReader
 
     private List<TResult> FromAnonList<TAnon, TResult>(Func<TAnon, TResult> selector) where TAnon : class
     {
-        return Wrapper(static (reader, state) => state.Item1.AnonumouseList(reader, state.selector),
-            state: (this, selector));
+        return Wrapper(selector, (reader, selector) => AnonumouseList(reader, selector));
     }
 
     private TResult[] FromAnonArray<TAnon, TResult>(Func<TAnon, TResult> selector) where TAnon : class
@@ -714,7 +682,7 @@ public abstract class SqlReader : ISqlReader
         var list = new List<TAnon>();
         if (reader.Read())
         {
-            var toObject = new ObjectMapper<TAnon>(reader, _sqlOrm);
+            var toObject = new ObjectMapper<TAnon>(reader, _parent);
             do
             {
                 var rowObj = toObject.ReadAsAnonymousObject<TAnon>();
@@ -730,7 +698,7 @@ public abstract class SqlReader : ISqlReader
         var list = new List<TResult>();
         if (reader.Read())
         {
-            var toObject = new ObjectMapper<TAnon>(reader, _sqlOrm);
+            var toObject = new ObjectMapper<TAnon>(reader, _parent);
             do
             {
                 var result = AnonToResult(toObject, selector);
@@ -752,7 +720,7 @@ public abstract class SqlReader : ISqlReader
         var list = new List<T>();
         if (reader.Read())
         {
-            var toObject = new ObjectMapper<T>(reader, _sqlOrm);
+            var toObject = new ObjectMapper<T>(reader, _parent);
             do
             {
                 var result = (T)toObject.ReadObject();
@@ -768,7 +736,7 @@ public abstract class SqlReader : ISqlReader
         var list = new TCollection();
         if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
-            var toObject = new ObjectMapper<TItem>(reader, _sqlOrm);
+            var toObject = new ObjectMapper<TItem>(reader, _parent);
             do
             {
                 var item = (TItem)toObject.ReadObject();
@@ -784,7 +752,7 @@ public abstract class SqlReader : ISqlReader
         var list = new List<T>();
         if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
-            var toObject = new ObjectMapper<T>(reader, _sqlOrm);
+            var toObject = new ObjectMapper<T>(reader, _parent);
             do
             {
                 var result = toObject.ReadAsAnonymousObject<T>();
@@ -802,7 +770,7 @@ public abstract class SqlReader : ISqlReader
         var list = new List<TResult>();
         if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
-            var toObject = new ObjectMapper<TAnon>(reader, _sqlOrm);
+            var toObject = new ObjectMapper<TAnon>(reader, _parent);
             do
             {
                 var result = AnonToResult(toObject, selector);
@@ -825,7 +793,7 @@ public abstract class SqlReader : ISqlReader
         var list = new List<T>();
         if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
-            var toObject = new ObjectMapper<T>(reader, _sqlOrm);
+            var toObject = new ObjectMapper<T>(reader, _parent);
             do
             {
                 var result = (T)toObject.ReadObject();
@@ -840,7 +808,7 @@ public abstract class SqlReader : ISqlReader
     {
         if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
-            var objectMapper = new ObjectMapper<T>(reader, _sqlOrm);
+            var objectMapper = new ObjectMapper<T>(reader, _parent);
             return (T)objectMapper.ReadObject();
         }
         else
@@ -854,7 +822,7 @@ public abstract class SqlReader : ISqlReader
         var task = reader.ReadAsync(cancellationToken);
         if (task.IsCompletedSuccessfully())
         {
-            var objectMapper = new ObjectMapper<T>(reader, _sqlOrm);
+            var objectMapper = new ObjectMapper<T>(reader, _parent);
             var value = Map(reader);
             return Task.FromResult(value);
         }
@@ -871,7 +839,7 @@ public abstract class SqlReader : ISqlReader
 
         T Map(DbDataReader reader)
         {
-            var objectMapper = new ObjectMapper<T>(reader, _sqlOrm);
+            var objectMapper = new ObjectMapper<T>(reader, _parent);
             return (T)objectMapper.ReadObject();
         }
     }
@@ -897,7 +865,7 @@ public abstract class SqlReader : ISqlReader
 
         T Map(DbDataReader reader)
         {
-            var toObject = new ObjectMapper<T>(reader, _sqlOrm);
+            var toObject = new ObjectMapper<T>(reader, _parent);
             return toObject.ReadAsAnonymousObject<T>();
         }
     }
@@ -909,7 +877,7 @@ public abstract class SqlReader : ISqlReader
         if (task.IsCompletedSuccessfully)
         {
             var hasRows = task.Result;
-            var value = MapAnonymousObject(hasRows, reader, _sqlOrm);
+            var value = MapAnonymousObject(hasRows, reader, _parent);
             return Task.FromResult(value);
         }
         else
@@ -919,7 +887,7 @@ public abstract class SqlReader : ISqlReader
             async Task<T?> WaitAsync(Task<bool> task, DbDataReader reader)
             {
                 var hasRows = await task.ConfigureAwait(false);
-                return MapAnonymousObject(hasRows, reader, _sqlOrm);
+                return MapAnonymousObject(hasRows, reader, _parent);
             }
         }
 
@@ -1007,10 +975,14 @@ public abstract class SqlReader : ISqlReader
 
     private T Wrapper<T>(Func<DbDataReader, T> selector)
     {
-        return Wrapper(static (reader, s) => s(reader), selector);
+        using (var commandReader = GetCommandReader())
+        {
+            var reader = commandReader.GetReader();
+            return selector(reader);
+        }
     }
 
-    private T Wrapper<T, TArg>(Func<DbDataReader, TArg, T> selector, TArg state)
+    private T Wrapper<T, TState>(TState state, Func<DbDataReader, TState, T> selector)
     {
         using (var commandReader = GetCommandReader())
         {
@@ -1022,29 +994,29 @@ public abstract class SqlReader : ISqlReader
     [DebuggerStepThrough]
     private readonly struct Anonimous<TAnon> : IAnonymousReader<TAnon>, IAsyncAnonymousReader<TAnon> where TAnon : class
     {
-        private readonly SqlReader _self;
+        private readonly SqlReader _parent;
 
-        public Anonimous(SqlReader self)
+        public Anonimous(SqlReader parent)
         {
-            _self = self;
+            _parent = parent;
         }
 
         public TResult[] Array<TResult>(Func<TAnon, TResult> selector)
-            => _self.FromAnonArray(selector);
+            => _parent.FromAnonArray(selector);
 
         public List<TResult> List<TResult>(Func<TAnon, TResult> selector)
-            => _self.FromAnonList(selector);
+            => _parent.FromAnonList(selector);
 
         Task<TResult[]> IAsyncAnonymousReader<TAnon>.Array<TResult>(Func<TAnon, TResult> selector)
-            => _self.FromAnonArrayAsync(selector);
+            => _parent.FromAnonArrayAsync(selector);
 
         Task<TResult[]> IAsyncAnonymousReader<TAnon>.Array<TResult>(Func<TAnon, TResult> selector, CancellationToken cancellationToken)
-            => _self.FromAnonArrayAsync(selector, cancellationToken);
+            => _parent.FromAnonArrayAsync(selector, cancellationToken);
 
         Task<List<TResult>> IAsyncAnonymousReader<TAnon>.List<TResult>(Func<TAnon, TResult> selector)
-            => _self.FromAnonListAsync(selector);
+            => _parent.FromAnonListAsync(selector);
 
         Task<List<TResult>> IAsyncAnonymousReader<TAnon>.List<TResult>(Func<TAnon, TResult> selector, CancellationToken cancellationToken)
-            => _self.FromAnonListAsync(selector, cancellationToken);
+            => _parent.FromAnonListAsync(selector, cancellationToken);
     }
 }
