@@ -14,6 +14,7 @@ public sealed class MicroORMTransaction : ISqlORM, IDisposable
     private readonly SqlORM _parent;
     private readonly DbConnection _dbConnection;
     private DbTransaction? _dbTransaction;
+    private bool _ownTransaction;
     private bool _disposed;
 
     /// <exception cref="ArgumentNullException"/>
@@ -34,6 +35,7 @@ public sealed class MicroORMTransaction : ISqlORM, IDisposable
         _parent = parent;
         _dbConnection = parent.GetConnection();
         _dbTransaction = dbTransaction;
+        _ownTransaction = false;
     }
 
     public void Dispose()
@@ -44,7 +46,10 @@ public sealed class MicroORMTransaction : ISqlORM, IDisposable
         }
 
         _disposed = true;
-        _dbTransaction?.Dispose();
+        if (_ownTransaction)
+        {
+            _dbTransaction?.Dispose();
+        }
         _dbConnection.Dispose();
         _dbTransaction = null;
     }
@@ -67,6 +72,7 @@ public sealed class MicroORMTransaction : ISqlORM, IDisposable
         CheckTransactionIsNull();
 
         _dbTransaction = dbTransaction;
+        _ownTransaction = false;
     }
 
     /// <exception cref="ObjectDisposedException"/>
@@ -81,6 +87,7 @@ public sealed class MicroORMTransaction : ISqlORM, IDisposable
         }
         
         _dbTransaction = _dbConnection.BeginTransaction();
+        _ownTransaction = true;
     }
 
     /// <exception cref="ObjectDisposedException"/>
@@ -95,6 +102,7 @@ public sealed class MicroORMTransaction : ISqlORM, IDisposable
         if (_dbConnection.State == System.Data.ConnectionState.Open)
         {
             _dbTransaction = _dbConnection.BeginTransaction();
+            _ownTransaction = true;
             return default;
         }
 
@@ -102,6 +110,7 @@ public sealed class MicroORMTransaction : ISqlORM, IDisposable
         if (task.IsCompletedSuccessfully)
         {
             _dbTransaction = _dbConnection.BeginTransaction();
+            _ownTransaction = true;
             return default;
         }
 
@@ -110,6 +119,7 @@ public sealed class MicroORMTransaction : ISqlORM, IDisposable
         {
             await openConnectionTask.ConfigureAwait(false);
             _dbTransaction = _dbConnection.BeginTransaction();
+            _ownTransaction = true;
         }
     }
 
