@@ -9,7 +9,7 @@ using DanilovSoft.MicroORM.Helpers;
 
 namespace DanilovSoft.MicroORM;
 
-public sealed class MicroORMTransaction : ISqlORM, IDisposable
+public sealed class MicroOrmTransaction : ISqlORM, IDisposable
 {
     private readonly SqlORM _parent;
     private readonly DbConnection _dbConnection;
@@ -18,7 +18,7 @@ public sealed class MicroORMTransaction : ISqlORM, IDisposable
     private bool _disposed;
 
     /// <exception cref="ArgumentNullException"/>
-    public MicroORMTransaction(SqlORM parent)
+    public MicroOrmTransaction(SqlORM parent)
     {
         Guard.ThrowIfNull(parent);
 
@@ -27,7 +27,7 @@ public sealed class MicroORMTransaction : ISqlORM, IDisposable
     }
 
     /// <exception cref="ArgumentNullException"/>
-    public MicroORMTransaction(SqlORM parent, DbTransaction dbTransaction)
+    public MicroOrmTransaction(SqlORM parent, DbTransaction dbTransaction)
     {
         Guard.ThrowIfNull(parent);
         Guard.ThrowIfNull(dbTransaction);
@@ -49,8 +49,8 @@ public sealed class MicroORMTransaction : ISqlORM, IDisposable
         if (_ownTransaction)
         {
             _dbTransaction?.Dispose();
+            _dbConnection.Dispose();
         }
-        _dbConnection.Dispose();
         _dbTransaction = null;
     }
 
@@ -133,7 +133,7 @@ public sealed class MicroORMTransaction : ISqlORM, IDisposable
         CheckDisposed();
         CheckTransactionNotNull();
 
-        var sqlQuery = new MicroORMQueryTransaction(_parent, _dbTransaction, query);
+        var sqlQuery = new MicroOrmQueryTransaction(_parent, _dbTransaction, query);
         sqlQuery.Parameters(parameters);
         return sqlQuery;
     }
@@ -153,7 +153,7 @@ public sealed class MicroORMTransaction : ISqlORM, IDisposable
 
         var formattedQuery = string.Format(CultureInfo.InvariantCulture, query.Format, argNames);
 
-        var sqlQuery = new MicroORMQueryTransaction(_parent, _dbTransaction, formattedQuery);
+        var sqlQuery = new MicroOrmQueryTransaction(_parent, _dbTransaction, formattedQuery);
         sqlQuery.Parameters(query.GetArguments());
         return sqlQuery;
     }
@@ -196,7 +196,7 @@ public sealed class MicroORMTransaction : ISqlORM, IDisposable
             return;
         }
 
-        ThrowHelper.ThrowObjectDisposed<MicroORMTransaction>();
+        ThrowHelper.ThrowObjectDisposed<MicroOrmTransaction>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

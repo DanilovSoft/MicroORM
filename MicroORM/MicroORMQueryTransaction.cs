@@ -8,11 +8,11 @@ using static DanilovSoft.MicroORM.Helpers.NullableHelper;
 
 namespace DanilovSoft.MicroORM;
 
-internal sealed class MicroORMQueryTransaction : SqlQuery
+internal sealed class MicroOrmQueryTransaction : SqlQuery
 {
     private readonly DbTransaction _dbTransaction;
 
-    internal MicroORMQueryTransaction(SqlORM parent, DbTransaction dbTransaction, string commandText)
+    internal MicroOrmQueryTransaction(SqlORM parent, DbTransaction dbTransaction, string commandText)
         : base(parent, commandText)
     {
         Guard.ThrowIfNull(dbTransaction);

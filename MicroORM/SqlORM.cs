@@ -71,9 +71,9 @@ public sealed class SqlORM : ISqlORM
         return sqlQuery;
     }
 
-    public MicroORMTransaction OpenTransaction()
+    public MicroOrmTransaction OpenTransaction()
     {
-        var t = new MicroORMTransaction(this);
+        var t = new MicroOrmTransaction(this);
         try
         {
             t.OpenTransaction();
@@ -85,11 +85,11 @@ public sealed class SqlORM : ISqlORM
         }
     }
 
-    public ValueTask<MicroORMTransaction> OpenTransactionAsync() => OpenTransactionAsync(CancellationToken.None);
+    public ValueTask<MicroOrmTransaction> OpenTransactionAsync() => OpenTransactionAsync(CancellationToken.None);
 
-    public ValueTask<MicroORMTransaction> OpenTransactionAsync(CancellationToken cancellationToken)
+    public ValueTask<MicroOrmTransaction> OpenTransactionAsync(CancellationToken cancellationToken)
     {
-        var transaction = new MicroORMTransaction(this);
+        var transaction = new MicroOrmTransaction(this);
         try
         {
             var task = transaction.OpenTransactionAsync(cancellationToken);
@@ -101,7 +101,7 @@ public sealed class SqlORM : ISqlORM
             }
 
             return Wait(task, SetNull(ref transaction));
-            static async ValueTask<MicroORMTransaction> Wait(ValueTask task, [DisallowNull] MicroORMTransaction? transaction)
+            static async ValueTask<MicroOrmTransaction> Wait(ValueTask task, [DisallowNull] MicroOrmTransaction? transaction)
             {
                 try
                 {
@@ -120,7 +120,7 @@ public sealed class SqlORM : ISqlORM
         }
     }
 
-    public MicroORMTransaction Transaction() => new(this);
+    public MicroOrmTransaction Transaction() => new(this);
 
     /// <exception cref="MicroOrmException"/>
     internal DbConnection GetConnection()
